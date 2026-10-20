@@ -10,6 +10,8 @@ A arquitetura de referência descreve componentes lógicos e cenários detalhado
 
 O `pom.xml` e o workflow apenas montam o lifecycle: o último `./mvnw -B verify` terminou com `BUILD SUCCESS`, mas compilou zero fontes e Surefire/Failsafe reportaram `No tests to run`. A CI existe localmente em [.github/workflows/ci.yml](../../.github/workflows/ci.yml#L1-L44), mas a consulta ao GitHub retornou zero workflows, zero runs e zero PRs; essa branch ainda não foi publicada. Portanto, o resultado verde não comprova nenhum atributo de qualidade do produto.
 
+**Atualização de evidências (2026-10-20):** `./mvnw -B verify` terminou com `BUILD SUCCESS`, mas Surefire e Failsafe reportaram `No tests to run`. O JaCoCo iniciou o agente, porém não encontrou `target/jacoco.exec` e pulou tanto `report` quanto `check`; portanto `target/site/jacoco/jacoco.xml` não foi gerado e as metas de cobertura de 80% de linhas/70% de branches não foram avaliadas nesta execução. Nenhuma meta foi alterada. A organização `nathanfliberatti`, o projeto `nathanfliberatti_Organizacao_de_recursos_QA` e a configuração do secret `SONAR_TOKEN` foram confirmados pelo responsável do repositório. A análise SonarCloud, o Quality Gate e as issues seguem pendentes da execução de CI no PR; o workflow foi configurado para importar `target/site/jacoco/jacoco.xml`. Nenhum token foi acessado ou exposto.
+
 As ADRs `ADR-001` a `ADR-010` são explicitamente propostas, não decisões aceitas ([arquitetura, seção 16](../arquitetura.md#L775-L888)). A avaliação preserva essa distinção. Os 12 cenários ATAM existentes na arquitetura foram normalizados abaixo nas seis partes solicitadas; não foram inventadas metas para critérios que as fontes deixam pendentes.
 
 ## Direcionadores de negócio
@@ -167,6 +169,18 @@ Os valores `A/M` abaixo reproduzem a importância/dificuldade da análise ATAM e
 - **Resposta:** produzir medição reproduzível e reportar erros/tempos sem violar integridade. Isso descreve a avaliação exigida, não desempenho já atingido.
 - **Medida de resposta:** usuários concorrentes, duração, volume, tempos e taxa de erro conforme `RNF-06`; valores-alvo e aprovação pendentes.
 
+### Evidência de JaCoCo e SonarCloud por cenário
+
+| Cenário | Evidência JaCoCo | Evidência SonarCloud |
+|---|---|---|
+| S01 — concorrência; S08 — persistência; S12 — desempenho online | Relatório local não gerado: `verify` não encontrou testes e o JaCoCo pulou `report`/`check` sem `target/jacoco.exec`. | IDs confirmados e scanner configurado; análise/Quality Gate pendentes da execução do PR. |
+| S02 — dados novos; S03 — retry; S04 — jobs sobrepostos; S05 — qualidade batch; S09 — fonte batch | Relatório não gerado; não há código batch nem testes para instrumentar. | Análise/Quality Gate pendentes da execução do PR; issues ainda não disponíveis para triagem. |
+| S06 — candidato inferior; S07 — rollback | Relatório não gerado; não há trainer, modelo, registry ou testes. | Análise/Quality Gate pendentes da execução do PR; issues ainda não disponíveis para triagem. |
+| S10 — acesso não autorizado | Relatório não gerado; não há código de autorização nem testes. | Análise/Quality Gate pendentes da execução do PR; ainda não há findings a classificar. |
+| S11 — provedor de notificação | Relatório não gerado; não há adaptador nem testes. | Análise/Quality Gate pendentes da execução do PR; issues ainda não disponíveis para triagem. |
+
+**Fonte da evidência local:** execução de `./mvnw -B verify` em 2026-10-20 (`BUILD SUCCESS`, nenhum teste executado, arquivo de execução JaCoCo ausente). O resultado do build não é um relatório de cobertura nem prova de ausência de defeitos. O workflow agora configura a análise SonarCloud, mas ainda não há relatório ou Quality Gate remoto para anexar; nenhuma issue foi corrigida, aceita ou classificada como falso positivo sem evidência.
+
 ## Táticas e abordagens encontradas na implementação
 
 Para os cenários de prioridade alta, **nenhuma tática arquitetural de produto foi encontrada no código**, porque não há código Java, teste, API, persistência, batch ou ML no conjunto pesquisado. A evidência positiva disponível é apenas de build: o [POM](../../pom.xml#L17-L52) declara JUnit/Surefire/Failsafe, sem regras ou componentes; o [README](../../README.md#L14-L17) declara a ausência de código/testes. Não confundir esses mecanismos de CI com táticas implementadas de qualidade do produto.
@@ -200,7 +214,7 @@ Pontos de sensibilidade e seus vínculos estão documentados na [arquitetura, se
 | SP-06 | Existência de consumidor ML/versão ativa. | Disponibilidade e rollback; S07; D-07 condicional. Sem requisito de inferência. |
 | SP-07 | Categoria, acesso, retenção e destino dos dados. | Segurança/privacidade; S10; D-02/D-06. Conteúdo e finalidade não classificados. |
 | SP-08 | Entrega síncrona ou durável de notificação. | Confiabilidade e acoplamento; S11; D-05. Simulador e API são alternativas permitidas. |
-| SP-09 | Perfil e metas de carga. | Avaliação de performance; S12; D-06. `RNF-06` lista dimensões, não limiares. |
+| SP-09 | Perfil e metas de carga e produção das evidências de qualidade. | Avaliação de performance e cobertura; S12; D-06. `RNF-06` lista dimensões, não limiares; JaCoCo não gerou relatório e SonarCloud não foi executado. |
 
 ## Pontos de trade-off
 
@@ -226,9 +240,9 @@ Os riscos originais estão classificados qualitativamente na [arquitetura, seç�
 | R-04 | Dados inelegíveis contaminarem o treino sem proveniência. | D-07; S05/S06; SP-04/SP-05. | Alto documental; qualidade e thresholds não definidos nem implementados. |
 | R-05 | Candidato inferior promovido ou rollback indisponível. | D-07 condicional; S06/S07; SP-05/SP-06. | Alto condicional; não há modelo, registry, consumidor nem requisito ML formal. |
 | R-06 | Falha do store causar confirmação falsa ou transição sem auditoria. | D-01/D-03; S08; SP-01. | Alto documental; persistência/auditoria ausentes. |
-| R-07 | Acesso indevido/exposição de dados em logs, snapshots ou provedores. | D-02/D-06; S10; SP-07. | Alto documental, exposição depende de classificação ainda ausente; sem controles implementados verificáveis. |
+| R-07 | Acesso indevido/exposição de dados em logs, snapshots ou provedores. | D-02/D-06; S10; SP-07. | Alto documental, exposição depende de classificação ainda ausente; sem controles implementados verificáveis. SonarCloud não foi executado, portanto não há findings para confirmar ou descartar. |
 | R-08 | Falha de provedor atrasar/duplicar notificações. | D-05; S11; SP-08. | Médio documental; API externa é opcional e não está configurada. |
-| R-09 | Resultados JMeter não permitirem decisão objetiva sem metas. | D-06; S12; SP-09. | Alto para aceite; impacto operacional não quantificado nem medido. |
+| R-09 | Ausência de evidência reproduzível de cobertura, análise estática e desempenho impedir decisão objetiva. | D-06; S12; SP-09. | Alto para aceite; `verify` passou sem testes, JaCoCo pulou relatório/checagem por falta de dados, SonarCloud não foi executado e não há resultado JMeter ou run de CI. Impacto operacional segue não quantificado. |
 | NR-01 | Aluno reservar. | D-02; RF-01/RF-04. | Não risco de requisito atual: não há persona/alocação de aluno. Não significa que autorização esteja implementada. |
 | NR-02 | Indisponibilidade de serving ML. | D-07 condicional; S07. | Não risco presente documentado: não há requisito de inferência/consumidor. Reavaliar se esse escopo for aprovado. |
 | NR-03 | Provedor externo interromper reservas. | D-05; S11. | Não é dependência obrigatória: `RF-11` permite simulação. Entrega externa continua risco condicional. |
@@ -244,21 +258,21 @@ Temas de risco da [arquitetura](../arquitetura.md#L722-L729): **RT-01 atomicidad
 | Fluxo online ilustra autenticação, validação, transação, auditoria, notificação e rejeição segura ([arquitetura](../arquitetura.md#L308-L379)). | Não há controlador, serviço, persistência, auditoria nem adaptador no código rastreado. | Nenhuma resposta do fluxo foi demonstrada. Regras fechadas ainda não têm implementação; transições e reserva comum permanecem pendentes na própria fonte. |
 | Fluxo batch ilustra job diário, delta, validação, manifesto, checkpoint e tratamento de candidato ([arquitetura](../arquitetura.md#L380-L437)). | Nenhum scheduler, fonte, trainer, checkpoint ou registry encontrado. | Diagrama é proposta; a arquitetura registra que a regra vem de solicitação anterior e precisa de formalização. ADR-005/006/007 não são decisões aceitas. |
 | ADR-001 a ADR-010 descrevem abordagens de decomposição, segurança, persistência, outbox, watermark, lock, modelo, dados, observabilidade e custo ([arquitetura](../arquitetura.md#L775-L888)). | Nenhuma tática correspondente em código. | Propostas não executadas e não aprovadas; não podem ser apresentadas como arquitetura realizada. |
-| `RNF-07` pede JUnit 5, Testcontainers, WireMock quando crítico, concorrência, JaCoCo, SonarCloud, CI, cobertura 80%/70%, TDD/BDD e zero itens críticos no fim ([RNF](../requisitos-nao-funcionais.md#L59-L83)). | POM declara JUnit/Surefire/Failsafe ([POM](../../pom.xml#L17-L52)); workflow executa verify e publica relatórios se existirem ([CI](../../.github/workflows/ci.yml#L32-L44)). Não há fonte/teste, JaCoCo, SonarCloud, Testcontainers, WireMock ou resultado de Actions. | Scaffold cobre somente comando de build. `verify` verde sem testes não satisfaz evidência comportamental, cobertura, concorrência, análise estática nem gate de entrega. |
+| `RNF-07` pede JUnit 5, Testcontainers, WireMock quando crítico, concorrência, JaCoCo, SonarCloud, CI, cobertura 80%/70%, TDD/BDD e zero itens críticos no fim ([RNF](../requisitos-nao-funcionais.md#L59-L83)). | POM declara JUnit/Surefire/Failsafe e metas JaCoCo de 80%/70% ([POM](../../pom.xml#L17-L52)); workflow executa verify, publica relatórios se existirem e agora configura scanner SonarCloud ([CI](../../.github/workflows/ci.yml#L32-L44)). Na execução local de 2026-10-20 não havia testes; JaCoCo não encontrou `target/jacoco.exec` e pulou `report` e `check`, sem gerar XML. Ainda não há run remoto ou resultado SonarCloud. | Scaffold cobre configuração, não resultado: as metas de cobertura permanecem configuradas, mas não são avaliadas sem dados; `verify` verde sem testes não satisfaz evidência comportamental, cobertura, concorrência, análise estática nem gate de entrega. |
 | `RNF-06` pede JMeter e cinco dimensões, com metas a aprovar ([RNF](../requisitos-nao-funcionais.md#L51-L57)). | Nenhum endpoint, plano JMeter ou relatório; consulta GitHub sem runs. | Não avaliado; não há resultado de desempenho. |
 | Critérios de reporte e auditoria dos RF/RNF. | Sem runtime e sem reports gerados; no último `verify`, Surefire/Failsafe disseram `No tests to run`. | Não há confirmação nem evidência de cobertura dos requisitos. |
 
-**Runs:** consulta em 2026-10-20 retornou `gh workflow list` vazio e `gh run list` vazio; não há run verde ou vermelho nem artifact. A execução Maven local verde não é um GitHub Actions run.
+**Runs e SonarCloud:** a análise Maven foi adicionada ao workflow com checkout completo, organização/projeto confirmados e secret `SONAR_TOKEN` injetado somente no ambiente da etapa. Ainda não há run de PR ou artifact para avaliar. A execução Maven local verde não é um GitHub Actions run, não gerou relatório JaCoCo e não substitui Quality Gate.
 
 ## Ações priorizadas para o ciclo 02
 
-1. **P0 — Validar semântica do núcleo online:** stakeholders fecharem matriz de permissões/transições de `RF-01`/`RF-14`, semântica de intervalos adjacentes, recursos restritos, campos mínimos e impacto de manutenção sobre reservas existentes. Registrar decisões nas fontes/RTM antes de converter pendências em critérios.
-2. **P0 — Demonstrar S01/S08:** selecionar tecnologia de persistência, documentar decisão e construir um teste concorrente reprodutível com estado persistido e auditoria. Critério já definido é no máximo uma reserva incompatível; não inventar meta de latência.
-3. **P1 — Formalizar ou retirar do escopo verificável o batch:** promover a restrição do job para RF/RNF/RTM; decidir fonte autorizada, fuso, cursor/“novo”, dados tardios, lote vazio/inválido e critérios de resultado. Só então validar S02–S05/S09 e escolher táticas.
-4. **P1 — Decidir se ML é produto:** declarar finalidade/consumidor ou manter o treinamento como restrição isolada; se houver promoção, aprovar baseline, dataset, métricas, autoridade e rollback antes de S06/S07.
-5. **P1 — Executar a trilha de evidências:** criar testes do produto a partir do plano TDD; adicionar Testcontainers/WireMock conforme dependências reais; completar JaCoCo/SonarCloud/JMeter e publicar runs. Registrar separadamente build verde sem teste versus qualidade comprovada.
-6. **P2 — Fechar segurança, privacidade e operação:** classificar dados, definir acesso/retention/logging, confirmar requisitos de interface pública e aprovar metas JMeter, criticidade e exceções de cobertura.
-7. **No próximo workshop ATAM:** revisitar utility tree com stakeholders, validar importância/dificuldade, executar protótipos para os pontos SP-01/SP-02 e reclassificar riscos somente com evidência; não tratar ADRs propostas como decisões até aprovação.
+1. [ ] **P0 — Validar semântica do núcleo online:** não atendida; não há decisões de stakeholders nem atualização das fontes/RTM nesta rodada. Pendências: matriz de permissões/transições de `RF-01`/`RF-14`, intervalos adjacentes, recursos restritos, campos mínimos e impacto de manutenção.
+2. [ ] **P0 — Demonstrar S01/S08:** não atendida; não há persistência ou teste concorrente de produto. A execução Maven não compilou fontes nem executou testes.
+3. [ ] **P1 — Formalizar ou retirar do escopo verificável o batch:** não atendida; fonte, fuso, cursor/“novo”, dados tardios e critérios do lote seguem sem decisão.
+4. [ ] **P1 — Decidir se ML é produto:** não atendida; finalidade, consumidor e governança do modelo seguem sem decisão.
+5. [~] **P1 — Executar a trilha de evidências:** parcialmente atendida no scaffold: POM mantém JaCoCo com metas de 80%/70%, CI prevê upload do relatório e o scanner SonarCloud está configurado. Nesta execução não havia testes nem `target/jacoco.exec`, então o relatório e a checagem foram pulados; Quality Gate, issues, JMeter e runs publicados ainda dependem de evidência remota. Nenhuma meta foi reduzida.
+6. [ ] **P2 — Fechar segurança, privacidade e operação:** não atendida; classificação de dados, acesso, retenção/logging, interface pública e metas JMeter continuam pendentes.
+7. [ ] **No próximo workshop ATAM:** não atendida nesta rodada; não houve workshop ou validação de utility tree com stakeholders.
 
 ## Fontes e limites
 
