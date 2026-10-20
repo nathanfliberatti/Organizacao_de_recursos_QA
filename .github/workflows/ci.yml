@@ -31,8 +31,17 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Verify
-        run: ./mvnw -B verify
+      - name: Verify and analyze with SonarCloud
+        run: >-
+          ./mvnw -B verify
+          org.sonarsource.scanner.maven:sonar-maven-plugin:5.3.0.6276:sonar
+          -Dsonar.projectKey=nathanfliberatti_Organizacao_de_recursos_QA
+          -Dsonar.organization=nathanfliberatti
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.qualitygate.wait=true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: SonarCloud analysis
         env:
