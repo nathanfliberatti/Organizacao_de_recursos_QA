@@ -262,7 +262,7 @@ Temas de risco da [arquitetura](../arquitetura.md#L722-L729): **RT-01 atomicidad
 | `RNF-06` pede JMeter e cinco dimensões, com metas a aprovar ([RNF](../requisitos-nao-funcionais.md#L51-L57)). | Nenhum endpoint, plano JMeter ou relatório; consulta GitHub sem runs. | Não avaliado; não há resultado de desempenho. |
 | Critérios de reporte e auditoria dos RF/RNF. | Sem runtime e sem reports gerados; no último `verify`, Surefire/Failsafe disseram `No tests to run`. | Não há confirmação nem evidência de cobertura dos requisitos. |
 
-**Runs e SonarCloud:** PR #2, SHA `7628936a118095f13d2c02cbf0f5355540625493`, run `39362964511`: `Maven verify` e `SonarCloud Code Analysis` concluíram `SUCCESS`. Quality Gate de código novo `OK`; condições: confiabilidade, segurança e manutenibilidade com rating `1`; duplicação `0.0%`; hotspots revisados `100%`. Medidas: `0` bugs, `0` vulnerabilidades, `0` code smells, `0` hotspots, `0` issues não resolvidas e `0` linhas novas para cobrir. A métrica de cobertura não foi produzida porque JaCoCo não gerou XML/artifact; não se infere cobertura de `0` linhas para cobrir. O token foi fornecido apenas via Actions secret no ambiente do step.
+**Runs e SonarCloud:** PR #2, SHA `cdd06cd77f2187c1efa306571096c6e8f8d4267d`, run `39363434395`: `Maven verify` e `SonarCloud Code Analysis` concluíram `SUCCESS`. Quality Gate de código novo `OK`; condições: confiabilidade, segurança e manutenibilidade com rating `1`; duplicação `0.0%`; hotspots revisados `100%`. A consulta de issues abertas do PR retornou `0`. O run não publicou artifacts; JaCoCo não gerou XML e `0` linhas novas para cobrir não representa cobertura de 100%. O token foi fornecido apenas via Actions secret no ambiente do step.
 
 ## Ações priorizadas para o ciclo 02
 
