@@ -2,7 +2,7 @@
 
 ## Objetivo e limites
 
-Este documento inventaria regras e cenários de teste a partir das fontes do projeto. Na preparação original, não foram implementados testes nem código de produção. No ciclo RED, os casos abaixo foram reavaliados contra suas fontes; nenhum teste foi escrito porque o workspace não contém projeto Java/JUnit nem APIs de produção a testar. Casos marcados como pendentes também não podem receber expectativas inventadas: precisam de decisão registrada antes de virarem asserts de aceitação.
+Este documento inventaria regras e cenários de teste a partir das fontes do projeto. Na preparação original, não foram implementados testes nem código de produção. O workspace agora contém scaffold Maven e JUnit 5, mas continua sem classes de produção nem testes de produto; por isso, não há API executável para testes comportamentais. Casos marcados como pendentes também não podem receber expectativas inventadas: precisam de decisão registrada antes de virarem asserts de aceitação.
 
 As fontes consultadas foram [requisitos funcionais](../requisitos-funcionais.md), [requisitos não funcionais](../requisitos-nao-funcionais.md), [matriz de rastreabilidade](../matriz-rastreabilidade.md), [arquitetura](../arquitetura.md), [persona Solicitante](../personas/persona-solicitante.md), [persona Responsável](../personas/persona-responsavel.md), [persona Administrador](../personas/persona-administrador.md) e [README](../../README.md).
 
@@ -383,9 +383,9 @@ As fontes consultadas foram [requisitos funcionais](../requisitos-funcionais.md)
 | RNF-06 | Entrada inválida: relatório sem ambiente/dados/carga/medidas | — | BLOQUEADO — sem execução JMeter |
 | RNF-06 | Conflito: política de conflito nos fluxos medidos | — | N/A documentado — regra de conflito está em RF-05/RF-06 |
 | RNF-06 | Estado proibido: transição de domínio | — | N/A documentado — requisito de desempenho |
-| RNF-07 | Caminho feliz: ferramentas, níveis de teste, CI, JaCoCo, SonarCloud e evidência TDD/BDD | — | BLOQUEADO — suíte/projeto/CI ausentes |
-| RNF-07 | Limite: exatamente 80% linhas e 70% branches satisfaz; abaixo não satisfaz | — | BLOQUEADO — sem build/relatório JaCoCo |
-| RNF-07 | Entrada inválida: falha de suíte/workflow ou cobertura ausente não comprova gate | — | BLOQUEADO — sem build/workflow |
+| RNF-07 | Caminho feliz: ferramentas, níveis de teste, CI, JaCoCo, SonarCloud e evidência TDD/BDD | — | PARCIAL — Maven/CI/JaCoCo configurados; suíte de domínio e SonarCloud ausentes |
+| RNF-07 | Limite: exatamente 80% linhas e 70% branches satisfaz; abaixo não satisfaz | — | PARCIAL — gate demonstrado com fixture temporária; execução final sem `jacoco.exec` foi pulada |
+| RNF-07 | Entrada inválida: falha de suíte/workflow ou cobertura ausente não comprova gate | — | PARCIAL — JaCoCo reporta/gateia quando há dados; sem dados não há relatório nem medição |
 | RNF-07 | Conflito: dupla reserva coberta pelo teste obrigatório RF-05/RF-06 | — | N/A documentado — comportamento exercitado nas regras referenciadas |
 | RNF-07 | Estado proibido: qualquer bug/vulnerabilidade crítica aberta reprova entrega final | — | BLOQUEADO — fonte de severidade pendente e sem SonarCloud |
 | Job diário (sem ID) | Caminho feliz: execução diária ao final do dia só usa dados novos | — | BLOQUEADO — critério “novo”, fuso e sem teste de comportamento |
@@ -394,10 +394,25 @@ As fontes consultadas foram [requisitos funcionais](../requisitos-funcionais.md)
 | Job diário (sem ID) | Conflito: sobreposição/reexecução/falha | — | BLOQUEADO — regra formal pendente e sem teste de comportamento |
 | Job diário (sem ID) | Estado proibido: treinar com registro não classificado como novo | — | BLOQUEADO — definição de novidade pendente e sem teste de comportamento |
 
-**Regras sem teste executável:** todas — `RF-01` a `RF-15`, `RNF-01` a `RNF-07` e a restrição do job diário sem ID. Não há teste novo que passe ou falhe; portanto, não foi possível confirmar falha pelo motivo esperado nem investigar testes preexistentes que já passem.
+**Regras de comportamento sem teste de produto:** todas — `RF-01` a `RF-15`, `RNF-01` a `RNF-06` e a restrição do job diário sem ID. A fixture temporária provou apenas o mecanismo do gate, não regras do domínio; nenhum teste permanente foi adicionado por falta de implementação executável.
 
 **Impedimento para sair do RED:** ainda faltam código/contratos do produto e testes de comportamento, além das decisões pendentes listadas acima. Requisitos de API, E2E, JMeter, cobertura e análise estática precisam dos respectivos alvos/ferramentas; não podem ser substituídos por testes unitários JUnit inventados. Com esses materiais, cada linha bloqueada deve receber ao menos um teste real, ser executada e ter seu status atualizado nesta matriz.
 
 ## Ordem sugerida para o ciclo TDD
 
 Começar pelos requisitos críticos da RTM: `RF-13` (intervalo), `RF-05`/`RF-06` (conflito e concorrência), `RF-07`/`RF-08` (restrição e manutenção), `RF-10` (auditoria), `RF-14`/`RF-15` (estados e preservação), e `RNF-02`/`RNF-03` (integridade e rastreabilidade). Antes de escrever asserts para qualquer caso marcado `Pendente`, obter decisão explícita e atualizar a fonte correspondente e este plano. Em seguida, percorrer os demais RF e os gates RNF, mantendo a rastreabilidade da RTM.
+
+## Evidência de cobertura JaCoCo
+
+Quando há dados de execução, o Maven gera relatórios HTML e XML em `target/site/jacoco/` durante `verify`. O gate de bundle exige no mínimo 80% de linhas e 70% de branches; o CI tenta publicar o diretório como artifact `jacoco-report` mesmo quando a verificação falha.
+
+Na execução inicial do ciclo, não foram encontrados arquivos `.java`, diretórios `src/` ou testes JUnit do produto. Assim, não há classes de regras de negócio nem linhas/branches executáveis para listar por classe ou classificar como risco/cosmética. Isso é uma lacuna de risco de validação para todos os requisitos comportamentais da matriz, não uma lacuna cosmética; não foram adicionados testes sem comportamento implementado nem asserts inventados. Casos exclusivamente visuais/documentais não podem ser classificados a partir de um relatório sem classes.
+
+| Evidência | Resultado | Classificação |
+|---|---|---|
+| Linhas/branches não cobertos por classe de negócio | Não mensurável: nenhuma classe de produção compilada | Bloqueio de risco; depende da implementação das regras |
+| Suíte JUnit e asserts de comportamento | Nenhum teste de produto encontrado | Bloqueio de risco; não escrever teste sem API/regra executável |
+| Linhas de apresentação/documentação | Nenhuma classe correspondente no código-fonte | Cosmética: não aplicável ao relatório atual |
+| Gate JaCoCo | Fixture temporária: falhou com 50% de branches; passou após afirmar os dois branches. No estado final, foi pulado por falta de `jacoco.exec` | Gate obrigatório; prova técnica, não cobre regra de negócio |
+
+O gate de cobertura só é comprovado quando o relatório contém classes de produção e a execução demonstra reprovação abaixo de qualquer limite e aprovação após restaurar a cobertura. Enquanto o projeto não tiver essas classes, não interpretar `BUILD SUCCESS` sem dados como prova dos percentuais nem como conclusão da matriz.
