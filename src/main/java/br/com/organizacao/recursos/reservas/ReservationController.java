@@ -3,6 +3,8 @@ package br.com.organizacao.recursos.reservas;
 import java.time.Clock;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,20 +53,23 @@ public class ReservationController {
     }
 
     @PostMapping("/api/reservations")
-    public ReservationAttemptResponse create(
+    public ResponseEntity<ReservationAttemptResponse> create(
             @RequestBody CreateReservationRequest request,
             Authentication authentication) {
         boolean accepted = reservationSchedulingService.schedule(request, authentication.getName());
-        return new ReservationAttemptResponse(accepted);
+        HttpStatus status = accepted ? HttpStatus.CREATED : HttpStatus.CONFLICT;
+        return ResponseEntity.status(status).body(new ReservationAttemptResponse(accepted));
     }
 
     @GetMapping("/api/resources/{resourceId}/availability")
     public ResourceAvailabilityResponse availability(
             @PathVariable String resourceId,
+            @RequestParam(required = false) String professorId,
             @RequestParam java.time.Instant startsAt,
             @RequestParam java.time.Instant endsAt) {
         ReservationPeriod period = new ReservationPeriod(startsAt, endsAt);
-        return new ResourceAvailabilityResponse(reservationSchedulingService.isAvailable(resourceId, period));
+        return new ResourceAvailabilityResponse(
+                reservationSchedulingService.isAvailable(resourceId, professorId, period));
     }
 
     @PostMapping("/api/reservations/{id}/start")

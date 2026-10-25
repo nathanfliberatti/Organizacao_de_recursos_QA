@@ -223,7 +223,7 @@ public class ApprovalBlockingSteps {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestedPeriod)))
-                    .andExpect(status().is2xxSuccessful())
+                          .andExpect(status().isConflict())
                 .andReturn();
         accepted = objectMapper.readTree(result.getResponse().getContentAsString())
                 .path("accepted").asBoolean();
@@ -239,6 +239,7 @@ public class ApprovalBlockingSteps {
         MvcResult result = mockMvc.perform(get("/api/resources/{resourceId}/availability", "room-1")
                         .queryParam("startsAt", requestedPeriod.startsAt().toString())
                         .queryParam("endsAt", requestedPeriod.endsAt().toString())
+                        .queryParam("professorId", "requester-1")
                         .with(profileToken("requester-1", "SOLICITANTE")))
                     .andExpect(status().is2xxSuccessful())
                 .andReturn();
