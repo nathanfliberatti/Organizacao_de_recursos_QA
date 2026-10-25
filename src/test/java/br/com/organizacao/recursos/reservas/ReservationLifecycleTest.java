@@ -55,4 +55,17 @@ class ReservationLifecycleTest {
                 () -> assertEquals(originalDecision, reservation.approvalDecision()),
                 () -> assertEquals(originalTransitions, reservation.transitions()));
     }
+
+        @Test
+        void reservationCannotStartUseBeforeApproval() {
+                Reservation reservation = Reservation.requestForRestrictedResource("requester-1");
+                User responsible = new User("responsible-1", UserRole.RESPONSAVEL);
+                Clock clock = Clock.fixed(Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC);
+
+                reservation.startUse(responsible, clock);
+
+                assertAll(
+                                () -> assertEquals(ReservationStatus.SOLICITADA, reservation.status()),
+                                () -> assertEquals(List.of(), reservation.transitions()));
+        }
 }

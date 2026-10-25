@@ -5,7 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.Timestamp;
@@ -18,6 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.IntFunction;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.RepeatedTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -81,6 +85,31 @@ class ReservationConcurrencyIT {
                         "professor-shared"),
                 "professor_id",
                 "professor-shared");
+    }
+
+        @Test
+    void roomAvailabilityQueriesPostgresWithoutProfessorFilter() throws Exception {
+        jdbcTemplate.update("TRUNCATE TABLE reservations RESTART IDENTITY");
+        jdbcTemplate.update(
+                "INSERT INTO reservations (room_id, professor_id, starts_at, ends_at) VALUES (?, ?, ?, ?)",
+                "room-from-db",
+                "professor-from-db",
+                Timestamp.from(STARTS_AT),
+                Timestamp.from(ENDS_AT));
+
+        mockMvc.perform(get("/api/resources/{resourceId}/availability", "room-from-db")
+                        .queryParam("startsAt", "2026-10-25T09:00:00Z")
+                        .queryParam("endsAt", "2026-10-25T09:30:00Z")
+                        .with(jwt().jwt(token -> token.subject("requester-1"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.available").value(true));
+
+        mockMvc.perform(get("/api/resources/{resourceId}/availability", "room-from-db")
+                        .queryParam("startsAt", STARTS_AT.toString())
+                        .queryParam("endsAt", ENDS_AT.toString())
+                        .with(jwt().jwt(token -> token.subject("requester-1"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.available").value(false));
     }
 
     private void verifyExactlyOneAcceptedAndOneDatabaseRow(
