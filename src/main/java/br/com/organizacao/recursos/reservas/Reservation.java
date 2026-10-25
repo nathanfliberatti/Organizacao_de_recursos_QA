@@ -1,6 +1,7 @@
 package br.com.organizacao.recursos.reservas;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,11 +29,12 @@ public final class Reservation {
     }
 
     public void approve(User approver, Clock clock) {
-        if (!isEligibleResponsible(approver)) {
+        if (!isEligibleResponsible(approver) || !isAllowedTransitionTo(ReservationStatus.APROVADA)) {
             return;
         }
-        approvalDecision = new ApprovalDecision(approver, clock.instant());
-        transitionTo(ReservationStatus.APROVADA, approver, clock);
+        Instant decidedAt = clock.instant();
+        approvalDecision = new ApprovalDecision(approver, decidedAt);
+        transitionTo(ReservationStatus.APROVADA, approver, decidedAt);
     }
 
     public ApprovalDecision approvalDecision() {
@@ -40,23 +42,23 @@ public final class Reservation {
     }
 
     public void startUse(User actor, Clock clock) {
-        transitionTo(ReservationStatus.EM_USO, actor, clock);
+        transitionTo(ReservationStatus.EM_USO, actor, clock.instant());
     }
 
     public void complete(User actor, Clock clock) {
-        transitionTo(ReservationStatus.CONCLUIDA, actor, clock);
+        transitionTo(ReservationStatus.CONCLUIDA, actor, clock.instant());
     }
 
     public List<ReservationTransition> transitions() {
         return List.copyOf(transitions);
     }
 
-    private void transitionTo(ReservationStatus nextStatus, User actor, Clock clock) {
+    private void transitionTo(ReservationStatus nextStatus, User actor, Instant changedAt) {
         if (!isAllowedTransitionTo(nextStatus)) {
             return;
         }
 
-        transitions.add(new ReservationTransition(currentStatus, nextStatus, actor.id(), clock.instant()));
+        transitions.add(new ReservationTransition(currentStatus, nextStatus, actor.id(), changedAt));
         currentStatus = nextStatus;
     }
 
