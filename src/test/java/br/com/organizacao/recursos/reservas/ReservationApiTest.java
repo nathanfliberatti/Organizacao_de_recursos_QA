@@ -18,7 +18,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ReservationController.class)
-@Import({ReservationCatalog.class, MaintenanceCatalog.class, ReservationSchedulingService.class,
+@Import({ReservationCatalog.class, MaintenanceCatalog.class, InMemoryReservationStore.class,
+        ReservationSchedulingService.class,
     ApplicationClockConfiguration.class})
 class ReservationApiTest {
     @Autowired
@@ -66,7 +67,7 @@ class ReservationApiTest {
                         .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is2xxSuccessful())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.accepted").value(false));
 
         assertEquals(reservationsBefore, reservationCatalog.count());
