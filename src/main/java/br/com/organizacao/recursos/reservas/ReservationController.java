@@ -27,10 +27,14 @@ public class ReservationController {
     @PostMapping("/api/reservations/{id}/approval")
     public ReservationResponse approve(@PathVariable String id, Authentication authentication) {
         Reservation reservation = reservationCatalog.findById(id);
+        reservation.approve(authenticatedUser(authentication), clock);
+        return new ReservationResponse(reservation.status().name(), reservation.approvalDecision());
+    }
+
+    private User authenticatedUser(Authentication authentication) {
         boolean responsible = authentication.getAuthorities()
                 .contains(new SimpleGrantedAuthority("ROLE_RESPONSAVEL"));
         UserRole role = responsible ? UserRole.RESPONSAVEL : UserRole.SOLICITANTE;
-        reservation.approve(new User(authentication.getName(), role), clock);
-        return new ReservationResponse(reservation.status().name(), reservation.approvalDecision());
+        return new User(authentication.getName(), role);
     }
 }
