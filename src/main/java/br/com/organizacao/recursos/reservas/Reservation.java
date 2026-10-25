@@ -52,17 +52,20 @@ public final class Reservation {
     }
 
     private void transitionTo(ReservationStatus nextStatus, User actor, Clock clock) {
-        boolean allowed = switch (currentStatus) {
-            case SOLICITADA -> nextStatus == ReservationStatus.APROVADA;
-            case APROVADA -> nextStatus == ReservationStatus.EM_USO;
-            case EM_USO -> nextStatus == ReservationStatus.CONCLUIDA;
-            case CONCLUIDA -> false;
-        };
-        if (!allowed) {
+        if (!isAllowedTransitionTo(nextStatus)) {
             return;
         }
 
         transitions.add(new ReservationTransition(currentStatus, nextStatus, actor.id(), clock.instant()));
         currentStatus = nextStatus;
+    }
+
+    private boolean isAllowedTransitionTo(ReservationStatus nextStatus) {
+        return switch (currentStatus) {
+            case SOLICITADA -> nextStatus == ReservationStatus.APROVADA;
+            case APROVADA -> nextStatus == ReservationStatus.EM_USO;
+            case EM_USO -> nextStatus == ReservationStatus.CONCLUIDA;
+            case CONCLUIDA -> false;
+        };
     }
 }
