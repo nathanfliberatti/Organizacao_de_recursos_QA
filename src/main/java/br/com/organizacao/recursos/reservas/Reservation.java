@@ -33,8 +33,9 @@ public final class Reservation {
             return;
         }
         Instant decidedAt = clock.instant();
-        approvalDecision = new ApprovalDecision(approver, decidedAt);
-        transitionTo(ReservationStatus.APROVADA, approver, decidedAt);
+        if (transitionTo(ReservationStatus.APROVADA, approver, decidedAt)) {
+            approvalDecision = new ApprovalDecision(approver, decidedAt);
+        }
     }
 
     public ApprovalDecision approvalDecision() {
@@ -53,13 +54,14 @@ public final class Reservation {
         return List.copyOf(transitions);
     }
 
-    private void transitionTo(ReservationStatus nextStatus, User actor, Instant changedAt) {
+    private boolean transitionTo(ReservationStatus nextStatus, User actor, Instant changedAt) {
         if (!isAllowedTransitionTo(nextStatus)) {
-            return;
+            return false;
         }
 
         transitions.add(new ReservationTransition(currentStatus, nextStatus, actor.id(), changedAt));
         currentStatus = nextStatus;
+        return true;
     }
 
     private boolean isAllowedTransitionTo(ReservationStatus nextStatus) {
