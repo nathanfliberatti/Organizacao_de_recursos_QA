@@ -32,7 +32,7 @@ public final class Reservation {
             return;
         }
         approvalDecision = new ApprovalDecision(approver, clock.instant());
-        currentStatus = ReservationStatus.APROVADA;
+        transitionTo(ReservationStatus.APROVADA, approver, clock);
     }
 
     public ApprovalDecision approvalDecision() {
@@ -40,12 +40,29 @@ public final class Reservation {
     }
 
     public void startUse(User actor, Clock clock) {
+        transitionTo(ReservationStatus.EM_USO, actor, clock);
     }
 
     public void complete(User actor, Clock clock) {
+        transitionTo(ReservationStatus.CONCLUIDA, actor, clock);
     }
 
     public List<ReservationTransition> transitions() {
-        return List.of();
+        return List.copyOf(transitions);
+    }
+
+    private void transitionTo(ReservationStatus nextStatus, User actor, Clock clock) {
+        boolean allowed = switch (currentStatus) {
+            case SOLICITADA -> nextStatus == ReservationStatus.APROVADA;
+            case APROVADA -> nextStatus == ReservationStatus.EM_USO;
+            case EM_USO -> nextStatus == ReservationStatus.CONCLUIDA;
+            case CONCLUIDA -> false;
+        };
+        if (!allowed) {
+            return;
+        }
+
+        transitions.add(new ReservationTransition(currentStatus, nextStatus, actor.id(), clock.instant()));
+        currentStatus = nextStatus;
     }
 }
