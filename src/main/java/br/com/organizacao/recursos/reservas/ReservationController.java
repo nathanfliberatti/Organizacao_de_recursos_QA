@@ -38,7 +38,16 @@ public class ReservationController {
     }
 
     @PostMapping("/api/reservations")
-    public ReservationAttemptResponse create(@RequestBody CreateReservationRequest request) {
+    public ReservationAttemptResponse create(
+            @RequestBody CreateReservationRequest request,
+            Authentication authentication) {
+        MaintenancePeriod maintenance = maintenanceCatalog.findByResourceId(request.resourceId());
+        ReservationPeriod period = new ReservationPeriod(request.startsAt(), request.endsAt());
+        if (maintenance != null && !new MaintenanceRule(clock).isReservable(period, maintenance)) {
+            return new ReservationAttemptResponse(false);
+        }
+
+        reservationCatalog.schedule(request.resourceId(), authentication.getName(), period);
         return new ReservationAttemptResponse(true);
     }
 
