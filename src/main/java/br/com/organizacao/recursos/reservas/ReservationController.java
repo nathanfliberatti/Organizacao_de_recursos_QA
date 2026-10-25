@@ -48,12 +48,16 @@ public class ReservationController {
 
     @PostMapping("/api/reservations/{id}/start")
     public ReservationResponse start(@PathVariable String id, Authentication authentication) {
-        return response(reservationCatalog.findById(id));
+        Reservation reservation = reservationCatalog.findById(id);
+        reservation.startUse(authenticatedUser(authentication), clock);
+        return response(reservation);
     }
 
     @PostMapping("/api/reservations/{id}/complete")
     public ReservationResponse complete(@PathVariable String id, Authentication authentication) {
-        return response(reservationCatalog.findById(id));
+        Reservation reservation = reservationCatalog.findById(id);
+        reservation.complete(authenticatedUser(authentication), clock);
+        return response(reservation);
     }
 
     private User authenticatedUser(Authentication authentication) {
