@@ -3,7 +3,7 @@ package br.com.organizacao.recursos.reservas;
 import java.time.Clock;
 
 public final class Reservation {
-    private final ReservationStatus currentStatus;
+    private ReservationStatus currentStatus;
     private ApprovalDecision approvalDecision;
 
     private Reservation(ReservationStatus currentStatus) {
@@ -19,6 +19,8 @@ public final class Reservation {
     }
 
     public void approve(User approver, Clock clock) {
+        approvalDecision = new ApprovalDecision(approver, clock.instant());
+        currentStatus = ReservationStatus.APROVADA;
     }
 
     public ApprovalDecision approvalDecision() {
