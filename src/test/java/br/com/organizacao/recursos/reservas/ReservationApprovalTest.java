@@ -35,7 +35,7 @@ class ReservationApprovalTest {
                 @Test
                 void requesterCannotApproveOwnReservationEvenWithResponsibleRole() {
                 User requesterAndApprover = new User("same-user", UserRole.RESPONSAVEL);
-                Reservation reservation = Reservation.requestForRestrictedResource(requesterAndApprover.id());
+                Reservation reservation = restrictedReservation(requesterAndApprover.id());
 
                 reservation.approve(requesterAndApprover, Clock.fixed(
                     Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC));
@@ -46,6 +46,10 @@ class ReservationApprovalTest {
                 }
 
     private Reservation restrictedReservation() {
-        return Reservation.requestForRestrictedResource();
+        return restrictedReservation("requester-1");
+    }
+
+    private Reservation restrictedReservation(String requesterId) {
+        return Reservation.requestForRestrictedResource(requesterId);
     }
 }
