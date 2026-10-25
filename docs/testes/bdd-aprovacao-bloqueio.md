@@ -86,6 +86,13 @@ Exemplo no mesmo dia: manutenção de `10:00:00` a `11:00:00`. A tabela usa prec
 - **Então** a transição deve ser recusada
 - **E** o estado deve permanecer `SOLICITADA`
 
+**RF-14 — Reserva concluída não aceita nova aprovação**
+
+- **Dado** que uma reserva percorreu o fluxo principal até `CONCLUÍDA` e possui decisão de aprovação registrada
+- **Quando** um Responsável tenta aprová-la novamente
+- **Então** a reserva deve permanecer `CONCLUÍDA`
+- **E** a decisão anteriormente registrada deve permanecer inalterada
+
 **RF-14 — Estados alternativos**
 
 - **Dado** que uma reserva pode terminar em `REJEITADA`, `CANCELADA` ou `NÃO_COMPARECEU`

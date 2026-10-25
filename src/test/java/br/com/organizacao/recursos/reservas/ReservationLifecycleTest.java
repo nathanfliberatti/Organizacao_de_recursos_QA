@@ -33,4 +33,26 @@ class ReservationLifecycleTest {
                                 ReservationStatus.CONCLUIDA, responsible.id(), changedAt)),
                         reservation.transitions()));
     }
+
+    @Test
+    void completedReservationPreservesApprovalDecisionWhenApprovalIsRepeated() {
+        Reservation reservation = Reservation.requestForRestrictedResource("requester-1");
+        User responsible = new User("responsible-1", UserRole.RESPONSAVEL);
+        Clock originalClock = Clock.fixed(
+                Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC);
+
+        reservation.approve(responsible, originalClock);
+        reservation.startUse(responsible, originalClock);
+        reservation.complete(responsible, originalClock);
+        ApprovalDecision originalDecision = reservation.approvalDecision();
+        List<ReservationTransition> originalTransitions = reservation.transitions();
+
+        reservation.approve(responsible, Clock.fixed(
+                Instant.parse("2026-10-25T13:00:00Z"), ZoneOffset.UTC));
+
+        assertAll(
+                () -> assertEquals(ReservationStatus.CONCLUIDA, reservation.status()),
+                () -> assertEquals(originalDecision, reservation.approvalDecision()),
+                () -> assertEquals(originalTransitions, reservation.transitions()));
+    }
 }
