@@ -15,6 +15,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Profile("postgres")
 public class PostgresReservationStore implements ReservationStore {
+    private static final String ROOM_AVAILABILITY_SQL = """
+            SELECT NOT EXISTS (
+                SELECT 1 FROM reservations
+                WHERE room_id = ? AND tstzrange(starts_at, ends_at) && tstzrange(?, ?)
+            )
+            """;
+    private static final String ROOM_AND_PROFESSOR_AVAILABILITY_SQL = """
+            SELECT NOT EXISTS (
+                SELECT 1 FROM reservations
+                WHERE (room_id = ? OR professor_id = ?)
+                    AND tstzrange(starts_at, ends_at) && tstzrange(?, ?)
+            )
+            """;
+
     private final JdbcTemplate jdbcTemplate;
 
     public PostgresReservationStore(JdbcTemplate jdbcTemplate) {
@@ -49,20 +63,15 @@ public class PostgresReservationStore implements ReservationStore {
 
     @Override
     public boolean isAvailable(String roomId, String professorId, ReservationPeriod period) {
-        String resourcePredicate = professorId == null
-            ? "room_id = ?"
-            : "(room_id = ? OR professor_id = ?)";
-        String sql = "SELECT NOT EXISTS (SELECT 1 FROM reservations WHERE " + resourcePredicate
-            + " AND tstzrange(starts_at, ends_at) && tstzrange(?, ?))";
         Boolean available = professorId == null
             ? jdbcTemplate.queryForObject(
-                sql,
+                ROOM_AVAILABILITY_SQL,
                 Boolean.class,
                 roomId,
                 Timestamp.from(period.startsAt()),
                 Timestamp.from(period.endsAt()))
             : jdbcTemplate.queryForObject(
-                sql,
+                ROOM_AND_PROFESSOR_AVAILABILITY_SQL,
                 Boolean.class,
                 roomId,
                 professorId,
