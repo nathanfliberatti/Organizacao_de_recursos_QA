@@ -45,6 +45,19 @@ class ReservationApprovalTest {
                 () -> assertNull(reservation.approvalDecision()));
     }
 
+    @Test
+    void requesterCannotApproveAnotherUsersRestrictedReservation() {
+        Reservation reservation = restrictedReservation("requester-1");
+        User requester = new User("requester-2", UserRole.SOLICITANTE);
+        Clock clock = Clock.fixed(Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC);
+
+        reservation.approve(requester, clock);
+
+        assertAll(
+                () -> assertEquals(ReservationStatus.SOLICITADA, reservation.status()),
+                () -> assertNull(reservation.approvalDecision()));
+    }
+
     private Reservation restrictedReservation() {
         return restrictedReservation("requester-1");
     }
