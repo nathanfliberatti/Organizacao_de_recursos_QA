@@ -28,7 +28,7 @@ public final class Reservation {
     }
 
     public void approve(User approver, Clock clock) {
-        if (approver.role() != UserRole.RESPONSAVEL || requesterId.equals(approver.id())) {
+        if (!isEligibleResponsible(approver)) {
             return;
         }
         approvalDecision = new ApprovalDecision(approver, clock.instant());
@@ -67,5 +67,9 @@ public final class Reservation {
             case EM_USO -> nextStatus == ReservationStatus.CONCLUIDA;
             case CONCLUIDA -> false;
         };
+    }
+
+    private boolean isEligibleResponsible(User approver) {
+        return approver.role() == UserRole.RESPONSAVEL && !requesterId.equals(approver.id());
     }
 }
