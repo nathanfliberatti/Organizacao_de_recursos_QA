@@ -32,6 +32,15 @@ Os cenários abaixo descrevem comportamento esperado, não evidência de impleme
 - **Então** a operação deve ser negada
 - **E** o estado e a decisão da reserva devem permanecer inalterados
 
+**API — Impedir autoaprovação**
+
+- **Dado** que a reserva restrita foi criada pela identidade autenticada
+- **E** que essa identidade possui perfil Responsável
+- **Quando** ela tenta aprovar a própria reserva pela API
+- **Então** a resposta não deve indicar aprovação
+- **E** o estado deve permanecer `SOLICITADA`
+- **E** a decisão deve permanecer ausente
+
 **RF-07 — Aprovação por outro Responsável**
 
 - **Dado** que uma reserva aguarda aprovação e o usuário autenticado é um Responsável diferente do Solicitante
