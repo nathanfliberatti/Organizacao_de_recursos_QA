@@ -15,7 +15,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ReservationController.class)
-@Import(ReservationCatalog.class)
+@Import({ReservationCatalog.class, ApplicationClockConfiguration.class})
 class ReservationApiTest {
     @Autowired
     private MockMvc mockMvc;
