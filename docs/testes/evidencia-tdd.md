@@ -2,9 +2,9 @@
 
 ## Estado do ciclo
 
-**Em andamento.** Foram concluídos sete ciclos RED/GREEN/refactor no domínio, todos com `./mvnw -B test`. Os commits de teste e implementação são pequenos e separados. Os testes atuais são unitários JUnit 5; a cobertura de API ainda não foi criada. O código atual ainda não é uma aplicação Spring Boot.
+**Em andamento.** Foram concluídos sete ciclos RED/GREEN/refactor de domínio e quatro ciclos de API, todos com `./mvnw -B test`. No último ciclo, 11 testes passaram (7 unitários e 4 MockMvc). A aplicação usa Spring Boot 3.4.5; os catálogos atuais são em memória e não representam persistência definitiva.
 
-Cada RED abaixo compilou antes de falhar por assertion. Os arquivos `target/` são saída local do Maven e não fazem parte dos commits.
+Cada RED executado nesta tabela compilou antes de falhar por assertion. Os arquivos `target/` são saída local do Maven e não fazem parte dos commits.
 
 ## Rastreabilidade por cenário
 
@@ -17,11 +17,11 @@ Cada RED abaixo compilou antes de falhar por assertion. Os arquivos `target/` s�
 | Reserva com sobreposição com período de manutenção é recusada | `d11309e` | `765eee8` | `485c112` | RED: `expected: <true> but was: <false>` para manutenção ativa e `expected: <false> but was: <true>` para reserva; GREEN/refactor: `4 tests, Failures: 0`. |
 | Fluxo principal `SOLICITADA → APROVADA → EM_USO → CONCLUÍDA` é aceito e auditado | `7b6c906` | `febd500` | `9707d3d` | RED: esperado `CONCLUIDA`, observado `APROVADA`, com transições vazias; GREEN/refactor: `5 tests, Failures: 0`. |
 | Aprovação repetida após `CONCLUÍDA` preserva decisão e histórico | `bea1e5b` | `390ecf2` | `1657f49` | RED: decisão mudou de `12:00` para `13:00`; GREEN/refactor: `7 tests, Failures: 0`. |
-| Salto `SOLICITADA → EM_USO` é recusado e preserva o estado | Não executado em RED: a política de transição foi criada no ciclo do fluxo principal; não fabricar regressão para simular falha | Pendente de teste dedicado | Pendente | A implementação atual rejeita o salto, mas falta comprovação com teste de assertion próprio. |
-| API: solicitação restrita antes da decisão e aprovação por Responsável | Pendente | Pendente | Pendente | Não executado; camada HTTP ainda não existe. |
-| API: impedir autoaprovação e preservar estado | Pendente | Pendente | Pendente | Não executado; camada HTTP ainda não existe. |
-| API: recurso indisponível durante manutenção | Pendente | Pendente | Pendente | Não executado; camada HTTP ainda não existe. |
-| API: fluxo principal e auditoria | Pendente | Pendente | Pendente | Não executado; camada HTTP ainda não existe. |
+| API: solicitação restrita permanece pendente; decisão de Responsável é aceita | `f4a88d5` | `c065ebe` | `7a3cb69` | RED: JSON esperado `SOLICITADA`, recebido `APROVADA`; GREEN/refactor: `1 API test, Failures: 0`. O fluxo aprovado por Responsável distinto também aparece no cenário do ciclo principal. |
+| API: impedir autoaprovação e preservar estado | `e6ac19c` | `8dc3b60` | `dc9ed75` | RED: JSON esperado `SOLICITADA`, recebido `APROVADA`; GREEN/refactor: `2 API tests, Failures: 0`. Tentativas anteriores com CSRF ausente/rota ausente não foram tratadas como RED. |
+| API: recurso indisponível durante manutenção | `2042544` | `9ae46c1` | `77f29ad` | RED: `$.accepted expected false but was true`; GREEN/refactor: `3 API tests, Failures: 0`, catálogo inalterado. |
+| API: fluxo principal e auditoria | `3e7d061` | `4f4a449` | `142688b` | RED: `$.status expected EM_USO but was APROVADA`; GREEN/refactor: `4 API tests, Failures: 0`, três transições retornadas. |
+| Salto `SOLICITADA → EM_USO` é recusado e preserva o estado | Não executado em RED: a política de transição já estava implementada no ciclo do fluxo principal | Pendente de teste dedicado | Pendente | O código rejeita o salto, mas não foi demonstrado por assertion independente; não foi fabricado um RED removendo comportamento já validado. |
 | Reserva termina exatamente no início da manutenção | Pendente: política não definida no BDD/requisitos | Pendente | Pendente | Não executado: aguarda decisão de produto. |
 | Reserva começa exatamente no fim da manutenção | Pendente: política não definida no BDD/requisitos | Pendente | Pendente | Não executado: aguarda decisão de produto. |
 | Transições alternativas para `REJEITADA`, `CANCELADA` e `NÃO_COMPARECEU` | Pendente: origens e atores não definidos | Pendente | Pendente | Não executado: aguarda matriz de transições aprovada. |
@@ -37,8 +37,8 @@ Saída concisa do baseline anterior à criação das fontes (não representa tes
 
 ## Pendências
 
-- Criar teste RED próprio para o salto `SOLICITADA → EM_USO` sem desfazer temporariamente o comportamento já implementado.
-- Criar a aplicação e os testes de API Spring Boot 3 em ciclos individuais.
+- Cobrir o salto `SOLICITADA → EM_USO` com um RED próprio; a regra já foi implementada antes do teste dedicado.
+- Definir persistência fora dos catálogos em memória antes de tratar a API como aplicação pronta para produção.
 - Não testar os limites exatos de manutenção até definição da política.
 - Não testar as alternativas `REJEITADA`, `CANCELADA` e `NÃO_COMPARECEU` até aprovação da matriz de transições.
 - Manter `Clock` injetado; não usar `Instant.now()` oculto nem `Thread.sleep`.
