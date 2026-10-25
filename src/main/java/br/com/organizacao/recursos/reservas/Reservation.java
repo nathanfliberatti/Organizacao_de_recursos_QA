@@ -8,7 +8,7 @@ public final class Reservation {
     }
 
     public static Reservation requestForRestrictedResource() {
-        return new Reservation(ReservationStatus.APROVADA);
+        return new Reservation(ReservationStatus.SOLICITADA);
     }
 
     public ReservationStatus status() {
