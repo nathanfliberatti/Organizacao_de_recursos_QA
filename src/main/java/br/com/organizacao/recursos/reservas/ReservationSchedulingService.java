@@ -24,7 +24,8 @@ public class ReservationSchedulingService {
     public boolean schedule(CreateReservationRequest request, String requesterId) {
         ReservationPeriod period = new ReservationPeriod(request.startsAt(), request.endsAt());
         String professorId = request.professorId() == null ? requesterId : request.professorId();
-        if (!isAvailable(request.resourceId(), professorId, period)) {
+        MaintenancePeriod maintenance = maintenanceCatalog.findByResourceId(request.resourceId());
+        if (maintenance != null && !new MaintenanceRule(clock).isReservable(period, maintenance)) {
             return false;
         }
 

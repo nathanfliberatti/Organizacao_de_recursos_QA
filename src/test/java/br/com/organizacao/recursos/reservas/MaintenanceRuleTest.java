@@ -40,4 +40,40 @@ class MaintenanceRuleTest {
 
                 assertTrue(rule.isReservable(reservation, maintenance));
         }
+
+        @Test
+        void reservationFullyBeforeMaintenanceRemainsReservable() {
+                Clock clock = Clock.fixed(Instant.parse("2026-10-25T09:00:00Z"), ZoneOffset.UTC);
+                MaintenanceRule rule = new MaintenanceRule(clock);
+                MaintenancePeriod maintenance = new MaintenancePeriod(
+                                Instant.parse("2026-10-25T10:00:00Z"),
+                                Instant.parse("2026-10-25T11:00:00Z"));
+                ReservationPeriod reservation = new ReservationPeriod(
+                                Instant.parse("2026-10-25T09:00:00Z"),
+                                Instant.parse("2026-10-25T09:30:00Z"));
+
+                assertTrue(rule.isReservable(reservation, maintenance));
+        }
+
+        @Test
+        void maintenanceIsNotActiveBeforeItsStart() {
+                Clock clock = Clock.fixed(Instant.parse("2026-10-25T09:00:00Z"), ZoneOffset.UTC);
+                MaintenanceRule rule = new MaintenanceRule(clock);
+                MaintenancePeriod maintenance = new MaintenancePeriod(
+                                Instant.parse("2026-10-25T10:00:00Z"),
+                                Instant.parse("2026-10-25T11:00:00Z"));
+
+                assertFalse(rule.isActiveNow(maintenance));
+        }
+
+        @Test
+        void maintenanceIsNotActiveAfterItsEnd() {
+                Clock clock = Clock.fixed(Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC);
+                MaintenanceRule rule = new MaintenanceRule(clock);
+                MaintenancePeriod maintenance = new MaintenancePeriod(
+                                Instant.parse("2026-10-25T10:00:00Z"),
+                                Instant.parse("2026-10-25T11:00:00Z"));
+
+                assertFalse(rule.isActiveNow(maintenance));
+        }
 }
