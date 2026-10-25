@@ -48,16 +48,12 @@ public class ReservationController {
 
     @PostMapping("/api/reservations/{id}/start")
     public ReservationResponse start(@PathVariable String id, Authentication authentication) {
-        Reservation reservation = reservationCatalog.findById(id);
-        reservation.startUse(authenticatedUser(authentication), clock);
-        return response(reservation);
+        return applyTransition(id, authentication, Reservation::startUse);
     }
 
     @PostMapping("/api/reservations/{id}/complete")
     public ReservationResponse complete(@PathVariable String id, Authentication authentication) {
-        Reservation reservation = reservationCatalog.findById(id);
-        reservation.complete(authenticatedUser(authentication), clock);
-        return response(reservation);
+        return applyTransition(id, authentication, Reservation::complete);
     }
 
     private User authenticatedUser(Authentication authentication) {
@@ -70,5 +66,19 @@ public class ReservationController {
     private ReservationResponse response(Reservation reservation) {
         return new ReservationResponse(reservation.status().name(), reservation.approvalDecision(),
                 reservation.transitions());
+    }
+
+    private ReservationResponse applyTransition(
+            String id,
+            Authentication authentication,
+            ReservationAction action) {
+        Reservation reservation = reservationCatalog.findById(id);
+        action.apply(reservation, authenticatedUser(authentication), clock);
+        return response(reservation);
+    }
+
+    @FunctionalInterface
+    private interface ReservationAction {
+        void apply(Reservation reservation, User actor, Clock clock);
     }
 }
