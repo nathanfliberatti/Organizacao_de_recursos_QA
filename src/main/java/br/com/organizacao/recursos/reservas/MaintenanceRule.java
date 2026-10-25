@@ -1,6 +1,7 @@
 package br.com.organizacao.recursos.reservas;
 
 import java.time.Clock;
+
 public final class MaintenanceRule {
     private final Clock clock;
 

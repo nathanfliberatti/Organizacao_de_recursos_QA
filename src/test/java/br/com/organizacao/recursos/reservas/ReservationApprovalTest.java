@@ -32,18 +32,18 @@ class ReservationApprovalTest {
                         reservation.approvalDecision()));
     }
 
-                @Test
-                void requesterCannotApproveOwnReservationEvenWithResponsibleRole() {
-                User requesterAndApprover = new User("same-user", UserRole.RESPONSAVEL);
-                Reservation reservation = restrictedReservation(requesterAndApprover.id());
+    @Test
+    void requesterCannotApproveOwnReservationEvenWithResponsibleRole() {
+        User requesterAndApprover = new User("same-user", UserRole.RESPONSAVEL);
+        Reservation reservation = restrictedReservation(requesterAndApprover.id());
 
-                reservation.approve(requesterAndApprover, Clock.fixed(
-                    Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC));
+        reservation.approve(requesterAndApprover, Clock.fixed(
+                Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC));
 
-                assertAll(
-                    () -> assertEquals(ReservationStatus.SOLICITADA, reservation.status()),
-                    () -> assertNull(reservation.approvalDecision()));
-                }
+        assertAll(
+                () -> assertEquals(ReservationStatus.SOLICITADA, reservation.status()),
+                () -> assertNull(reservation.approvalDecision()));
+    }
 
     private Reservation restrictedReservation() {
         return restrictedReservation("requester-1");
