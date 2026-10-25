@@ -16,4 +16,8 @@ public class ReservationCatalog {
     public Reservation findById(String id) {
         return reservations.get(id);
     }
+
+    public int count() {
+        return reservations.size();
+    }
 }

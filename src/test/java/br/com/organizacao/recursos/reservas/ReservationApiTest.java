@@ -7,6 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.nullValue;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,13 +18,17 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ReservationController.class)
-@Import({ReservationCatalog.class, ApplicationClockConfiguration.class})
+@Import({ReservationCatalog.class, MaintenanceCatalog.class, ApplicationClockConfiguration.class})
 class ReservationApiTest {
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ReservationCatalog reservationCatalog;
+    @Autowired
+    private MaintenanceCatalog maintenanceCatalog;
+        @Autowired
+        private ObjectMapper objectMapper;
 
     @Test
     @WithMockUser(username = "requester-1", roles = "SOLICITANTE")
@@ -40,5 +47,27 @@ class ReservationApiTest {
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.status").value("SOLICITADA"))
                 .andExpect(jsonPath("$.approvalDecision").value(nullValue()));
+    }
+
+    @Test
+    @WithMockUser(username = "requester-1", roles = "SOLICITANTE")
+    void apiRejectsReservationCrossingMaintenanceAndDoesNotStoreIt() throws Exception {
+        maintenanceCatalog.block("room-1", new MaintenancePeriod(
+                Instant.parse("2026-10-25T10:00:00Z"),
+                Instant.parse("2026-10-25T11:00:00Z")));
+        int reservationsBefore = reservationCatalog.count();
+        CreateReservationRequest request = new CreateReservationRequest(
+                "room-1",
+                Instant.parse("2026-10-25T09:59:59Z"),
+                Instant.parse("2026-10-25T10:00:01Z"));
+
+        mockMvc.perform(post("/api/reservations")
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.accepted").value(false));
+
+        assertEquals(reservationsBefore, reservationCatalog.count());
     }
 }

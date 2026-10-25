@@ -6,15 +6,21 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class ReservationController {
     private final ReservationCatalog reservationCatalog;
+    private final MaintenanceCatalog maintenanceCatalog;
     private final Clock clock;
 
-    public ReservationController(ReservationCatalog reservationCatalog, Clock clock) {
+    public ReservationController(
+            ReservationCatalog reservationCatalog,
+            MaintenanceCatalog maintenanceCatalog,
+            Clock clock) {
         this.reservationCatalog = reservationCatalog;
+        this.maintenanceCatalog = maintenanceCatalog;
         this.clock = clock;
     }
 
@@ -29,6 +35,11 @@ public class ReservationController {
         Reservation reservation = reservationCatalog.findById(id);
         reservation.approve(authenticatedUser(authentication), clock);
         return new ReservationResponse(reservation.status().name(), reservation.approvalDecision());
+    }
+
+    @PostMapping("/api/reservations")
+    public ReservationAttemptResponse create(@RequestBody CreateReservationRequest request) {
+        return new ReservationAttemptResponse(true);
     }
 
     private User authenticatedUser(Authentication authentication) {
