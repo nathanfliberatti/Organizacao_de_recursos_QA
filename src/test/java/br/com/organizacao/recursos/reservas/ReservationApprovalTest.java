@@ -12,14 +12,14 @@ class ReservationApprovalTest {
 
     @Test
     void restrictedResourceReservationRemainsRequestedUntilResponsibleApproval() {
-        Reservation reservation = Reservation.requestForRestrictedResource();
+        Reservation reservation = restrictedReservation();
 
         assertEquals(ReservationStatus.SOLICITADA, reservation.status());
     }
 
     @Test
     void responsibleApprovalRecordsDecisionAndMovesReservationToApproved() {
-        Reservation reservation = Reservation.requestForRestrictedResource();
+        Reservation reservation = restrictedReservation();
         User responsible = new User("responsible-1", UserRole.RESPONSAVEL);
         Instant decisionTime = Instant.parse("2026-10-25T12:00:00Z");
 
@@ -29,5 +29,9 @@ class ReservationApprovalTest {
                 () -> assertEquals(ReservationStatus.APROVADA, reservation.status()),
                 () -> assertEquals(new ApprovalDecision(responsible, decisionTime),
                         reservation.approvalDecision()));
+    }
+
+    private Reservation restrictedReservation() {
+        return Reservation.requestForRestrictedResource();
     }
 }
