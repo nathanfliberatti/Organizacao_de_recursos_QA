@@ -25,6 +25,9 @@ public final class Reservation {
     }
 
     public void approve(User approver, Clock clock) {
+        if (requesterId.equals(approver.id())) {
+            return;
+        }
         approvalDecision = new ApprovalDecision(approver, clock.instant());
         currentStatus = ReservationStatus.APROVADA;
     }
