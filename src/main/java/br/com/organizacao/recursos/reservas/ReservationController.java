@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReservationController {
     @GetMapping("/api/reservations/restricted")
     public Map<String, String> restrictedReservation() {
-        return Map.of("status", ReservationStatus.APROVADA.name());
+        Reservation reservation = Reservation.requestForRestrictedResource();
+        return Map.of("status", reservation.status().name());
     }
 }
