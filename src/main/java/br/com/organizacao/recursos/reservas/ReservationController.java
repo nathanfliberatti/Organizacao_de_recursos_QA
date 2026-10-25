@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
@@ -31,11 +32,22 @@ public class ReservationController {
         return response(reservation);
     }
 
+    @PostMapping("/api/reservations/restricted")
+    public ReservationResponse createRestrictedReservation(Authentication authentication) {
+        String id = reservationCatalog.createRestrictedReservation(authentication.getName());
+        return response(id, reservationCatalog.findById(id));
+    }
+
+    @GetMapping("/api/reservations/{id}")
+    public ReservationResponse findReservation(@PathVariable String id) {
+        return response(id, reservationCatalog.findById(id));
+    }
+
     @PostMapping("/api/reservations/{id}/approval")
     public ReservationResponse approve(@PathVariable String id, Authentication authentication) {
         Reservation reservation = reservationCatalog.findById(id);
         reservation.approve(authenticatedUser(authentication), clock);
-        return response(reservation);
+        return response(id, reservation);
     }
 
     @PostMapping("/api/reservations")
@@ -44,6 +56,15 @@ public class ReservationController {
             Authentication authentication) {
         boolean accepted = reservationSchedulingService.schedule(request, authentication.getName());
         return new ReservationAttemptResponse(accepted);
+    }
+
+    @GetMapping("/api/resources/{resourceId}/availability")
+    public ResourceAvailabilityResponse availability(
+            @PathVariable String resourceId,
+            @RequestParam java.time.Instant startsAt,
+            @RequestParam java.time.Instant endsAt) {
+        ReservationPeriod period = new ReservationPeriod(startsAt, endsAt);
+        return new ResourceAvailabilityResponse(reservationSchedulingService.isAvailable(resourceId, period));
     }
 
     @PostMapping("/api/reservations/{id}/start")
@@ -64,7 +85,12 @@ public class ReservationController {
     }
 
     private ReservationResponse response(Reservation reservation) {
-        return new ReservationResponse(reservation.status().name(), reservation.approvalDecision(),
+        return new ReservationResponse(null, reservation.status().name(), reservation.approvalDecision(),
+                reservation.transitions());
+    }
+
+    private ReservationResponse response(String id, Reservation reservation) {
+        return new ReservationResponse(id, reservation.status().name(), reservation.approvalDecision(),
                 reservation.transitions());
     }
 
@@ -74,7 +100,7 @@ public class ReservationController {
             ReservationAction action) {
         Reservation reservation = reservationCatalog.findById(id);
         action.apply(reservation, authenticatedUser(authentication), clock);
-        return response(reservation);
+        return response(id, reservation);
     }
 
     @FunctionalInterface

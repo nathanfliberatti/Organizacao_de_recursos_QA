@@ -19,13 +19,17 @@ public class ReservationSchedulingService {
     }
 
     public boolean schedule(CreateReservationRequest request, String requesterId) {
-        MaintenancePeriod maintenance = maintenanceCatalog.findByResourceId(request.resourceId());
         ReservationPeriod period = new ReservationPeriod(request.startsAt(), request.endsAt());
-        if (maintenance != null && !new MaintenanceRule(clock).isReservable(period, maintenance)) {
+        if (!isAvailable(request.resourceId(), period)) {
             return false;
         }
 
         reservationCatalog.schedule(request.resourceId(), requesterId, period);
         return true;
+    }
+
+    public boolean isAvailable(String resourceId, ReservationPeriod period) {
+        MaintenancePeriod maintenance = maintenanceCatalog.findByResourceId(resourceId);
+        return maintenance == null || new MaintenanceRule(clock).isReservable(period, maintenance);
     }
 }
