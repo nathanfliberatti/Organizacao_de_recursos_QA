@@ -1,11 +1,14 @@
 package br.com.organizacao.recursos.reservas;
 
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class Reservation {
     private final String requesterId;
     private ReservationStatus currentStatus;
     private ApprovalDecision approvalDecision;
+    private final List<ReservationTransition> transitions = new ArrayList<>();
 
     private Reservation(String requesterId, ReservationStatus currentStatus) {
         this.requesterId = requesterId;
@@ -34,5 +37,15 @@ public final class Reservation {
 
     public ApprovalDecision approvalDecision() {
         return approvalDecision;
+    }
+
+    public void startUse(User actor, Clock clock) {
+    }
+
+    public void complete(User actor, Clock clock) {
+    }
+
+    public List<ReservationTransition> transitions() {
+        return List.of();
     }
 }

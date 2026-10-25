@@ -2,5 +2,7 @@ package br.com.organizacao.recursos.reservas;
 
 public enum ReservationStatus {
     SOLICITADA,
-    APROVADA
+    APROVADA,
+    EM_USO,
+    CONCLUIDA
 }
