@@ -2,7 +2,7 @@
 
 ## Estado do ciclo
 
-**Em andamento.** Foram concluídos ciclos RED/GREEN/refactor de domínio/API e seis cenários Cucumber-JVM executáveis por MockMvc. `./mvnw -B verify` passou com 18 testes (12 JUnit + 6 Cucumber) e JaCoCo em 93,1% de linhas e 72,5% de branches. A aplicação usa Spring Boot 3.4.5; os catálogos atuais são em memória e não representam persistência definitiva.
+**Em andamento.** Foram concluídos ciclos RED/GREEN/refactor de domínio/API, seis cenários Cucumber-JVM executáveis por MockMvc e a integração concorrente PostgreSQL. `./mvnw -B verify` passou com 18 testes Surefire (12 JUnit + 6 Cucumber) e 11 testes Failsafe; JaCoCo em 91,9% de linhas e 77,3% de branches. O perfil `postgres` usa persistência PostgreSQL; o perfil padrão ainda usa a store em memória.
 
 Cada RED executado nesta tabela compilou antes de falhar por assertion. Os arquivos `target/` são saída local do Maven e não fazem parte dos commits.
 
@@ -26,6 +26,15 @@ Cada RED executado nesta tabela compilou antes de falhar por assertion. Os arqui
 | Reserva começa exatamente no fim da manutenção | Pendente: política não definida no BDD/requisitos | Pendente | Pendente | Não executado: aguarda decisão de produto. |
 | Transições alternativas para `REJEITADA`, `CANCELADA` e `NÃO_COMPARECEU` | Pendente: origens e atores não definidos | Pendente | Pendente | Não executado: aguarda matriz de transições aprovada. |
 
+## Concorrência PostgreSQL
+
+| Cenário/Teste | Commit de teste/base | Commit de correção | Evidência RED | Evidência final |
+|---|---|---|---|---|
+| `ReservationConcurrencyIT#onlyOneConcurrentReservationIsAcceptedForSameRoomAndTime` | `26ccea4` | `87afce8` | Antes da persistência, todas as cinco repetições observaram 0 respostas 201, 0 respostas 409 e 0 linhas no Postgres. | Cinco repetições: cada uma com 20 requests sincronizados, 1×201, 19×409 e uma linha SQL para sala/intervalo. |
+| `ReservationConcurrencyIT#onlyOneConcurrentReservationIsAcceptedForSameProfessorAndTime` | `26ccea4` | `87afce8` | Inicialmente 0 respostas aceitas/409 e 0 linhas; após constraints, uma repetição expôs deadlock SQLSTATE `40P01` (ver [DEF-002](../defeitos/DEF-002-deadlock-constraints-exclusao.md)). | Cinco repetições: cada uma com 20 requests sincronizados, 1×201, 19×409 e uma linha SQL para professor/intervalo. |
+
+**Execução final:** `./mvnw -B verify` — 18 Surefire + 11 Failsafe, `BUILD SUCCESS`. PostgreSQL 16 foi iniciado por Testcontainers; JaCoCo 91,9% linhas/77,3% branches. A decisão técnica está em [ADR-001](../adr/ADR-001-integridade-concorrente-postgresql.md); correções em [DEF-001](../defeitos/DEF-001-concorrencia-reservas.md) e [DEF-002](../defeitos/DEF-002-deadlock-constraints-exclusao.md).
+
 Saída concisa do baseline anterior à criação das fontes (não representa teste de comportamento):
 
 ```text
@@ -38,7 +47,7 @@ Saída concisa do baseline anterior à criação das fontes (não representa tes
 ## Pendências
 
 - Cobrir o salto `SOLICITADA → EM_USO` com um RED próprio; a regra já foi implementada antes do teste dedicado.
-- Definir persistência fora dos catálogos em memória antes de tratar a API como aplicação pronta para produção.
+- O perfil padrão ainda usa store em memória; definir e configurar o perfil persistente apropriado para a implantação antes de tratá-la como aplicação pronta para produção.
 - Não testar os limites exatos de manutenção até definição da política.
 - Não testar as alternativas `REJEITADA`, `CANCELADA` e `NÃO_COMPARECEU` até aprovação da matriz de transições.
 - Manter `Clock` injetado; não usar `Instant.now()` oculto nem `Thread.sleep`.
