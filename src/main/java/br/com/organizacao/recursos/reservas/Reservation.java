@@ -1,10 +1,10 @@
 package br.com.organizacao.recursos.reservas;
 
 public final class Reservation {
-    private final ReservationStatus status;
+    private final ReservationStatus currentStatus;
 
-    private Reservation(ReservationStatus status) {
-        this.status = status;
+    private Reservation(ReservationStatus currentStatus) {
+        this.currentStatus = currentStatus;
     }
 
     public static Reservation requestForRestrictedResource() {
@@ -12,6 +12,6 @@ public final class Reservation {
     }
 
     public ReservationStatus status() {
-        return status;
+        return currentStatus;
     }
 }
