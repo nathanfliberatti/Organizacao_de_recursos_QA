@@ -2,6 +2,7 @@ package br.com.organizacao.recursos.reservas;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -30,6 +31,19 @@ class ReservationApprovalTest {
                 () -> assertEquals(new ApprovalDecision(responsible, decisionTime),
                         reservation.approvalDecision()));
     }
+
+                @Test
+                void requesterCannotApproveOwnReservationEvenWithResponsibleRole() {
+                User requesterAndApprover = new User("same-user", UserRole.RESPONSAVEL);
+                Reservation reservation = Reservation.requestForRestrictedResource(requesterAndApprover.id());
+
+                reservation.approve(requesterAndApprover, Clock.fixed(
+                    Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC));
+
+                assertAll(
+                    () -> assertEquals(ReservationStatus.SOLICITADA, reservation.status()),
+                    () -> assertNull(reservation.approvalDecision()));
+                }
 
     private Reservation restrictedReservation() {
         return Reservation.requestForRestrictedResource();

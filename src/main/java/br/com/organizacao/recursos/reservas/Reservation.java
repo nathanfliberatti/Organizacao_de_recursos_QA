@@ -3,15 +3,21 @@ package br.com.organizacao.recursos.reservas;
 import java.time.Clock;
 
 public final class Reservation {
+    private final String requesterId;
     private ReservationStatus currentStatus;
     private ApprovalDecision approvalDecision;
 
-    private Reservation(ReservationStatus currentStatus) {
+    private Reservation(String requesterId, ReservationStatus currentStatus) {
+        this.requesterId = requesterId;
         this.currentStatus = currentStatus;
     }
 
     public static Reservation requestForRestrictedResource() {
-        return new Reservation(ReservationStatus.SOLICITADA);
+        return requestForRestrictedResource("requester-1");
+    }
+
+    public static Reservation requestForRestrictedResource(String requesterId) {
+        return new Reservation(requesterId, ReservationStatus.SOLICITADA);
     }
 
     public ReservationStatus status() {
