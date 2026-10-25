@@ -12,15 +12,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ReservationController {
     private final ReservationCatalog reservationCatalog;
-    private final MaintenanceCatalog maintenanceCatalog;
+    private final ReservationSchedulingService reservationSchedulingService;
     private final Clock clock;
 
     public ReservationController(
             ReservationCatalog reservationCatalog,
-            MaintenanceCatalog maintenanceCatalog,
+            ReservationSchedulingService reservationSchedulingService,
             Clock clock) {
         this.reservationCatalog = reservationCatalog;
-        this.maintenanceCatalog = maintenanceCatalog;
+        this.reservationSchedulingService = reservationSchedulingService;
         this.clock = clock;
     }
 
@@ -41,14 +41,8 @@ public class ReservationController {
     public ReservationAttemptResponse create(
             @RequestBody CreateReservationRequest request,
             Authentication authentication) {
-        MaintenancePeriod maintenance = maintenanceCatalog.findByResourceId(request.resourceId());
-        ReservationPeriod period = new ReservationPeriod(request.startsAt(), request.endsAt());
-        if (maintenance != null && !new MaintenanceRule(clock).isReservable(period, maintenance)) {
-            return new ReservationAttemptResponse(false);
-        }
-
-        reservationCatalog.schedule(request.resourceId(), authentication.getName(), period);
-        return new ReservationAttemptResponse(true);
+        boolean accepted = reservationSchedulingService.schedule(request, authentication.getName());
+        return new ReservationAttemptResponse(accepted);
     }
 
     private User authenticatedUser(Authentication authentication) {
