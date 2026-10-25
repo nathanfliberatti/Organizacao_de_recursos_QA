@@ -1,4 +1,9 @@
 package br.com.organizacao.recursos.reservas;
 
-public record ReservationResponse(String status, ApprovalDecision approvalDecision) {
+import java.util.List;
+
+public record ReservationResponse(
+	String status,
+	ApprovalDecision approvalDecision,
+	List<ReservationTransition> transitions) {
 }

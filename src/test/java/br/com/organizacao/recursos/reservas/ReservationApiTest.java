@@ -71,4 +71,23 @@ class ReservationApiTest {
 
         assertEquals(reservationsBefore, reservationCatalog.count());
     }
+
+    @Test
+    @WithMockUser(username = "responsible-1", roles = "RESPONSAVEL")
+    void apiRunsMainLifecycleAndReturnsThreeAuditTransitions() throws Exception {
+        String reservationId = reservationCatalog.createRestrictedReservation("requester-1");
+
+        mockMvc.perform(post("/api/reservations/{id}/approval", reservationId).with(csrf()))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.status").value("APROVADA"));
+        mockMvc.perform(post("/api/reservations/{id}/start", reservationId).with(csrf()))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.status").value("EM_USO"));
+        mockMvc.perform(post("/api/reservations/{id}/complete", reservationId).with(csrf()))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.status").value("CONCLUIDA"))
+                .andExpect(jsonPath("$.transitions.length()").value(3))
+                .andExpect(jsonPath("$.transitions[0].from").value("SOLICITADA"))
+                .andExpect(jsonPath("$.transitions[2].to").value("CONCLUIDA"));
+    }
 }

@@ -88,6 +88,13 @@ Exemplo no mesmo dia: manutenção de `10:00:00` a `11:00:00`. A tabela usa prec
 - **E** o estado final deve ser `CONCLUÍDA`
 - **E** cada mudança de estado deve gerar registro de auditoria, conforme RF-10
 
+**API — Fluxo principal e auditoria**
+
+- **Dado** que uma reserva restrita foi solicitada e aguarda decisão
+- **Quando** um Responsável distinto aprova, inicia e conclui a reserva pelas operações públicas
+- **Então** os estados observados devem seguir `APROVADA`, `EM_USO` e `CONCLUÍDA`
+- **E** a resposta final deve expor os três registros de transição com ator e instante
+
 **RF-14 — Não permitir salto no fluxo principal**
 
 - **Dado** que uma reserva está em `SOLICITADA`
