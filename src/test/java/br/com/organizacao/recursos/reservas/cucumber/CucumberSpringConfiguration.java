@@ -7,7 +7,9 @@ import org.springframework.context.annotation.Import;
 import io.cucumber.spring.CucumberContextConfiguration;
 
 @CucumberContextConfiguration
-@SpringBootTest(classes = OrganizacaoRecursosApplication.class)
+@SpringBootTest(
+	classes = OrganizacaoRecursosApplication.class,
+	properties = "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration")
 @AutoConfigureMockMvc
 @Import(CucumberMethodSecurityConfiguration.class)
 public class CucumberSpringConfiguration {
