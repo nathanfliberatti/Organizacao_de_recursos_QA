@@ -2,7 +2,7 @@
 
 ## Base e convenções
 
-Cenários derivados de [Requisitos Funcionais](../requisitos-funcionais.md) e da [Matriz de Rastreabilidade](../matriz-rastreabilidade.md). Os arquivos solicitados `docs/prd.md` e `docs/rtm.md` não existem neste workspace; não foram encontrados arquivos Java de reservas. A documentação disponível registra o scaffold Maven/JUnit, mas ainda não há código de produto para confirmar o comportamento implementado.
+Cenários derivados de [Requisitos Funcionais](../requisitos-funcionais.md), da [Matriz de Rastreabilidade](../matriz-rastreabilidade.md) e da [RTM atual](../rtm.md). `docs/prd.md` não existe neste workspace; o código de API e os testes Cucumber foram adicionados após a redação inicial deste documento.
 
 Os cenários abaixo descrevem comportamento esperado, não evidência de implementação. Onde a fonte deixa a política em aberto, a expectativa está marcada como pergunta e não deve virar um assert de aprovação até que haja decisão. Códigos HTTP específicos também não são definidos pelos requisitos.
 

@@ -2,7 +2,7 @@
 
 ## Estado do ciclo
 
-**Em andamento.** Foram concluídos sete ciclos RED/GREEN/refactor de domínio e quatro ciclos de API, todos com `./mvnw -B test`. No último ciclo, 11 testes passaram (7 unitários e 4 MockMvc). A aplicação usa Spring Boot 3.4.5; os catálogos atuais são em memória e não representam persistência definitiva.
+**Em andamento.** Foram concluídos ciclos RED/GREEN/refactor de domínio/API e seis cenários Cucumber-JVM executáveis por MockMvc. `./mvnw -B verify` passou com 18 testes (12 JUnit + 6 Cucumber) e JaCoCo em 93,1% de linhas e 72,5% de branches. A aplicação usa Spring Boot 3.4.5; os catálogos atuais são em memória e não representam persistência definitiva.
 
 Cada RED executado nesta tabela compilou antes de falhar por assertion. Os arquivos `target/` são saída local do Maven e não fazem parte dos commits.
 
