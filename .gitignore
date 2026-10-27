@@ -24,6 +24,10 @@ Thumbs.db
 .idea/
 *.swp
 
+# JMeter generated artifacts
+/perf/resultados/
+/perf/relatorio-01/
+
 # AIOX Local (AIOX)
 .aiox-core/local/
 .claude/settings.local.json
