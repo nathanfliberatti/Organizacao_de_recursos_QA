@@ -1,6 +1,7 @@
 package br.com.organizacao.recursos.reservas;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
@@ -47,7 +48,7 @@ class ReservationAuditEntryTest {
                 Instant.parse("2026-11-02T22:00:00Z"),
                 "Solicitação criada");
 
-        assertEquals(null, created.from());
+        assertNull(created.from());
         assertEquals(ReservationStatus.SOLICITADA, created.to());
 
         assertThrows(IllegalArgumentException.class, () -> new ReservationTransition(
@@ -57,5 +58,22 @@ class ReservationAuditEntryTest {
                 "responsible-7",
                 Instant.parse("2026-11-02T22:00:00Z"),
                 "Aprovação sem estado anterior"));
+    }
+
+    @Test
+    void requiresReservationActorTimestampAndReason() {
+        Instant changedAt = Instant.parse("2026-11-02T22:00:00Z");
+        assertThrows(IllegalArgumentException.class, () -> new ReservationTransition(
+                null, ReservationStatus.SOLICITADA, ReservationStatus.APROVADA,
+                "responsible-7", changedAt, "Motivo"));
+        assertThrows(IllegalArgumentException.class, () -> new ReservationTransition(
+                "reservation-42", ReservationStatus.SOLICITADA, ReservationStatus.APROVADA,
+                " ", changedAt, "Motivo"));
+        assertThrows(NullPointerException.class, () -> new ReservationTransition(
+                "reservation-42", ReservationStatus.SOLICITADA, ReservationStatus.APROVADA,
+                "responsible-7", null, "Motivo"));
+        assertThrows(IllegalArgumentException.class, () -> new ReservationTransition(
+                "reservation-42", ReservationStatus.SOLICITADA, ReservationStatus.APROVADA,
+                "responsible-7", changedAt, null));
     }
 }

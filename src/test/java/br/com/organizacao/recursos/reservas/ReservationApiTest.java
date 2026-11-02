@@ -19,8 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ReservationController.class)
 @Import({ReservationCatalog.class, MaintenanceCatalog.class, InMemoryReservationStore.class,
-        ReservationSchedulingService.class,
-    ApplicationClockConfiguration.class})
+        ReservationSchedulingService.class, InMemoryReservationAuditService.class,
+        ApplicationClockConfiguration.class})
 class ReservationApiTest {
     @Autowired
     private MockMvc mockMvc;
@@ -31,6 +31,9 @@ class ReservationApiTest {
     private MaintenanceCatalog maintenanceCatalog;
         @Autowired
         private ObjectMapper objectMapper;
+
+        @Autowired
+        private ReservationAuditService reservationAuditService;
 
     @Test
     @WithMockUser(username = "requester-1", roles = "SOLICITANTE")
@@ -44,6 +47,8 @@ class ReservationApiTest {
     @WithMockUser(username = "requester-1", roles = "RESPONSAVEL")
     void apiRejectsRequesterApprovingOwnRestrictedReservation() throws Exception {
         String reservationId = reservationCatalog.createRestrictedReservation("requester-1");
+        reservationAuditService.createReservation(
+                reservationId, "requester-1", java.time.Clock.systemUTC(), "Solicitação criada");
 
         mockMvc.perform(post("/api/reservations/{id}/approval", reservationId).with(csrf()))
                 .andExpect(status().is2xxSuccessful())
@@ -77,6 +82,8 @@ class ReservationApiTest {
     @WithMockUser(username = "responsible-1", roles = "RESPONSAVEL")
     void apiRunsMainLifecycleAndReturnsThreeAuditTransitions() throws Exception {
         String reservationId = reservationCatalog.createRestrictedReservation("requester-1");
+        reservationAuditService.createReservation(
+                reservationId, "requester-1", java.time.Clock.systemUTC(), "Solicitação criada");
 
         mockMvc.perform(post("/api/reservations/{id}/approval", reservationId).with(csrf()))
                 .andExpect(status().is2xxSuccessful())

@@ -1,11 +1,13 @@
 package br.com.organizacao.recursos.reservas;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,6 +91,31 @@ class ReservationAuditIT {
     }
 
     @Test
+    void historyReturnsCreationAndStateChangeWithClockAndReason() {
+        reservationAuditService.createReservation(
+                "reservation-history", "requester-1", clock, "Solicitação criada");
+        reservationAuditService.changeState(
+                "reservation-history",
+                ReservationStatus.APROVADA,
+                "responsible-1",
+                clock,
+                "Aprovada pelo responsável");
+
+        List<ReservationTransition> history = reservationAuditService.history("reservation-history");
+
+        assertEquals(2, history.size());
+        assertNull(history.get(0).from());
+        assertEquals(ReservationStatus.SOLICITADA, history.get(0).to());
+        assertEquals("requester-1", history.get(0).actorId());
+        assertEquals(clock.instant(), history.get(0).changedAt());
+        assertEquals("Solicitação criada", history.get(0).reason());
+        assertEquals(ReservationStatus.SOLICITADA, history.get(1).from());
+        assertEquals(ReservationStatus.APROVADA, history.get(1).to());
+        assertEquals("responsible-1", history.get(1).actorId());
+        assertEquals("Aprovada pelo responsável", history.get(1).reason());
+    }
+
+    @Test
     void rollbackDoesNotLeaveStateChangeOrOrphanedAudit() {
         reservationAuditService.createReservation(
                 "reservation-rollback", "requester-1", clock, "Solicitação criada");
@@ -148,5 +175,65 @@ class ReservationAuditIT {
                 "SELECT COUNT(*) FROM reservation_audit WHERE reservation_id = ?",
                 Integer.class,
                 "reservation-started"));
+    }
+
+    @Test
+    void invalidTransitionDoesNotChangeStateOrAppendAudit() {
+        reservationAuditService.createReservation(
+                "reservation-invalid", "requester-1", clock, "Solicitação criada");
+
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> reservationAuditService.changeState(
+                        "reservation-invalid",
+                        ReservationStatus.EM_USO,
+                        "responsible-1",
+                        clock,
+                        "Tentativa inválida"));
+
+        assertEquals("SOLICITADA", jdbcTemplate.queryForObject(
+                "SELECT status FROM reservation_lifecycle WHERE reservation_id = ?",
+                String.class,
+                "reservation-invalid"));
+        assertEquals(1, jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM reservation_audit WHERE reservation_id = ?",
+                Integer.class,
+                "reservation-invalid"));
+    }
+
+    @Test
+    void nonStartedReservationCanBeSoftDeletedWithoutDeletingItsHistory() {
+        reservationAuditService.createReservation(
+                "reservation-deleted", "requester-1", clock, "Solicitação criada");
+
+        reservationAuditService.deleteReservation("reservation-deleted");
+
+        assertEquals(true, jdbcTemplate.queryForObject(
+                "SELECT deleted FROM reservation_lifecycle WHERE reservation_id = ?",
+                Boolean.class,
+                "reservation-deleted"));
+        assertEquals(1, jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM reservation_audit WHERE reservation_id = ?",
+                Integer.class,
+                "reservation-deleted"));
+        assertEquals(List.of(ReservationStatus.SOLICITADA.name()), reservationAuditService.history(
+                        "reservation-deleted").stream().map(entry -> entry.to().name()).toList());
+    }
+
+    @Test
+    void completedReservationCannotBeDeleted() {
+        reservationAuditService.createReservation(
+                "reservation-completed", "requester-1", clock, "Solicitação criada");
+        reservationAuditService.changeState(
+                "reservation-completed", ReservationStatus.APROVADA,
+                "responsible-1", clock, "Aprovada");
+        reservationAuditService.changeState(
+                "reservation-completed", ReservationStatus.EM_USO,
+                "responsible-1", clock, "Iniciada");
+        reservationAuditService.changeState(
+                "reservation-completed", ReservationStatus.CONCLUIDA,
+                "responsible-1", clock, "Concluída");
+
+        assertThrows(ReservationDeletionConflictException.class,
+                () -> reservationAuditService.deleteReservation("reservation-completed"));
     }
 }

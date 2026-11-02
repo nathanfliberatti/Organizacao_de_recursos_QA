@@ -2,6 +2,7 @@ package br.com.organizacao.recursos.reservas;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -50,6 +51,24 @@ class ReservationLifecycleTest {
     }
 
     @Test
+    void rejectsTransitionThatDoesNotMatchReservationIdOrCurrentState() {
+        Reservation reservation = Reservation.requestForRestrictedResource(
+                "reservation-42", "requester-1");
+        Instant changedAt = Instant.parse("2026-10-25T12:00:00Z");
+        ReservationTransition wrongId = new ReservationTransition(
+                "another-reservation", ReservationStatus.SOLICITADA, ReservationStatus.APROVADA,
+                "responsible-1", changedAt, "Aprovada");
+        ReservationTransition wrongState = new ReservationTransition(
+                "reservation-42", ReservationStatus.APROVADA, ReservationStatus.EM_USO,
+                "responsible-1", changedAt, "Iniciada");
+
+        assertThrows(IllegalStateException.class, () -> reservation.applyTransition(wrongId));
+        assertThrows(IllegalStateException.class, () -> reservation.applyTransition(wrongState));
+        assertEquals(ReservationStatus.SOLICITADA, reservation.status());
+        assertEquals(true, reservation.canBeDeleted());
+    }
+
+    @Test
     void reservationFollowsMainLifecycleAndAuditsEveryTransition() {
         Reservation reservation = Reservation.requestForRestrictedResource("requester-1");
         User responsible = new User("responsible-1", UserRole.RESPONSAVEL);
@@ -63,12 +82,14 @@ class ReservationLifecycleTest {
         assertAll(
                 () -> assertEquals(ReservationStatus.CONCLUIDA, reservation.status()),
                 () -> assertEquals(List.of(
-                        new ReservationTransition(ReservationStatus.SOLICITADA,
-                                ReservationStatus.APROVADA, responsible.id(), changedAt),
-                        new ReservationTransition(ReservationStatus.APROVADA,
-                                ReservationStatus.EM_USO, responsible.id(), changedAt),
-                        new ReservationTransition(ReservationStatus.EM_USO,
-                                ReservationStatus.CONCLUIDA, responsible.id(), changedAt)),
+                        new ReservationTransition(reservation.id(), ReservationStatus.SOLICITADA,
+                                ReservationStatus.APROVADA, responsible.id(), changedAt,
+                                "Reserva aprovada pelo Responsável"),
+                        new ReservationTransition(reservation.id(), ReservationStatus.APROVADA,
+                                ReservationStatus.EM_USO, responsible.id(), changedAt, "Reserva iniciada"),
+                        new ReservationTransition(reservation.id(), ReservationStatus.EM_USO,
+                                ReservationStatus.CONCLUIDA, responsible.id(), changedAt,
+                                "Reserva concluída")),
                         reservation.transitions()));
     }
 
