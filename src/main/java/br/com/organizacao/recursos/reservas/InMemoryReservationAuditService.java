@@ -51,7 +51,7 @@ public class InMemoryReservationAuditService extends ReservationAuditService {
             Clock clock,
             String reason) {
         ReservationStatus previousStatus = currentStatus(reservationId);
-        if (!isAllowedTransition(previousStatus, newStatus)) {
+        if (!isAllowedInMemoryTransition(previousStatus, newStatus)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid reservation state transition");
         }
         ReservationTransition transition = new ReservationTransition(
@@ -64,7 +64,7 @@ public class InMemoryReservationAuditService extends ReservationAuditService {
     public synchronized void recordTransition(ReservationTransition transition) {
         ReservationStatus currentStatus = currentStatus(transition.reservationId());
         if (currentStatus != transition.from()
-                || !isAllowedTransition(currentStatus, transition.to())) {
+                || !isAllowedInMemoryTransition(currentStatus, transition.to())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Reservation state has changed");
         }
         statuses.put(transition.reservationId(), transition.to());
@@ -100,7 +100,7 @@ public class InMemoryReservationAuditService extends ReservationAuditService {
         return status;
     }
 
-    private boolean isAllowedTransition(ReservationStatus previousStatus, ReservationStatus newStatus) {
+    private boolean isAllowedInMemoryTransition(ReservationStatus previousStatus, ReservationStatus newStatus) {
         return switch (previousStatus) {
             case SOLICITADA -> newStatus == ReservationStatus.APROVADA;
             case APROVADA -> newStatus == ReservationStatus.EM_USO;
