@@ -3,8 +3,10 @@ package br.com.organizacao.recursos.reservas;
 import java.time.Clock;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,14 +19,17 @@ import java.util.List;
 public class ReservationController {
     private final ReservationCatalog reservationCatalog;
     private final ReservationSchedulingService reservationSchedulingService;
+    private final ReservationAuditService reservationAuditService;
     private final Clock clock;
 
     public ReservationController(
             ReservationCatalog reservationCatalog,
             ReservationSchedulingService reservationSchedulingService,
+            ReservationAuditService reservationAuditService,
             Clock clock) {
         this.reservationCatalog = reservationCatalog;
         this.reservationSchedulingService = reservationSchedulingService;
+        this.reservationAuditService = reservationAuditService;
         this.clock = clock;
     }
 
@@ -36,7 +41,10 @@ public class ReservationController {
 
     @PostMapping("/api/reservations/restricted")
     public ReservationResponse createRestrictedReservation(Authentication authentication) {
-        String id = reservationCatalog.createRestrictedReservation(authentication.getName());
+        String id = java.util.UUID.randomUUID().toString();
+        reservationAuditService.createReservation(
+                id, authentication.getName(), clock, "Solicitação criada");
+        reservationCatalog.createRestrictedReservation(id, authentication.getName());
         return response(id, reservationCatalog.findById(id));
     }
 
@@ -45,10 +53,27 @@ public class ReservationController {
         return response(id, reservationCatalog.findById(id));
     }
 
+    @GetMapping("/api/reservations/{id}/history")
+    @PreAuthorize("hasAnyRole('RESPONSAVEL', 'ADMINISTRADOR')")
+    public List<ReservationTransition> history(@PathVariable String id) {
+        return reservationAuditService.history(id);
+    }
+
+    @DeleteMapping("/api/reservations/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        reservationAuditService.deleteReservation(id);
+        reservationCatalog.remove(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/api/reservations/{id}/approval")
     public ReservationResponse approve(@PathVariable String id, Authentication authentication) {
         Reservation reservation = reservationCatalog.findById(id);
-        reservation.approve(authenticatedUser(authentication), clock);
+        User actor = authenticatedUser(authentication);
+        ReservationTransition transition = reservation.prepareApproval(
+                actor, clock, "Reserva aprovada pelo Responsável");
+        recordTransition(reservation, transition);
         return response(id, reservation);
     }
 
@@ -74,12 +99,14 @@ public class ReservationController {
 
     @PostMapping("/api/reservations/{id}/start")
     public ReservationResponse start(@PathVariable String id, Authentication authentication) {
-        return applyTransition(id, authentication, Reservation::startUse);
+        return applyTransition(id, authentication,
+                (reservation, actor) -> reservation.prepareStartUse(actor, clock, "Reserva iniciada"));
     }
 
     @PostMapping("/api/reservations/{id}/complete")
     public ReservationResponse complete(@PathVariable String id, Authentication authentication) {
-        return applyTransition(id, authentication, Reservation::complete);
+        return applyTransition(id, authentication,
+                (reservation, actor) -> reservation.prepareComplete(actor, clock, "Reserva concluída"));
     }
 
     private User authenticatedUser(Authentication authentication) {
@@ -104,12 +131,21 @@ public class ReservationController {
             Authentication authentication,
             ReservationAction action) {
         Reservation reservation = reservationCatalog.findById(id);
-        action.apply(reservation, authenticatedUser(authentication), clock);
+        ReservationTransition transition = action.prepare(reservation, authenticatedUser(authentication));
+        recordTransition(reservation, transition);
         return response(id, reservation);
+    }
+
+    private void recordTransition(Reservation reservation, ReservationTransition transition) {
+        if (transition == null) {
+            return;
+        }
+        reservationAuditService.recordTransition(transition);
+        reservation.applyTransition(transition);
     }
 
     @FunctionalInterface
     private interface ReservationAction {
-        void apply(Reservation reservation, User actor, Clock clock);
+        ReservationTransition prepare(Reservation reservation, User actor);
     }
 }

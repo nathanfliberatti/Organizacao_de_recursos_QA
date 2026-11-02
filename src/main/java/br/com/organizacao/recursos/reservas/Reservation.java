@@ -4,14 +4,17 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public final class Reservation {
+    private final String id;
     private final String requesterId;
     private ReservationStatus currentStatus;
     private ApprovalDecision approvalDecision;
     private final List<ReservationTransition> transitions = new ArrayList<>();
 
-    private Reservation(String requesterId, ReservationStatus currentStatus) {
+    private Reservation(String id, String requesterId, ReservationStatus currentStatus) {
+        this.id = id;
         this.requesterId = requesterId;
         this.currentStatus = currentStatus;
     }
@@ -21,7 +24,15 @@ public final class Reservation {
     }
 
     public static Reservation requestForRestrictedResource(String requesterId) {
-        return new Reservation(requesterId, ReservationStatus.SOLICITADA);
+        return requestForRestrictedResource(UUID.randomUUID().toString(), requesterId);
+    }
+
+    public static Reservation requestForRestrictedResource(String id, String requesterId) {
+        return new Reservation(id, requesterId, ReservationStatus.SOLICITADA);
+    }
+
+    public String id() {
+        return id;
     }
 
     public ReservationStatus status() {
@@ -29,12 +40,13 @@ public final class Reservation {
     }
 
     public void approve(User approver, Clock clock) {
-        if (!isEligibleResponsible(approver) || !isAllowedTransitionTo(ReservationStatus.APROVADA)) {
-            return;
-        }
-        Instant decidedAt = clock.instant();
-        if (transitionTo(ReservationStatus.APROVADA, approver, decidedAt)) {
-            approvalDecision = new ApprovalDecision(approver, decidedAt);
+        approve(approver, clock, "Reserva aprovada pelo Responsável");
+    }
+
+    public void approve(User approver, Clock clock, String reason) {
+        ReservationTransition transition = prepareApproval(approver, clock, reason);
+        if (transition != null) {
+            applyTransition(transition);
         }
     }
 
@@ -43,25 +55,72 @@ public final class Reservation {
     }
 
     public void startUse(User actor, Clock clock) {
-        transitionTo(ReservationStatus.EM_USO, actor, clock.instant());
+        startUse(actor, clock, "Reserva iniciada");
+    }
+
+    public void startUse(User actor, Clock clock, String reason) {
+        applyIfAllowed(ReservationStatus.EM_USO, actor, clock, reason);
     }
 
     public void complete(User actor, Clock clock) {
-        transitionTo(ReservationStatus.CONCLUIDA, actor, clock.instant());
+        complete(actor, clock, "Reserva concluída");
+    }
+
+    public void complete(User actor, Clock clock, String reason) {
+        applyIfAllowed(ReservationStatus.CONCLUIDA, actor, clock, reason);
     }
 
     public List<ReservationTransition> transitions() {
         return List.copyOf(transitions);
     }
 
-    private boolean transitionTo(ReservationStatus nextStatus, User actor, Instant changedAt) {
-        if (!isAllowedTransitionTo(nextStatus)) {
-            return false;
-        }
+    public boolean canBeDeleted() {
+        return currentStatus != ReservationStatus.EM_USO && currentStatus != ReservationStatus.CONCLUIDA;
+    }
 
-        transitions.add(new ReservationTransition(currentStatus, nextStatus, actor.id(), changedAt));
-        currentStatus = nextStatus;
-        return true;
+    public ReservationTransition prepareApproval(User approver, Clock clock, String reason) {
+        if (!isEligibleResponsible(approver)) {
+            return null;
+        }
+        return prepareTransition(ReservationStatus.APROVADA, approver, clock.instant(), reason);
+    }
+
+    public ReservationTransition prepareStartUse(User actor, Clock clock, String reason) {
+        return prepareTransition(ReservationStatus.EM_USO, actor, clock.instant(), reason);
+    }
+
+    public ReservationTransition prepareComplete(User actor, Clock clock, String reason) {
+        return prepareTransition(ReservationStatus.CONCLUIDA, actor, clock.instant(), reason);
+    }
+
+    public void applyTransition(ReservationTransition transition) {
+        if (!id.equals(transition.reservationId())
+                || currentStatus != transition.from()
+                || !isAllowedTransitionTo(transition.to())) {
+            throw new IllegalStateException("Reservation transition does not match the current state");
+        }
+        transitions.add(transition);
+        currentStatus = transition.to();
+        if (transition.to() == ReservationStatus.APROVADA) {
+            approvalDecision = new ApprovalDecision(
+                    new User(transition.actorId(), UserRole.RESPONSAVEL), transition.changedAt());
+        }
+    }
+
+    private void applyIfAllowed(
+            ReservationStatus nextStatus, User actor, Clock clock, String reason) {
+        ReservationTransition transition = prepareTransition(nextStatus, actor, clock.instant(), reason);
+        if (transition != null) {
+            applyTransition(transition);
+        }
+    }
+
+    private ReservationTransition prepareTransition(
+            ReservationStatus nextStatus, User actor, Instant changedAt, String reason) {
+        if (!isAllowedTransitionTo(nextStatus)) {
+            return null;
+        }
+        return new ReservationTransition(id, currentStatus, nextStatus, actor.id(), changedAt, reason);
     }
 
     private boolean isAllowedTransitionTo(ReservationStatus nextStatus) {

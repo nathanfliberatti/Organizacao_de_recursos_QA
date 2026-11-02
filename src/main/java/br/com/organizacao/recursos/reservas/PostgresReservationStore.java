@@ -18,13 +18,15 @@ public class PostgresReservationStore implements ReservationStore {
     private static final String ROOM_AVAILABILITY_SQL = """
             SELECT NOT EXISTS (
                 SELECT 1 FROM reservations
-                WHERE room_id = ? AND tstzrange(starts_at, ends_at) && tstzrange(?, ?)
+                WHERE room_id = ? AND status <> 'CANCELADA'
+                    AND tstzrange(starts_at, ends_at) && tstzrange(?, ?)
             )
             """;
     private static final String ROOM_AND_PROFESSOR_AVAILABILITY_SQL = """
             SELECT NOT EXISTS (
                 SELECT 1 FROM reservations
                 WHERE (room_id = ? OR professor_id = ?)
+                    AND status <> 'CANCELADA'
                     AND tstzrange(starts_at, ends_at) && tstzrange(?, ?)
             )
             """;
@@ -59,6 +61,19 @@ public class PostgresReservationStore implements ReservationStore {
             }
             throw exception;
         }
+    }
+
+    @Override
+    @Transactional
+    public void recordConflictAttempt(String roomId, String professorId, ReservationPeriod period) {
+        jdbcTemplate.update("""
+                INSERT INTO reservation_conflict_attempts (room_id, professor_id, starts_at, ends_at)
+                VALUES (?, ?, ?, ?)
+                """,
+                roomId,
+                professorId,
+                Timestamp.from(period.startsAt()),
+                Timestamp.from(period.endsAt()));
     }
 
     @Override

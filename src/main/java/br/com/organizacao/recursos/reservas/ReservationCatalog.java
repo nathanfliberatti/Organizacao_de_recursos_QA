@@ -12,12 +12,20 @@ public class ReservationCatalog {
 
     public String createRestrictedReservation(String requesterId) {
         String id = UUID.randomUUID().toString();
-        reservations.put(id, Reservation.requestForRestrictedResource(requesterId));
+        createRestrictedReservation(id, requesterId);
         return id;
+    }
+
+    public void createRestrictedReservation(String id, String requesterId) {
+        reservations.put(id, Reservation.requestForRestrictedResource(id, requesterId));
     }
 
     public Reservation findById(String id) {
         return reservations.get(id);
+    }
+
+    public void remove(String id) {
+        reservations.remove(id);
     }
 
     public int count() {
