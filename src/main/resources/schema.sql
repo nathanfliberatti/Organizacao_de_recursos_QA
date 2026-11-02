@@ -6,11 +6,37 @@ CREATE TABLE IF NOT EXISTS reservations (
     professor_id TEXT NOT NULL,
     starts_at TIMESTAMPTZ NOT NULL,
     ends_at TIMESTAMPTZ NOT NULL,
+    status TEXT NOT NULL DEFAULT 'AGENDADA',
     CONSTRAINT reservations_valid_period CHECK (ends_at > starts_at),
     CONSTRAINT reservations_room_no_overlap
-        EXCLUDE USING gist (room_id WITH =, tstzrange(starts_at, ends_at) WITH &&),
+        EXCLUDE USING gist (room_id WITH =, tstzrange(starts_at, ends_at) WITH &&)
+        WHERE (status <> 'CANCELADA'),
     CONSTRAINT reservations_professor_no_overlap
         EXCLUDE USING gist (professor_id WITH =, tstzrange(starts_at, ends_at) WITH &&)
+        WHERE (status <> 'CANCELADA')
+);
+
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'AGENDADA';
+ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_room_no_overlap;
+ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_professor_no_overlap;
+ALTER TABLE reservations ADD CONSTRAINT reservations_room_no_overlap
+    EXCLUDE USING gist (room_id WITH =, tstzrange(starts_at, ends_at) WITH &&)
+    WHERE (status <> 'CANCELADA');
+ALTER TABLE reservations ADD CONSTRAINT reservations_professor_no_overlap
+    EXCLUDE USING gist (professor_id WITH =, tstzrange(starts_at, ends_at) WITH &&)
+    WHERE (status <> 'CANCELADA');
+ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_status_check;
+ALTER TABLE reservations ADD CONSTRAINT reservations_status_check
+    CHECK (status IN ('AGENDADA', 'CANCELADA'));
+
+CREATE TABLE IF NOT EXISTS reservation_conflict_attempts (
+    attempt_id BIGSERIAL PRIMARY KEY,
+    room_id TEXT NOT NULL,
+    professor_id TEXT NOT NULL,
+    starts_at TIMESTAMPTZ NOT NULL,
+    ends_at TIMESTAMPTZ NOT NULL,
+    rejected_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT reservation_conflict_attempts_valid_period CHECK (ends_at > starts_at)
 );
 
 CREATE TABLE IF NOT EXISTS reservation_lifecycle (

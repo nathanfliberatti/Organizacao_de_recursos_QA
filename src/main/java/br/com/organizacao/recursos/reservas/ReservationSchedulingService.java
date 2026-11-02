@@ -30,6 +30,7 @@ public class ReservationSchedulingService {
         }
 
         if (!reservationStore.schedule(request.resourceId(), professorId, requesterId, period)) {
+            reservationStore.recordConflictAttempt(request.resourceId(), professorId, period);
             return false;
         }
         reservationCatalog.schedule(request.resourceId(), requesterId, period);
