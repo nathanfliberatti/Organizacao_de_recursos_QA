@@ -1,0 +1,8 @@
+# DEF-003: Aprovação responde sucesso a perfis não autorizados
+
+- **Situação:** Aberto
+- **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix`
+- **Operação:** `POST /api/reservations/{id}/approval`
+- **Células divergentes:** Solicitante e Administrador esperam `403`; ambos recebem `200`.
+- **Risco:** A resposta de sucesso mascara uma tentativa de aprovação proibida e não comunica corretamente a política exclusiva do Responsável.
+- **Correção esperada:** Restringir a operação ao papel Responsável e devolver `403` aos demais perfis autenticados.
