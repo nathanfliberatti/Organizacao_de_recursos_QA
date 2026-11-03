@@ -1,5 +1,10 @@
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
+CREATE TABLE IF NOT EXISTS resources (
+    resource_id TEXT PRIMARY KEY,
+    capacity INTEGER NOT NULL CHECK (capacity > 0)
+);
+
 CREATE TABLE IF NOT EXISTS reservations (
     id BIGSERIAL PRIMARY KEY,
     room_id TEXT NOT NULL,

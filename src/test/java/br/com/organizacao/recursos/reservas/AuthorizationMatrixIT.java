@@ -83,6 +83,7 @@ class AuthorizationMatrixIT {
         jdbcTemplate.update("DELETE FROM reservation_lifecycle");
         jdbcTemplate.update("DELETE FROM reservation_conflict_attempts");
         jdbcTemplate.update("DELETE FROM reservations");
+        jdbcTemplate.update("DELETE FROM resources");
         reservationCatalog.clear();
     }
 
