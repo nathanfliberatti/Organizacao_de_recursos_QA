@@ -37,7 +37,7 @@ A feature [aprovacao-bloqueio.feature](../src/test/resources/features/aprovacao-
 | RNF-03 | RF-07 — Decisão por Responsável; API — Fluxo principal e auditoria | `ReservationAuditIT#stateAndAuditArePersistedTogether`; `#rollbackDoesNotLeaveStateChangeOrOrphanedAudit`; `ReservationAuditApiTest#auditHistoryHasNoApiMutationOperations` | `3e96ff4` + implementação desta story | Ator, instante, motivo, estado anterior/novo, persistência, rollback e ausência de mutações na API cobertos; a retenção usa PostgreSQL. |
 | RNF-04 | — | — | — | Sem E2E de interface/responsividade. |
 | RNF-05 | — | — | — | Esta RTM não substitui documentação de contrato da API. |
-| RNF-06 | — | — | — | Sem plano ou resultado JMeter. |
+| RNF-06 — RNF-PERF-01 | Plano de desempenho; execução JMeter por operação; consulta de integridade da disputa no PostgreSQL | [Plano RNF-PERF-01](performance/rnf.md); [resultado da rodada 01](performance/resultado-01.md) | `20c0f7a` (checkout analisado; execução não comprovadamente associada) | Resultado inconclusivo: JTL/relatório e banco indisponíveis para reprocessamento; o resumo documentado informa p95 de 127 ms (GET) e 154 ms (POST), mas não permite verificar p50, p99, vazão ou cardinalidade. Próxima execução deve demonstrar 10 minutos estáveis após o ramp-up. |
 | RNF-07 | As seis features da funcionalidade; suíte JUnit 5 e integração PostgreSQL/Testcontainers; execução Maven/CI | `aprovacao-bloqueio.feature`; `RunCucumberTest`; `ReservationApiTest`; `MaintenanceRuleTest`; `ReservationConcurrencyIT`; `.github/workflows/ci.yml` | `08e26df`, `26ccea4`, `87afce8` | `./mvnw -B verify` completo passou; JaCoCo 91,9% linhas/77,3% branches, mínimos 80%/70% sem exclusões novas. |
 
 ## Execução e gates

@@ -31,3 +31,5 @@ Execução CLI local com JMeter 5.6.3, PostgreSQL 16, 50 usuários, ramp-up de 1
 | Criação de reserva | 211.963 | 154 ms | 0 (0,00%) |
 
 A mistura observada foi 70% consulta / 30% criação. As 211.963 criações retornaram uma resposta `201` e 211.962 respostas `409`; nenhuma resposta inesperada ou `5xx`. O PostgreSQL terminou com uma única reserva para o recurso e intervalo disputados. Os percentis e contagens são evidência desta configuração local, não uma garantia de desempenho em outro hardware ou ambiente. A proposta segue pendente de validação pelo grupo.
+
+**Ressalva de rastreabilidade:** o resumo acima não pôde ser reprocessado nesta revisão porque `perf/resultados/rodada-01.jtl`, o relatório gerado e o banco da execução não estão disponíveis no checkout. Além disso, o JMX configura `duration=720` segundos com ramp-up de 120 segundos; isso não comprova os 10 minutos estáveis pedidos pelo RNF. Trate contagens e p95 acima como valores previamente registrados, não como métricas independentemente verificadas. A análise está em [resultado-01.md](resultado-01.md).
