@@ -61,8 +61,10 @@ public class ReservationController {
 
     @DeleteMapping("/api/reservations/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        reservationAuditService.deleteReservation(id);
+    public ResponseEntity<Void> delete(@PathVariable String id, Authentication authentication) {
+        boolean canDeleteAny = hasRole(authentication, "RESPONSAVEL")
+                || hasRole(authentication, "ADMINISTRADOR");
+        reservationAuditService.deleteReservation(id, authentication.getName(), canDeleteAny);
         reservationCatalog.remove(id);
         return ResponseEntity.noContent().build();
     }
@@ -111,10 +113,13 @@ public class ReservationController {
     }
 
     private User authenticatedUser(Authentication authentication) {
-        boolean responsible = authentication.getAuthorities()
-                .contains(new SimpleGrantedAuthority("ROLE_RESPONSAVEL"));
+        boolean responsible = hasRole(authentication, "RESPONSAVEL");
         UserRole role = responsible ? UserRole.RESPONSAVEL : UserRole.SOLICITANTE;
         return new User(authentication.getName(), role);
+    }
+
+    private boolean hasRole(Authentication authentication, String role) {
+        return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
     private ReservationResponse response(Reservation reservation) {

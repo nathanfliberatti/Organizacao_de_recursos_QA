@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Profile("!postgres")
 public class InMemoryReservationAuditService extends ReservationAuditService {
     private final Map<String, ReservationStatus> statuses = new ConcurrentHashMap<>();
+    private final Map<String, String> requesterIds = new ConcurrentHashMap<>();
     private final Map<String, List<ReservationTransition>> audit = new ConcurrentHashMap<>();
     private final Map<String, Boolean> deleted = new ConcurrentHashMap<>();
 
@@ -23,6 +24,7 @@ public class InMemoryReservationAuditService extends ReservationAuditService {
 
     public synchronized void clear() {
         statuses.clear();
+        requesterIds.clear();
         audit.clear();
         deleted.clear();
     }
@@ -33,6 +35,7 @@ public class InMemoryReservationAuditService extends ReservationAuditService {
         if (statuses.putIfAbsent(reservationId, ReservationStatus.SOLICITADA) != null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Reservation already exists");
         }
+        requesterIds.put(reservationId, requesterId);
         deleted.put(reservationId, false);
         audit.put(reservationId, new ArrayList<>(List.of(new ReservationTransition(
                 reservationId,
@@ -79,7 +82,16 @@ public class InMemoryReservationAuditService extends ReservationAuditService {
 
     @Override
     public synchronized void deleteReservation(String reservationId) {
+        deleteReservation(reservationId, null, true);
+    }
+
+    @Override
+    public synchronized void deleteReservation(
+            String reservationId, String requesterId, boolean canDeleteAny) {
         ReservationStatus status = currentStatus(reservationId);
+        if (requesterId != null && !canDeleteAny && !requesterIds.get(reservationId).equals(requesterId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to cancel this reservation");
+        }
         if (status == ReservationStatus.EM_USO || status == ReservationStatus.CONCLUIDA) {
             throw new ReservationDeletionConflictException();
         }
