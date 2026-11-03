@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,7 @@ public class PerformanceAuthController {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(request.username())
+                .claim("roles", List.of("SOLICITANTE"))
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(TOKEN_LIFETIME_SECONDS))
                 .build();

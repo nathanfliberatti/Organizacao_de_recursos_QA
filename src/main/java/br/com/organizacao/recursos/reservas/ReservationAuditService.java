@@ -76,9 +76,38 @@ public class ReservationAuditService {
                 reservationId);
     }
 
+    @Transactional(readOnly = true)
+    public void assertCanOperate(String reservationId, String requesterId, boolean canOperateAny) {
+        if (canOperateAny) {
+            return;
+        }
+        String owner;
+        try {
+            owner = jdbcTemplate.queryForObject(
+                    "SELECT requester_id FROM reservation_lifecycle"
+                            + " WHERE reservation_id = ? AND deleted = FALSE",
+                    String.class,
+                    reservationId);
+        } catch (org.springframework.dao.EmptyResultDataAccessException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation not found", exception);
+        }
+        if (!owner.equals(requesterId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to operate this reservation");
+        }
+    }
+
     @Transactional
     public void deleteReservation(String reservationId) {
-        ReservationStatus status = lockCurrentStatus(reservationId);
+        deleteReservation(reservationId, null, true);
+    }
+
+    @Transactional
+    public void deleteReservation(String reservationId, String requesterId, boolean canDeleteAny) {
+        ReservationLifecycle reservation = lockCurrentReservation(reservationId);
+        if (requesterId != null && !canDeleteAny && !reservation.requesterId().equals(requesterId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to cancel this reservation");
+        }
+        ReservationStatus status = reservation.status();
         if (status == ReservationStatus.EM_USO || status == ReservationStatus.CONCLUIDA) {
             throw new ReservationDeletionConflictException();
         }
@@ -87,6 +116,23 @@ public class ReservationAuditService {
                 reservationId);
         if (updated != 1) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation not found");
+        }
+    }
+
+    private ReservationLifecycle lockCurrentReservation(String reservationId) {
+        try {
+            return jdbcTemplate.queryForObject("""
+                    SELECT requester_id, status
+                    FROM reservation_lifecycle
+                    WHERE reservation_id = ? AND deleted = FALSE
+                    FOR UPDATE
+                    """,
+                    (resultSet, rowNumber) -> new ReservationLifecycle(
+                            resultSet.getString("requester_id"),
+                            ReservationStatus.valueOf(resultSet.getString("status"))),
+                    reservationId);
+        } catch (org.springframework.dao.EmptyResultDataAccessException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation not found", exception);
         }
     }
 
@@ -148,5 +194,8 @@ public class ReservationAuditService {
             case EM_USO -> newStatus == ReservationStatus.CONCLUIDA;
             case CONCLUIDA -> false;
         };
+    }
+
+    private record ReservationLifecycle(String requesterId, ReservationStatus status) {
     }
 }

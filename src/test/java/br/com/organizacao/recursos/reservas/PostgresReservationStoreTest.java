@@ -63,6 +63,13 @@ class PostgresReservationStoreTest {
 
                 @Override
                 public <T> T queryForObject(String sql, Class<T> requiredType, Object... args) {
+                        if (sql.startsWith("INSERT")) {
+                                if (updateFailure != null) {
+                                        throw updateFailure;
+                                }
+                                inserted = true;
+                                return requiredType.cast(1L);
+                        }
                         return requiredType.cast(queryResult);
                 }
 

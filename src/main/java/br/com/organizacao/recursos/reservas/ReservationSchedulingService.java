@@ -1,7 +1,12 @@
 package br.com.organizacao.recursos.reservas;
 
 import java.time.Clock;
+import java.util.Optional;
+import java.util.OptionalLong;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ReservationSchedulingService {
@@ -21,20 +26,42 @@ public class ReservationSchedulingService {
         this.clock = clock;
     }
 
-    public boolean schedule(CreateReservationRequest request, String requesterId) {
+    public ReservationAttemptResponse schedule(CreateReservationRequest request, String requesterId) {
+        validatePeriod(request.startsAt(), request.endsAt());
         ReservationPeriod period = new ReservationPeriod(request.startsAt(), request.endsAt());
         String professorId = request.professorId() == null ? requesterId : request.professorId();
         MaintenancePeriod maintenance = maintenanceCatalog.findByResourceId(request.resourceId());
         if (maintenance != null && !new MaintenanceRule(clock).isReservable(period, maintenance)) {
-            return false;
+            return new ReservationAttemptResponse(false);
         }
 
-        if (!reservationStore.schedule(request.resourceId(), professorId, requesterId, period)) {
+        OptionalLong reservationId = reservationStore.scheduleWithId(
+                request.resourceId(), professorId, requesterId, period);
+        if (reservationId.isEmpty()) {
             reservationStore.recordConflictAttempt(request.resourceId(), professorId, period);
-            return false;
+            return new ReservationAttemptResponse(false);
         }
         reservationCatalog.schedule(request.resourceId(), requesterId, period);
-        return true;
+        return new ReservationAttemptResponse(true, reservationId.getAsLong());
+    }
+
+    @Transactional
+    public void update(long reservationId, String requesterId, boolean canModifyAny, ReservationPeriod period) {
+        validatePeriod(period.startsAt(), period.endsAt());
+        Optional<String> owner = reservationStore.requesterId(reservationId);
+        if (owner.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation not found");
+        }
+        if (!canModifyAny && !owner.get().equals(requesterId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to modify this reservation");
+        }
+        reservationStore.update(reservationId, period);
+    }
+
+    private void validatePeriod(java.time.Instant startsAt, java.time.Instant endsAt) {
+        if (startsAt == null || endsAt == null || !startsAt.isBefore(endsAt)) {
+            throw new InvalidReservationPeriodException();
+        }
     }
 
     public boolean isAvailable(String resourceId, ReservationPeriod period) {

@@ -1,6 +1,7 @@
 package br.com.organizacao.recursos.reservas;
 
 import java.time.Clock;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,12 +42,12 @@ public class ReservationController {
     }
 
     @PostMapping("/api/reservations/restricted")
-    public ReservationResponse createRestrictedReservation(Authentication authentication) {
+    public ResponseEntity<ReservationResponse> createRestrictedReservation(Authentication authentication) {
         String id = java.util.UUID.randomUUID().toString();
         reservationAuditService.createReservation(
                 id, authentication.getName(), clock, "Solicitação criada");
         reservationCatalog.createRestrictedReservation(id, authentication.getName());
-        return response(id, reservationCatalog.findById(id));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response(id, reservationCatalog.findById(id)));
     }
 
     @GetMapping("/api/reservations/{id}")
@@ -61,13 +63,16 @@ public class ReservationController {
 
     @DeleteMapping("/api/reservations/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        reservationAuditService.deleteReservation(id);
+    public ResponseEntity<Void> delete(@PathVariable String id, Authentication authentication) {
+        boolean canDeleteAny = hasRole(authentication, "RESPONSAVEL")
+                || hasRole(authentication, "ADMINISTRADOR");
+        reservationAuditService.deleteReservation(id, authentication.getName(), canDeleteAny);
         reservationCatalog.remove(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/api/reservations/{id}/approval")
+    @PreAuthorize("hasRole('RESPONSAVEL')")
     public ReservationResponse approve(@PathVariable String id, Authentication authentication) {
         Reservation reservation = reservationCatalog.findById(id);
         User actor = authenticatedUser(authentication);
@@ -79,11 +84,27 @@ public class ReservationController {
 
     @PostMapping("/api/reservations")
     public ResponseEntity<ReservationAttemptResponse> create(
-            @RequestBody CreateReservationRequest request,
+            @Valid @RequestBody CreateReservationRequest request,
             Authentication authentication) {
-        boolean accepted = reservationSchedulingService.schedule(request, authentication.getName());
-        HttpStatus status = accepted ? HttpStatus.CREATED : HttpStatus.CONFLICT;
-        return ResponseEntity.status(status).body(new ReservationAttemptResponse(accepted));
+        ReservationAttemptResponse result = reservationSchedulingService.schedule(request, authentication.getName());
+        HttpStatus status = result.accepted() ? HttpStatus.CREATED : HttpStatus.CONFLICT;
+        return ResponseEntity.status(status).body(result);
+    }
+
+    @PutMapping("/api/reservations/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> update(
+            @PathVariable long id,
+            @RequestBody UpdateReservationRequest request,
+            Authentication authentication) {
+        boolean canModifyAny = hasRole(authentication, "RESPONSAVEL")
+                || hasRole(authentication, "ADMINISTRADOR");
+        reservationSchedulingService.update(
+                id,
+                authentication.getName(),
+                canModifyAny,
+                new ReservationPeriod(request.startsAt(), request.endsAt()));
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/api/resources/{resourceId}/availability")
@@ -99,21 +120,30 @@ public class ReservationController {
 
     @PostMapping("/api/reservations/{id}/start")
     public ReservationResponse start(@PathVariable String id, Authentication authentication) {
+        reservationAuditService.assertCanOperate(id, authentication.getName(), canManageAny(authentication));
         return applyTransition(id, authentication,
                 (reservation, actor) -> reservation.prepareStartUse(actor, clock, "Reserva iniciada"));
     }
 
     @PostMapping("/api/reservations/{id}/complete")
     public ReservationResponse complete(@PathVariable String id, Authentication authentication) {
+        reservationAuditService.assertCanOperate(id, authentication.getName(), canManageAny(authentication));
         return applyTransition(id, authentication,
                 (reservation, actor) -> reservation.prepareComplete(actor, clock, "Reserva concluída"));
     }
 
+    private boolean canManageAny(Authentication authentication) {
+        return hasRole(authentication, "RESPONSAVEL") || hasRole(authentication, "ADMINISTRADOR");
+    }
+
     private User authenticatedUser(Authentication authentication) {
-        boolean responsible = authentication.getAuthorities()
-                .contains(new SimpleGrantedAuthority("ROLE_RESPONSAVEL"));
+        boolean responsible = hasRole(authentication, "RESPONSAVEL");
         UserRole role = responsible ? UserRole.RESPONSAVEL : UserRole.SOLICITANTE;
         return new User(authentication.getName(), role);
+    }
+
+    private boolean hasRole(Authentication authentication, String role) {
+        return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
     private ReservationResponse response(Reservation reservation) {

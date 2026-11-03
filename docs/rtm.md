@@ -45,6 +45,7 @@ A feature [aprovacao-bloqueio.feature](../src/test/resources/features/aprovacao-
 - Maven executa Cucumber pela suíte JUnit Platform `RunCucumberTest` durante `test`, incluída em `./mvnw -B verify`.
 - JaCoCo mantém os limites configurados no POM: 80% de linhas e 70% de branches; nenhuma meta foi reduzida e nenhuma exclusão nova foi aplicada.
 - GitHub Actions executa `./mvnw -B verify` e o scanner SonarCloud em pull requests, aguardando o Quality Gate.
+- A auditoria de rastreabilidade e os resultados observados das mutações manuais estão em [mutacao-manual.md](testes/mutacao-manual.md).
 
 ## Lacunas que permanecem abertas
 
