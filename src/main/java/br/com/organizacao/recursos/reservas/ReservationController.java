@@ -68,6 +68,7 @@ public class ReservationController {
     }
 
     @PostMapping("/api/reservations/{id}/approval")
+    @PreAuthorize("hasRole('RESPONSAVEL')")
     public ReservationResponse approve(@PathVariable String id, Authentication authentication) {
         Reservation reservation = reservationCatalog.findById(id);
         User actor = authenticatedUser(authentication);
