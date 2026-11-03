@@ -1,6 +1,7 @@
 package br.com.organizacao.recursos.reservas;
 
 import java.time.Clock;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -83,7 +84,7 @@ public class ReservationController {
 
     @PostMapping("/api/reservations")
     public ResponseEntity<ReservationAttemptResponse> create(
-            @RequestBody CreateReservationRequest request,
+            @Valid @RequestBody CreateReservationRequest request,
             Authentication authentication) {
         ReservationAttemptResponse result = reservationSchedulingService.schedule(request, authentication.getName());
         HttpStatus status = result.accepted() ? HttpStatus.CREATED : HttpStatus.CONFLICT;

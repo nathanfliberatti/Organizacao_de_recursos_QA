@@ -3,9 +3,9 @@ package br.com.organizacao.recursos.reservas;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.OptionalLong;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -27,6 +27,7 @@ public class ReservationSchedulingService {
     }
 
     public ReservationAttemptResponse schedule(CreateReservationRequest request, String requesterId) {
+        validatePeriod(request.startsAt(), request.endsAt());
         ReservationPeriod period = new ReservationPeriod(request.startsAt(), request.endsAt());
         String professorId = request.professorId() == null ? requesterId : request.professorId();
         MaintenancePeriod maintenance = maintenanceCatalog.findByResourceId(request.resourceId());
@@ -46,9 +47,7 @@ public class ReservationSchedulingService {
 
     @Transactional
     public void update(long reservationId, String requesterId, boolean canModifyAny, ReservationPeriod period) {
-        if (period.startsAt() == null || period.endsAt() == null || !period.startsAt().isBefore(period.endsAt())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "endsAt must be later than startsAt");
-        }
+        validatePeriod(period.startsAt(), period.endsAt());
         Optional<String> owner = reservationStore.requesterId(reservationId);
         if (owner.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation not found");
@@ -57,6 +56,12 @@ public class ReservationSchedulingService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to modify this reservation");
         }
         reservationStore.update(reservationId, period);
+    }
+
+    private void validatePeriod(java.time.Instant startsAt, java.time.Instant endsAt) {
+        if (startsAt == null || endsAt == null || !startsAt.isBefore(endsAt)) {
+            throw new InvalidReservationPeriodException();
+        }
     }
 
     public boolean isAvailable(String resourceId, ReservationPeriod period) {

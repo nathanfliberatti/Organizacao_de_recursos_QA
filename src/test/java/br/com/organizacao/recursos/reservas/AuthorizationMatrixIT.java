@@ -102,6 +102,9 @@ class AuthorizationMatrixIT {
         MvcResult result = mockMvc.perform(request)
                 .andExpect(status().is(testCase.expectedStatus()))
                 .andReturn();
+        if (result.getResponse().getStatus() >= 400) {
+            assertNoInternalDetails(result.getResponse().getContentAsString());
+        }
         if (testCase.operation().equals("POST /api/reservations") && testCase.expectedStatus() == 201) {
             assertTrue(objectMapper.readTree(result.getResponse().getContentAsString())
                     .hasNonNull("reservationId"));
@@ -125,7 +128,8 @@ class AuthorizationMatrixIT {
         assertTrue(problem.has("detail"));
         assertTrue(problem.get("detail").asText().length() > 0);
         org.junit.jupiter.api.Assertions.assertEquals(400, problem.get("status").asInt());
-        assertFalse(response.matches("(?is).*\\b(at [\\w.$]+\\([^)]*\\.java:\\d+\\)|select\\s|insert\\s|update\\s|delete\\s|org\\.springframework|org\\.postgresql|SQLException)\\b.*"));
+        assertTrue(problem.get("detail").asText().contains(invalidRequest.expectedDetail()));
+        assertNoInternalDetails(response);
     }
 
     @Test
@@ -206,19 +210,19 @@ class AuthorizationMatrixIT {
                         new InvalidRequest(post("/api/reservations"),
                                 """
                                 {"resourceId":"invalid-period","startsAt":"2026-11-02T12:00:00Z","endsAt":"2026-11-02T11:00:00Z"}
-                                """)),
+                                """, "endsAt")),
                 Named.of("reservation required fields are missing",
                         new InvalidRequest(post("/api/reservations"), """
                                 {"resourceId":"missing-period"}
-                                """)),
+                                """, "required")),
                 Named.of("resource capacity is negative",
                         new InvalidRequest(post("/api/resources"), """
                                 {"id":"negative-capacity","capacity":-1}
-                                """)),
+                                """, "capacity")),
                 Named.of("resource capacity is missing",
                         new InvalidRequest(post("/api/resources"), """
                                 {"id":"missing-capacity"}
-                                """)));
+                                """, "capacity")));
     }
 
     private static Named<MatrixCase> row(
@@ -323,6 +327,10 @@ class AuthorizationMatrixIT {
                 """;
     }
 
+    private void assertNoInternalDetails(String response) {
+        assertFalse(response.matches("(?is).*(at [\\w.$]+\\([^)]*\\.java:\\d+\\)|\\b(select|insert|update|delete)\\s|org\\.[\\w.]+|br\\.com\\.organizacao\\.[\\w.]+|SQLException|NullPointerException|IllegalStateException).*"));
+    }
+
     private enum Role {
         ANONYMOUS(null, null),
         SOLICITANTE("requester-owner", "SOLICITANTE"),
@@ -359,6 +367,6 @@ class AuthorizationMatrixIT {
             String subject, int expectedStatus, Fixture fixture) {
     }
 
-    private record InvalidRequest(MockHttpServletRequestBuilder request, String body) {
+    private record InvalidRequest(MockHttpServletRequestBuilder request, String body, String expectedDetail) {
     }
 }

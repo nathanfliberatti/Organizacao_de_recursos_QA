@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -23,6 +24,19 @@ public class ApiExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ProblemDetail> handleUnreadableBody(HttpMessageNotReadableException exception) {
         return problem(HttpStatus.BAD_REQUEST, "Request body is missing or malformed");
+    }
+
+    @ExceptionHandler(InvalidReservationPeriodException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidReservationPeriod(
+            InvalidReservationPeriodException exception) {
+        return problem(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ProblemDetail> handleResponseStatus(ResponseStatusException exception) {
+        HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
+        String detail = exception.getReason() == null ? status.getReasonPhrase() : exception.getReason();
+        return problem(status, detail);
     }
 
     private ResponseEntity<ProblemDetail> problem(HttpStatus status, String detail) {
