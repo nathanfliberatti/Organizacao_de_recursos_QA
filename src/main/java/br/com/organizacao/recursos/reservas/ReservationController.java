@@ -40,12 +40,12 @@ public class ReservationController {
     }
 
     @PostMapping("/api/reservations/restricted")
-    public ReservationResponse createRestrictedReservation(Authentication authentication) {
+    public ResponseEntity<ReservationResponse> createRestrictedReservation(Authentication authentication) {
         String id = java.util.UUID.randomUUID().toString();
         reservationAuditService.createReservation(
                 id, authentication.getName(), clock, "Solicitação criada");
         reservationCatalog.createRestrictedReservation(id, authentication.getName());
-        return response(id, reservationCatalog.findById(id));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response(id, reservationCatalog.findById(id)));
     }
 
     @GetMapping("/api/reservations/{id}")
