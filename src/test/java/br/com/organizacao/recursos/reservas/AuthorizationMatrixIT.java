@@ -1,6 +1,7 @@
 package br.com.organizacao.recursos.reservas;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -109,6 +110,14 @@ class AuthorizationMatrixIT {
             assertTrue(objectMapper.readTree(result.getResponse().getContentAsString())
                     .hasNonNull("reservationId"));
         }
+        if (testCase.operation().endsWith("/start") && testCase.role() != Role.ANONYMOUS) {
+            assertEquals("EM_USO", objectMapper.readTree(result.getResponse().getContentAsString())
+                    .get("status").asText());
+        }
+        if (testCase.operation().endsWith("/complete") && testCase.role() != Role.ANONYMOUS) {
+            assertEquals("CONCLUIDA", objectMapper.readTree(result.getResponse().getContentAsString())
+                    .get("status").asText());
+        }
     }
 
     @ParameterizedTest(name = "{0}")
@@ -151,6 +160,24 @@ class AuthorizationMatrixIT {
 
         mockMvc.perform(delete("/api/reservations/{id}", RESERVATION_ID)
                         .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void requesterCannotStartAnotherRequestersReservation() throws Exception {
+        seedReservation(Fixture.APROVADA);
+
+        mockMvc.perform(post("/api/reservations/{id}/start", RESERVATION_ID)
+                        .header("Authorization", "Bearer " + token(Role.SOLICITANTE, "requester-outsider")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void requesterCannotCompleteAnotherRequestersReservation() throws Exception {
+        seedReservation(Fixture.EM_USO);
+
+        mockMvc.perform(post("/api/reservations/{id}/complete", RESERVATION_ID)
+                        .header("Authorization", "Bearer " + token(Role.SOLICITANTE, "requester-outsider")))
                 .andExpect(status().isForbidden());
     }
 
@@ -312,13 +339,17 @@ class AuthorizationMatrixIT {
         reservationCatalog.createRestrictedReservation(RESERVATION_ID, "requester-owner");
         reservationAuditService.createReservation(RESERVATION_ID, "requester-owner", CLOCK, "Solicitação criada");
         if (fixture == Fixture.APROVADA || fixture == Fixture.EM_USO) {
-            reservationAuditService.changeState(
-                    RESERVATION_ID, ReservationStatus.APROVADA, "responsible-1", CLOCK, "Aprovada");
+            applySeedTransition(ReservationStatus.APROVADA, "responsible-1", "Aprovada");
         }
         if (fixture == Fixture.EM_USO) {
-            reservationAuditService.changeState(
-                    RESERVATION_ID, ReservationStatus.EM_USO, "requester-owner", CLOCK, "Iniciada");
+            applySeedTransition(ReservationStatus.EM_USO, "requester-owner", "Iniciada");
         }
+    }
+
+    private void applySeedTransition(ReservationStatus status, String actorId, String reason) {
+        ReservationTransition transition = reservationAuditService.changeState(
+                RESERVATION_ID, status, actorId, CLOCK, reason);
+        reservationCatalog.findById(RESERVATION_ID).applyTransition(transition);
     }
 
     private static String validUpdateBody() {
