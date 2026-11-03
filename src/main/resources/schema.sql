@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS reservations (
 
 ALTER TABLE reservations ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'AGENDADA';
 ALTER TABLE reservations ADD COLUMN IF NOT EXISTS requester_id TEXT;
-UPDATE reservations SET requester_id = professor_id WHERE requester_id IS NULL;
+UPDATE reservations SET requester_id = '__legacy_unassigned__:' || id::TEXT WHERE requester_id IS NULL;
 ALTER TABLE reservations ALTER COLUMN requester_id SET NOT NULL;
 ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_room_no_overlap;
 ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_professor_no_overlap;
