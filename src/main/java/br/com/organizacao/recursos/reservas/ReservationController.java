@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -84,9 +85,25 @@ public class ReservationController {
     public ResponseEntity<ReservationAttemptResponse> create(
             @RequestBody CreateReservationRequest request,
             Authentication authentication) {
-        boolean accepted = reservationSchedulingService.schedule(request, authentication.getName());
-        HttpStatus status = accepted ? HttpStatus.CREATED : HttpStatus.CONFLICT;
-        return ResponseEntity.status(status).body(new ReservationAttemptResponse(accepted));
+        ReservationAttemptResponse result = reservationSchedulingService.schedule(request, authentication.getName());
+        HttpStatus status = result.accepted() ? HttpStatus.CREATED : HttpStatus.CONFLICT;
+        return ResponseEntity.status(status).body(result);
+    }
+
+    @PutMapping("/api/reservations/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> update(
+            @PathVariable long id,
+            @RequestBody UpdateReservationRequest request,
+            Authentication authentication) {
+        boolean canModifyAny = hasRole(authentication, "RESPONSAVEL")
+                || hasRole(authentication, "ADMINISTRADOR");
+        reservationSchedulingService.update(
+                id,
+                authentication.getName(),
+                canModifyAny,
+                new ReservationPeriod(request.startsAt(), request.endsAt()));
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/api/resources/{resourceId}/availability")

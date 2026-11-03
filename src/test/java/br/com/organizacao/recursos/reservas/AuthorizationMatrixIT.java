@@ -98,7 +98,13 @@ class AuthorizationMatrixIT {
             request.header("Authorization", "Bearer " + token(testCase.role(), testCase.subject()));
         }
 
-        mockMvc.perform(request).andExpect(status().is(testCase.expectedStatus()));
+        MvcResult result = mockMvc.perform(request)
+                .andExpect(status().is(testCase.expectedStatus()))
+                .andReturn();
+        if (testCase.operation().equals("POST /api/reservations") && testCase.expectedStatus() == 201) {
+            assertTrue(objectMapper.readTree(result.getResponse().getContentAsString())
+                    .hasNonNull("reservationId"));
+        }
     }
 
     @ParameterizedTest(name = "{0}")
@@ -287,11 +293,12 @@ class AuthorizationMatrixIT {
     private void seedReservation(Fixture fixture) {
         if (fixture == Fixture.SCHEDULED) {
             jdbcTemplate.update("""
-                    INSERT INTO reservations (id, room_id, professor_id, starts_at, ends_at)
-                    OVERRIDING SYSTEM VALUE VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO reservations (id, room_id, professor_id, requester_id, starts_at, ends_at)
+                    OVERRIDING SYSTEM VALUE VALUES (?, ?, ?, ?, ?, ?)
                     """,
                     9001,
                     "matrix-room",
+                    "requester-owner",
                     "requester-owner",
                     java.sql.Timestamp.from(Instant.parse("2026-11-03T10:00:00Z")),
                     java.sql.Timestamp.from(Instant.parse("2026-11-03T11:00:00Z")));

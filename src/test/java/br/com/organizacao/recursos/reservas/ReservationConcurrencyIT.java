@@ -91,9 +91,11 @@ class ReservationConcurrencyIT {
     void roomAvailabilityQueriesPostgresWithoutProfessorFilter() throws Exception {
         jdbcTemplate.update("TRUNCATE TABLE reservations RESTART IDENTITY");
         jdbcTemplate.update(
-                "INSERT INTO reservations (room_id, professor_id, starts_at, ends_at) VALUES (?, ?, ?, ?)",
+                "INSERT INTO reservations (room_id, professor_id, requester_id, starts_at, ends_at)"
+                        + " VALUES (?, ?, ?, ?, ?)",
                 "room-from-db",
                 "professor-from-db",
+                "requester-from-db",
                 Timestamp.from(STARTS_AT),
                 Timestamp.from(ENDS_AT));
 

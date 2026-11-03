@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     id BIGSERIAL PRIMARY KEY,
     room_id TEXT NOT NULL,
     professor_id TEXT NOT NULL,
+    requester_id TEXT NOT NULL,
     starts_at TIMESTAMPTZ NOT NULL,
     ends_at TIMESTAMPTZ NOT NULL,
     status TEXT NOT NULL DEFAULT 'AGENDADA',
@@ -17,6 +18,9 @@ CREATE TABLE IF NOT EXISTS reservations (
 );
 
 ALTER TABLE reservations ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'AGENDADA';
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS requester_id TEXT;
+UPDATE reservations SET requester_id = professor_id WHERE requester_id IS NULL;
+ALTER TABLE reservations ALTER COLUMN requester_id SET NOT NULL;
 ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_room_no_overlap;
 ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_professor_no_overlap;
 ALTER TABLE reservations ADD CONSTRAINT reservations_room_no_overlap

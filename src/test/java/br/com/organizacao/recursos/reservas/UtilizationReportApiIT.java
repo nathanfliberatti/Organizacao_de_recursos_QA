@@ -176,11 +176,12 @@ class UtilizationReportApiIT {
     private void insertReservation(
             String resourceId, String professorId, String startsAt, String endsAt, String status) {
         jdbcTemplate.update("""
-                INSERT INTO reservations (room_id, professor_id, starts_at, ends_at, status)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO reservations (room_id, professor_id, requester_id, starts_at, ends_at, status)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 resourceId,
                 professorId,
+                "requester-" + professorId,
                 Timestamp.from(Instant.parse(startsAt)),
                 Timestamp.from(Instant.parse(endsAt)),
                 status);
