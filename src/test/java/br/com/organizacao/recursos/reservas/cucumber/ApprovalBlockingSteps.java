@@ -174,10 +174,13 @@ public class ApprovalBlockingSteps {
 
     @Quando("esse usuário tenta aprovar a solicitação")
     public void requesterAttemptsToApprove() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/reservations/{id}/approval", reservationId)
+        mockMvc.perform(post("/api/reservations/{id}/approval", reservationId)
                         .with(profileToken("requester-2", "SOLICITANTE"))
                         .with(csrf()))
-            .andExpect(status().is2xxSuccessful())
+                .andExpect(status().isForbidden());
+        MvcResult result = mockMvc.perform(get("/api/reservations/{id}", reservationId)
+                        .with(profileToken("requester-1", "SOLICITANTE")))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn();
         currentResponse = readReservationResponse(result);
     }
