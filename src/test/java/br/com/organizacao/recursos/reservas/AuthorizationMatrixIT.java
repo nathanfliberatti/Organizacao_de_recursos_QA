@@ -238,6 +238,11 @@ class AuthorizationMatrixIT {
                                 """
                                 {"resourceId":"invalid-period","startsAt":"2026-11-02T12:00:00Z","endsAt":"2026-11-02T11:00:00Z"}
                                 """, "endsAt")),
+                Named.of("reservation period ends when it starts",
+                        new InvalidRequest(post("/api/reservations"),
+                                """
+                                {"resourceId":"zero-length-period","startsAt":"2026-11-02T12:00:00Z","endsAt":"2026-11-02T12:00:00Z"}
+                                """, "endsAt")),
                 Named.of("reservation required fields are missing",
                         new InvalidRequest(post("/api/reservations"), """
                                 {"resourceId":"missing-period"}
