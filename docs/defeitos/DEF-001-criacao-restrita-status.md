@@ -1,6 +1,6 @@
 # DEF-001: Código de sucesso da criação de reserva restrita
 
-- **Situação:** Aberto
+- **Situação:** Corrigido em `7d3c96b`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix`
 - **Operação:** `POST /api/reservations/restricted`
 - **Células divergentes:** Solicitante, Responsável e Administrador esperam `201`; a API devolve `200`.

@@ -1,6 +1,6 @@
 # DEF-008: Código de sucesso incorreto no cadastro de manutenção
 
-- **Situação:** Aberto
+- **Situação:** Corrigido em `b587009`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix`, após corrigir o mapeamento de JWT em DEF-002.
 - **Operação:** `POST /api/resources/{resourceId}/maintenance`
 - **Célula divergente:** Administrador autorizado espera `201`; recebe `200`.

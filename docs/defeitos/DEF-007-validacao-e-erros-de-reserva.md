@@ -1,6 +1,6 @@
 # DEF-007: Entrada inválida de reserva causa exceção interna
 
-- **Situação:** Aberto
+- **Situação:** Corrigido em `c8754c6`
 - **Evidência:** `AuthorizationMatrixIT.invalidInputReturnsSafeProblemDetail`
 - **Operação:** `POST /api/reservations`
 - **Casos divergentes:**

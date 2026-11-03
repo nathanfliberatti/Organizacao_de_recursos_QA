@@ -1,6 +1,6 @@
 # DEF-002: Autoridades dos perfis não são extraídas do JWT
 
-- **Situação:** Aberto
+- **Situação:** Corrigido em `5639986`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix`
 - **Causa observada:** JWTs válidos e assinados com a claim `roles` autenticam, mas não produzem as autoridades `ROLE_*` esperadas por `@PreAuthorize`.
 - **Células divergentes:**

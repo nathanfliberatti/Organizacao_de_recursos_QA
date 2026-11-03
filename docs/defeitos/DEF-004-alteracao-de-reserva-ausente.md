@@ -1,6 +1,6 @@
 # DEF-004: Endpoint de alteração de reserva ausente
 
-- **Situação:** Aberto
+- **Situação:** Corrigido em `91fb390` e endurecido para reservas legadas em `c205d77`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix` e `AuthorizationMatrixIT.requesterCannotModifyAnotherRequestersReservation`
 - **Operação:** `PUT /api/reservations/{id}`
 - **Células divergentes:** Solicitante, Responsável e Administrador esperam `200`, recebem `405`; Solicitante alheio espera `403`, recebe `405`.

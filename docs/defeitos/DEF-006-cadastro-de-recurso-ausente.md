@@ -1,6 +1,6 @@
 # DEF-006: Cadastro de recurso e validação de capacidade ausentes
 
-- **Situação:** Aberto
+- **Situação:** Corrigido em `16fb9ae`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix` e `AuthorizationMatrixIT.invalidInputReturnsSafeProblemDetail`
 - **Operação:** `POST /api/resources`, payload com `id` e `capacity`.
 - **Células divergentes:** Solicitante e Responsável esperam `403`, Administrador espera `201`; os três recebem `404`.

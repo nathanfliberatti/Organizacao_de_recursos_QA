@@ -1,6 +1,6 @@
 # DEF-005: Solicitante pode cancelar reserva alheia
 
-- **Situação:** Aberto
+- **Situação:** Corrigido em `7d230a4`
 - **Evidência:** `AuthorizationMatrixIT.requesterCannotCancelAnotherRequestersReservation`
 - **Operação:** `DELETE /api/reservations/{id}`
 - **Célula divergente:** Solicitante que não é proprietário espera `403`; recebe `204`.

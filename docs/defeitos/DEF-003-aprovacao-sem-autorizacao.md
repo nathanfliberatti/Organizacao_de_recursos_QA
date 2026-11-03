@@ -1,6 +1,6 @@
 # DEF-003: Aprovação responde sucesso a perfis não autorizados
 
-- **Situação:** Aberto
+- **Situação:** Corrigido em `85a1106`; regressão Cucumber em `7ea7894`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix`
 - **Operação:** `POST /api/reservations/{id}/approval`
 - **Células divergentes:** Solicitante e Administrador esperam `403`; ambos recebem `200`.

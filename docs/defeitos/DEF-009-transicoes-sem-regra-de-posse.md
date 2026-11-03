@@ -1,6 +1,6 @@
 # DEF-009: Solicitante pode iniciar ou concluir reserva alheia
 
-- **Situação:** Aberto
+- **Situação:** Corrigido em `0e4d8f6`
 - **Evidência:** `AuthorizationMatrixIT.requesterCannotStartAnotherRequestersReservation` e `AuthorizationMatrixIT.requesterCannotCompleteAnotherRequestersReservation`
 - **Operações:** `POST /api/reservations/{id}/start` e `POST /api/reservations/{id}/complete`.
 - **Células divergentes:** Solicitante alheio espera `403` nas duas operações; ambas respondem `200`.
