@@ -76,6 +76,26 @@ public class ReservationAuditService {
                 reservationId);
     }
 
+    @Transactional(readOnly = true)
+    public void assertCanOperate(String reservationId, String requesterId, boolean canOperateAny) {
+        if (canOperateAny) {
+            return;
+        }
+        String owner;
+        try {
+            owner = jdbcTemplate.queryForObject(
+                    "SELECT requester_id FROM reservation_lifecycle"
+                            + " WHERE reservation_id = ? AND deleted = FALSE",
+                    String.class,
+                    reservationId);
+        } catch (org.springframework.dao.EmptyResultDataAccessException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation not found", exception);
+        }
+        if (!owner.equals(requesterId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to operate this reservation");
+        }
+    }
+
     @Transactional
     public void deleteReservation(String reservationId) {
         deleteReservation(reservationId, null, true);

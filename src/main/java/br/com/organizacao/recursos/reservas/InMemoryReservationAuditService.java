@@ -81,6 +81,15 @@ public class InMemoryReservationAuditService extends ReservationAuditService {
     }
 
     @Override
+    public synchronized void assertCanOperate(
+            String reservationId, String requesterId, boolean canOperateAny) {
+        currentStatus(reservationId);
+        if (!canOperateAny && !requesterIds.get(reservationId).equals(requesterId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to operate this reservation");
+        }
+    }
+
+    @Override
     public synchronized void deleteReservation(String reservationId) {
         deleteReservation(reservationId, null, true);
     }

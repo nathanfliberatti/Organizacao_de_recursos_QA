@@ -120,14 +120,20 @@ public class ReservationController {
 
     @PostMapping("/api/reservations/{id}/start")
     public ReservationResponse start(@PathVariable String id, Authentication authentication) {
+        reservationAuditService.assertCanOperate(id, authentication.getName(), canManageAny(authentication));
         return applyTransition(id, authentication,
                 (reservation, actor) -> reservation.prepareStartUse(actor, clock, "Reserva iniciada"));
     }
 
     @PostMapping("/api/reservations/{id}/complete")
     public ReservationResponse complete(@PathVariable String id, Authentication authentication) {
+        reservationAuditService.assertCanOperate(id, authentication.getName(), canManageAny(authentication));
         return applyTransition(id, authentication,
                 (reservation, actor) -> reservation.prepareComplete(actor, clock, "Reserva concluída"));
+    }
+
+    private boolean canManageAny(Authentication authentication) {
+        return hasRole(authentication, "RESPONSAVEL") || hasRole(authentication, "ADMINISTRADOR");
     }
 
     private User authenticatedUser(Authentication authentication) {
