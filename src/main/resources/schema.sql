@@ -5,6 +5,19 @@ CREATE TABLE IF NOT EXISTS resources (
     capacity INTEGER NOT NULL CHECK (capacity > 0)
 );
 
+CREATE TABLE IF NOT EXISTS product_users (
+    login TEXT PRIMARY KEY,
+    password_hash TEXT NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS product_user_roles (
+    login TEXT NOT NULL REFERENCES product_users (login) ON DELETE CASCADE,
+    role TEXT NOT NULL CHECK (role IN ('SOLICITANTE', 'RESPONSAVEL', 'ADMINISTRADOR')),
+    PRIMARY KEY (login, role)
+);
+
 CREATE TABLE IF NOT EXISTS reservations (
     id BIGSERIAL PRIMARY KEY,
     room_id TEXT NOT NULL,

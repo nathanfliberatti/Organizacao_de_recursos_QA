@@ -69,8 +69,13 @@ public class ReservationSchedulingService {
     }
 
     public boolean isAvailable(String resourceId, String professorId, ReservationPeriod period) {
+        validatePeriod(period.startsAt(), period.endsAt());
         MaintenancePeriod maintenance = maintenanceCatalog.findByResourceId(resourceId);
         return (maintenance == null || new MaintenanceRule(clock).isReservable(period, maintenance))
                 && reservationStore.isAvailable(resourceId, professorId, period);
+    }
+
+    public java.util.List<ScheduledReservation> findByRequesterId(String requesterId) {
+        return reservationStore.findByRequesterId(requesterId);
     }
 }

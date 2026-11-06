@@ -120,15 +120,34 @@ public class PostgresReservationStore implements ReservationStore {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ScheduledReservation> findByRequesterId(String requesterId) {
+        return jdbcTemplate.query("""
+                SELECT id, room_id, professor_id, requester_id, starts_at, ends_at
+                FROM reservations
+                WHERE requester_id = ? AND status <> 'CANCELADA'
+                ORDER BY starts_at, id
+                """,
+                (resultSet, rowNumber) -> new ScheduledReservation(
+                        resultSet.getLong("id"),
+                        resultSet.getString("room_id"),
+                        resultSet.getString("professor_id"),
+                        resultSet.getString("requester_id"),
+                        resultSet.getTimestamp("starts_at").toInstant(),
+                        resultSet.getTimestamp("ends_at").toInstant()),
+                requesterId);
+    }
+
+    @Override
     @Transactional
     public void update(long reservationId, ReservationPeriod period) {
-        List<ScheduledReservation> matches = jdbcTemplate.query("""
+        List<ReservationResourceIdentity> matches = jdbcTemplate.query("""
                 SELECT room_id, professor_id
                 FROM reservations
                 WHERE id = ? AND status = 'AGENDADA'
                 FOR UPDATE
                 """,
-                (resultSet, rowNumber) -> new ScheduledReservation(
+                (resultSet, rowNumber) -> new ReservationResourceIdentity(
                         resultSet.getString("room_id"), resultSet.getString("professor_id")),
                 reservationId);
         if (matches.isEmpty()) {
@@ -136,7 +155,7 @@ public class PostgresReservationStore implements ReservationStore {
                     org.springframework.http.HttpStatus.NOT_FOUND, "Reservation not found");
         }
 
-        ScheduledReservation reservation = matches.getFirst();
+        ReservationResourceIdentity reservation = matches.getFirst();
         List.of("professor:" + reservation.professorId(), "room:" + reservation.roomId()).stream()
                 .sorted()
                 .forEach(this::acquireTransactionLock);
@@ -200,6 +219,6 @@ public class PostgresReservationStore implements ReservationStore {
         });
     }
 
-    private record ScheduledReservation(String roomId, String professorId) {
+    private record ReservationResourceIdentity(String roomId, String professorId) {
     }
 }

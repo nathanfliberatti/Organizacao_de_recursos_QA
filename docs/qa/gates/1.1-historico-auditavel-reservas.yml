@@ -1,0 +1,14 @@
+schema: 1
+story: '1.1'
+gate: CONCERNS
+status_reason: 'The acceptance criteria were revalidated and ./mvnw -B verify passed with 142 tests; CodeRabbit could not be run because its CLI is unavailable in this environment, which remains a non-blocking review limitation.'
+reviewer: Quinn
+reviewed_revision: 'commit:126e9f8123d871d4711ff5e0841c4c413a3cd20c'
+updated: '2026-11-05T23:44:13Z'
+top_issues:
+  - id: MNT-001
+    severity: medium
+    finding: 'Automated CodeRabbit review was not run because the CLI is unavailable in this environment.'
+    suggested_action: 'Run the automated review before merge when the CLI is available.'
+waiver:
+  active: false

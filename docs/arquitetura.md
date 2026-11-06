@@ -14,11 +14,11 @@ As fontes documentais consultadas nesta versão são:
 - [Matriz de rastreabilidade](matriz-rastreabilidade.md): criticidade, validações planejadas, evidências e gates.
 - [README](../README.md): contém apenas o título do projeto, sem decisões arquiteturais adicionais.
 
-Não foram encontrados em `docs/` documentos separados de regras de negócio, restrições ou decisões arquiteturais anteriores. Portanto, esta seção não assume decisões técnicas ausentes das fontes.
+Não foram encontrados em `docs/` documentos separados de regras de negócio ou restrições. As decisões técnicas aprovadas estão registradas em [ADR-001](adr/ADR-001-integridade-concorrente-postgresql.md) e [ADR-002](adr/ADR-002-identidade-e-canais-produto.md); esta seção mantém explícitas as questões ainda abertas.
 
 ### Objetivo arquitetural
 
-Estabelecer os principais drivers que a arquitetura precisa satisfazer: autorizar ações por perfil, manter a consistência da agenda sob concorrência, representar o ciclo de vida de reservas, auditar mudanças e permitir demonstrar os atributos de qualidade definidos. Esta seção registra os drivers e as questões em aberto; não escolhe tecnologias, topologia ou contratos ainda não definidos.
+Estabelecer os principais drivers que a arquitetura precisa satisfazer: autorizar ações por perfil, manter a consistência da agenda sob concorrência, representar o ciclo de vida de reservas, auditar mudanças e permitir demonstrar os atributos de qualidade definidos. As escolhas aprovadas e suas fronteiras constam nos ADRs referenciados; as demais questões permanecem abertas.
 
 ### Restrição de treinamento diário
 
@@ -55,7 +55,7 @@ Não há persona de aluno nos documentos. Como `RF-01` exige autorização por p
 
 | Atributo | Necessidade documentada | Medida ou evidência disponível | Limites conhecidos |
 |---|---|---|---|
-| Segurança | Autenticação, autorização por perfil, validação de entrada e tratamento seguro de erros. | Testes de acesso permitido e negado; análise do SonarCloud. | Mecanismo de autenticação, política de sessão e requisitos adicionais não definidos (`RF-01`, `RNF-01`, `RNF-07`). |
+| Segurança | Autenticação, autorização por perfil, validação de entrada e tratamento seguro de erros. | Testes de acesso permitido e negado; análise do SonarCloud. | Mecanismo de identidade, credenciais, JWT e revogação definidos em [ADR-002](adr/ADR-002-identidade-e-canais-produto.md); requisitos adicionais e política de sessão web além do bearer inicial permanecem abertos (`RF-01`, `RNF-01`, `RNF-07`). |
 | Integridade e consistência | Impedir intervalos inválidos, sobreposição, dupla reserva concorrente e reserva durante manutenção. | Testes unitários parametrizados, de integração e teste concorrente com Testcontainers. | Volume concorrente esperado não definido (`RF-05`, `RF-06`, `RF-08`, `RF-13`, `RNF-02`). |
 | Rastreabilidade | Auditar mudanças de dados e todas as transições de estado. | Registros com ação, objeto, autor e data/hora; teste automatizado. | Retenção, proteção contra alteração e acesso ao histórico não definidos (`RF-10`, `RNF-03`). |
 | Desempenho | Avaliar consultas de disponibilidade e criação de reservas com JMeter. | Medir usuários concorrentes, duração, volume de dados, tempo de resposta e taxa de erro. | Os aspectos estão definidos, mas não há valores-alvo aprovados (`RNF-06`). |
@@ -127,7 +127,7 @@ Prioridade **P0** indica regras identificadas como críticas pelo professor ou n
 - A permissão para reservar é atribuída somente ao Solicitante (professor), pois `RF-04` diz “ao solicitante” e não há persona de aluno. Portanto, aluno não deve obter essa permissão; isso não cria um perfil ou requisito de aluno.
 - O Responsável não cria nem altera reservas, porque sua persona descreve aprovação de solicitações especiais, validação docente e movimentação de materiais, mas não reserva (`persona-responsavel.md`).
 - O Administrador administra cadastros e disponibilidade, mas não recebe automaticamente poder de aprovar recurso restrito nem de cancelar reservas de terceiros, pois essas permissões não estão documentadas (`RF-04`, `RF-07`, persona Administrador).
-- Nenhuma escolha de linguagem, framework de produção, banco, mecanismo de autenticação, hospedagem, volume, SLA ou topologia é assumida por esta seção. Tecnologias citadas para qualidade são apenas as explicitamente requeridas em `RNF-07`.
+- As escolhas aprovadas de aplicação, persistência, autenticação e canais constam em [ADR-001](adr/ADR-001-integridade-concorrente-postgresql.md) e [ADR-002](adr/ADR-002-identidade-e-canais-produto.md). Permanecem sem decisão os aspectos não cobertos por esses ADRs, como hospedagem, volume e SLA; tecnologias citadas para qualidade são as explicitamente requeridas em `RNF-07`.
 
 ## 8. Riscos Iniciais e Perguntas Abertas
 
@@ -145,7 +145,7 @@ Prioridade **P0** indica regras identificadas como críticas pelo professor ou n
 
 ---
 
-Esta é uma seção inicial de drivers, não uma arquitetura técnica aprovada. Decisões técnicas posteriores devem apontar para requisitos e decisões documentados, sem tratar lacunas desta análise como requisitos já validados.
+Esta seção reúne drivers, limites lógicos e questões abertas; as decisões técnicas já aprovadas devem ser lidas nos ADRs referenciados, sem tratar lacunas desta análise como requisitos já validados.
 
 ## 9. Responsabilidades, Limites e Interfaces
 
@@ -153,9 +153,9 @@ Esta é uma seção inicial de drivers, não uma arquitetura técnica aprovada. 
 
 | Limite | Responsabilidade | Fora do limite / não decidido |
 |---|---|---|
-| Interface do solicitante | Consultar disponibilidade e solicitar, alterar ou cancelar as próprias reservas. | Tecnologia de frontend e protocolo da API. Não concede reservas a alunos. |
-| Aplicação online | Autenticar e autorizar operações; aplicar regras de agenda, reservas, recursos, aprovação, auditoria, movimentação de materiais, relatórios e notificações. | Framework, implantação e separação em serviços físicos. Os componentes abaixo são limites lógicos, não microsserviços decididos. |
-| Persistência operacional | Registrar recursos, reservas, estados, bloqueios e eventos de auditoria com integridade. | Banco e mecanismo específico de serialização/concorrência não estão escolhidos. |
+| Interface do solicitante | Consultar disponibilidade e solicitar, alterar ou cancelar as próprias reservas. | CLI Java 21 antes da UI; frontend estático same-origin depois da API e CLI. Framework JavaScript permanece em aberto. Protocolo HTTP e autenticação Bearer constam em [ADR-002](adr/ADR-002-identidade-e-canais-produto.md). Não concede reservas a alunos. |
+| Aplicação online | Autenticar e autorizar operações; aplicar regras de agenda, reservas, recursos, aprovação, auditoria, movimentação de materiais, relatórios e notificações. | Monólito Spring Boot; detalhes de implantação permanecem em aberto. Os componentes abaixo são limites lógicos, não microsserviços decididos. |
+| Persistência operacional | Registrar recursos, reservas, estados, bloqueios e eventos de auditoria com integridade. | PostgreSQL e proteção concorrente constam em [ADR-001](adr/ADR-001-integridade-concorrente-postgresql.md); detalhes não cobertos pelo ADR permanecem em aberto. |
 | Integração de notificação | Enviar ou simular eventos de criação, alteração e cancelamento. | API externa ainda é opcional; provedor e protocolo não definidos (`RF-11`). |
 | Pipeline batch/ML | Identificar a partição nova, validá-la, preparar dados, treinar/retreinar candidato, validá-lo e registrar linhagem. | Origem dos dados, algoritmo, finalidade do modelo, runtime de inferência e tecnologias do pipeline não documentados. |
 | Registro de modelos | Manter versão, estado de validação e proveniência dos artefatos de modelo, caso a proposta seja aprovada. | Registry não é requisito explícito e não há uso online do modelo especificado. |
@@ -178,11 +178,11 @@ Esta é uma seção inicial de drivers, não uma arquitetura técnica aprovada. 
 
 ### Interfaces lógicas
 
-Os contratos abaixo são nomes e responsabilidades lógicos, não contratos HTTP, schemas ou escolhas de tecnologia aprovados.
+Os contratos abaixo são nomes e responsabilidades lógicos; os canais, o uso de HTTP e a autenticação estão definidos em [ADR-002](adr/ADR-002-identidade-e-canais-produto.md), mas os schemas e os detalhes dos fluxos ainda não estão todos definidos.
 
 | Interface lógica | Direção e dados mínimos | Regra/justificativa | Decisão |
 |---|---|---|---|
-| Consulta de disponibilidade | Interface → Aplicação: período e critérios de recurso; Aplicação → Interface: recursos disponíveis e motivos observáveis de indisponibilidade/conflito. | Sustenta pesquisa e consulta confiável (`RF-03`, persona Solicitante). | Obrigação de comportamento; protocolo e filtros por tipo ainda não definidos. |
+| Consulta de disponibilidade | CLI ou futura UI → API: período e critérios de recurso; API → cliente: recursos disponíveis e motivos observáveis de indisponibilidade/conflito. | Sustenta pesquisa e consulta confiável (`RF-03`, persona Solicitante). | Obrigação de comportamento; HTTP definido em [ADR-002](adr/ADR-002-identidade-e-canais-produto.md); filtros por tipo e demais detalhes permanecem pendentes. |
 | Comando de reserva | Interface → Aplicação: usuário autenticado, recurso(s), professor, início, término e dados exigidos a definir; resposta: estado ou rejeição compreensível. | Sustenta autorização, limites temporais, conflitos e mensagens claras (`RF-01`, `RF-04` a `RF-06`, `RF-13`, `RNF-04`). | Obrigatório; schema e mecanismo de idempotência são proposta sem requisito explícito. |
 | Comando de aprovação | Interface do Responsável → Aplicação: solicitação, decisão e justificativa quando aplicável; resposta: estado atualizado. | Somente o perfil Responsável aprova recurso restrito (`RF-07` e persona). | Obrigatório para recurso restrito; campos além da decisão e regra de justificativa não definidos. |
 | Comandos administrativos | Interface do Administrador → Aplicação: manutenção de cadastro, usuário, permissão, bloqueio ou período de manutenção. | Mantém inventário e indisponibilidades (`RF-02`, `RF-08`, personas). | Obrigatório; payloads e regras de impacto em reserva existente pendentes. |
@@ -228,16 +228,17 @@ C4Context
 
 ```mermaid
 C4Container
-	title Contêineres Lógicos — Tecnologias Não Selecionadas
+	title Monólito online e canais — decisões dos ADRs 001 e 002
 
 	Person(professor, "Solicitante / Professor", "Reserva para si")
 	Person(responsavel, "Responsável", "Aprova solicitações restritas")
 	Person(admin, "Administrador", "Administra recursos e usuários")
 
 	System_Boundary(scope, "Sistema de Organização de Recursos") {
-		Container(web, "Interface responsiva", "Tecnologia a definir", "Consulta e comandos conforme perfil")
-		Container(api, "Aplicação online", "Runtime a definir", "Autorização, regras, transações, auditoria e relatórios")
-		ContainerDb(operationalStore, "Repositório operacional", "Banco a definir", "Recursos, reservas, estados, manutenção e dados de auditoria")
+		Container(cli, "CLI", "Java 21; JDK HttpClient", "Primeiro canal cliente; incluído no JAR executável")
+		Container(api, "API e aplicação online", "Monólito Spring Boot", "Fonte única de regras e autorização")
+		Container(web, "Frontend estático same-origin", "src/main/resources/static; framework JS a definir", "Canal web posterior à API e à CLI")
+		ContainerDb(operationalStore, "Repositório operacional", "PostgreSQL", "Recursos, reservas, estados, manutenção e dados de auditoria")
 		Container(batch, "Pipeline batch diário", "Agendador e runtime a definir", "Incrementalização, qualidade, preparação, treinamento e validação")
 		ContainerDb(trainingStore, "Armazenamento de lotes", "Tecnologia a definir", "Checkpoints, manifestos, snapshots/datasets e resultados de execução")
 		ContainerDb(modelRegistry, "Registry lógico de modelos", "Tecnologia a definir; proposta", "Candidatos, versões, métricas, proveniência e estado de promoção")
@@ -246,18 +247,20 @@ C4Container
 	System_Ext(trainingSource, "Fonte autorizada de treinamento", "A definir; pode ou não coincidir com dados operacionais")
 	System_Ext(notificationProvider, "API externa de notificação", "Opcional; mecanismo simulado também permitido")
 
-	Rel(professor, web, "Consulta e gerencia próprias reservas")
+	Rel(professor, cli, "Usa primeiro o slice CLI")
+	Rel(professor, web, "Usa a interface web após sua entrega")
 	Rel(responsavel, web, "Aprova e acompanha solicitações/materiais")
 	Rel(admin, web, "Mantém recursos e indisponibilidades")
-	Rel(web, api, "Comandos e consultas; protocolo a definir")
-	Rel(api, operationalStore, "Lê/escreve dados operacionais com garantia transacional a definir")
+	Rel(cli, api, "Comandos e consultas HTTP; Bearer")
+	Rel(web, api, "Comandos e consultas HTTP; Bearer")
+	Rel(api, operationalStore, "Lê/escreve; integridade concorrente conforme ADR-001")
 	Rel(api, notificationProvider, "Entrega eventos se integração externa for selecionada")
 	Rel(batch, trainingSource, "Lê delta limitado por cursor; contrato a definir")
 	Rel(batch, trainingStore, "Persiste checkpoint, lote, manifesto e métricas")
 	Rel(batch, modelRegistry, "Registra candidato e versão; promove somente segundo política aprovada")
 ```
 
-**Origem/decisões:** interface responsiva (`RNF-04`), API ou fluxos públicos (`RNF-05`), persistência para as regras de reserva (`RF-02` a `RF-10`), treinamento diário informado pelo solicitante. Separar contêineres batch, store de treinamento e registry é uma decomposição lógica proposta; não implica implantação física, produto, banco, protocolo ou fonte de dados já escolhidos.
+**Origem/decisões:** monólito Spring Boot, PostgreSQL, API HTTP, CLI antes da UI e frontend estático same-origin conforme [ADR-001](adr/ADR-001-integridade-concorrente-postgresql.md) e [ADR-002](adr/ADR-002-identidade-e-canais-produto.md); interface responsiva (`RNF-04`), API (`RNF-05`) e treinamento diário informado pelo solicitante. Separar contêineres batch, store de treinamento e registry é uma decomposição lógica proposta; implantação/runtime batch, store de treinamento, registry e fonte de dados continuam sem decisão.
 
 ### C4 — Componentes da aplicação online
 
@@ -278,7 +281,7 @@ C4Component
 		Component(reporting, "Relatórios", "Componente lógico", "Produz relatórios mensais por recurso, carga e conflitos evitados")
 	}
 
-	ContainerDb(store, "Repositório operacional", "Banco não selecionado", "Recursos, reservas, bloqueios e registros")
+	ContainerDb(store, "Repositório operacional", "PostgreSQL", "Recursos, reservas, bloqueios e registros; integridade concorrente conforme ADR-001")
 	System_Ext(notifier, "API externa de notificação", "Opcional")
 
 	Rel(publicInterface, authz, "Verifica identidade e permissão")
@@ -307,7 +310,7 @@ C4Component
 
 ### Fluxo online — consulta e comando de reserva
 
-O fluxo abaixo mostra o comportamento arquitetural requerido e uma forma de delimitar a proteção contra concorrência. Não decide protocolo de API, banco ou técnica de lock.
+O fluxo abaixo mostra o comportamento arquitetural requerido por HTTP autenticado e uma forma de delimitar a proteção contra concorrência. O uso de PostgreSQL e a técnica de integridade concorrente constam em [ADR-001](adr/ADR-001-integridade-concorrente-postgresql.md); schemas detalhados e regras de transição ainda pendentes não são definidos aqui.
 
 ```mermaid
 sequenceDiagram

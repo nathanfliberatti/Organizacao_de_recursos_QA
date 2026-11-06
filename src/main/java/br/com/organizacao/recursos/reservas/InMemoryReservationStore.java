@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Profile("!postgres")
 public class InMemoryReservationStore implements ReservationStore {
     private final List<RejectedAttempt> rejectedAttempts = new CopyOnWriteArrayList<>();
-    private final Map<Long, ScheduledReservation> reservations = new ConcurrentHashMap<>();
+    private final Map<Long, StoredReservation> reservations = new ConcurrentHashMap<>();
     private final AtomicLong reservationIds = new AtomicLong();
 
     @Override
@@ -26,7 +26,7 @@ public class InMemoryReservationStore implements ReservationStore {
     public OptionalLong scheduleWithId(
             String roomId, String professorId, String requesterId, ReservationPeriod period) {
         long id = reservationIds.incrementAndGet();
-        reservations.put(id, new ScheduledReservation(roomId, professorId, requesterId, period));
+        reservations.put(id, new StoredReservation(roomId, professorId, requesterId, period));
         return OptionalLong.of(id);
     }
 
@@ -42,8 +42,23 @@ public class InMemoryReservationStore implements ReservationStore {
 
     @Override
     public Optional<String> requesterId(long reservationId) {
-        ScheduledReservation reservation = reservations.get(reservationId);
+        StoredReservation reservation = reservations.get(reservationId);
         return reservation == null ? Optional.empty() : Optional.of(reservation.requesterId());
+    }
+
+    @Override
+    public List<ScheduledReservation> findByRequesterId(String requesterId) {
+        return reservations.entrySet().stream()
+                .filter(entry -> entry.getValue().requesterId().equals(requesterId))
+                .map(entry -> new ScheduledReservation(
+                        entry.getKey(),
+                        entry.getValue().roomId(),
+                        entry.getValue().professorId(),
+                        entry.getValue().requesterId(),
+                        entry.getValue().period().startsAt(),
+                        entry.getValue().period().endsAt()))
+                .sorted(java.util.Comparator.comparingLong(ScheduledReservation::id))
+                .toList();
     }
 
     @Override
@@ -53,7 +68,7 @@ public class InMemoryReservationStore implements ReservationStore {
                 throw new org.springframework.web.server.ResponseStatusException(
                         org.springframework.http.HttpStatus.NOT_FOUND, "Reservation not found");
             }
-            return new ScheduledReservation(
+                return new StoredReservation(
                     reservation.roomId(), reservation.professorId(), reservation.requesterId(), period);
         });
     }
@@ -61,7 +76,7 @@ public class InMemoryReservationStore implements ReservationStore {
     private record RejectedAttempt(String roomId, String professorId, ReservationPeriod period) {
     }
 
-    private record ScheduledReservation(
+    private record StoredReservation(
             String roomId, String professorId, String requesterId, ReservationPeriod period) {
     }
 }

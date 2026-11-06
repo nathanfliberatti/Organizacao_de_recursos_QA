@@ -1,5 +1,6 @@
 package br.com.organizacao.recursos.reservas;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.springframework.context.annotation.Profile;
@@ -18,5 +19,12 @@ public class InMemoryResourceStore implements ResourceStore {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Resource already exists");
         }
         return resource;
+    }
+
+    @Override
+    public List<Resource> findAll() {
+        return resources.values().stream()
+                .sorted(java.util.Comparator.comparing(Resource::id))
+                .toList();
     }
 }

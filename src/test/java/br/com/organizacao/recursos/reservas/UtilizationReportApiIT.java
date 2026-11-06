@@ -51,6 +51,9 @@ class UtilizationReportApiIT {
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.datasource.driver-class-name", POSTGRES::getDriverClassName);
+        registry.add("RECURSOS_JWT_SECRET", () -> "utilization-test-secret-with-at-least-32-bytes");
+        registry.add("BOOTSTRAP_ADMIN_LOGIN", () -> "utilization-admin");
+        registry.add("BOOTSTRAP_ADMIN_PASSWORD", () -> "utilization-password");
     }
 
     @BeforeEach
@@ -84,7 +87,6 @@ class UtilizationReportApiIT {
                         .content("""
                                 {
                                   "resourceId": "resource-a",
-                                  "professorId": "professor-new",
                                   "startsAt": "2026-11-02T10:15:00Z",
                                   "endsAt": "2026-11-02T10:45:00Z"
                                 }

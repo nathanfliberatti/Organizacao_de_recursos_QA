@@ -1,5 +1,6 @@
 package br.com.organizacao.recursos.reservas;
 
+import java.util.List;
 import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
@@ -27,5 +28,13 @@ public class PostgresResourceStore implements ResourceStore {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Resource already exists", exception);
         }
         return resource;
+    }
+
+    @Override
+    public List<Resource> findAll() {
+        return jdbcTemplate.query(
+                "SELECT resource_id, capacity FROM resources ORDER BY resource_id",
+                (resultSet, rowNumber) -> new Resource(
+                        resultSet.getString("resource_id"), resultSet.getInt("capacity")));
     }
 }

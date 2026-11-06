@@ -67,13 +67,15 @@ class ReservationConcurrencyIT {
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.datasource.driver-class-name", POSTGRES::getDriverClassName);
+        registry.add("RECURSOS_JWT_SECRET", () -> "concurrency-test-secret-with-at-least-32-bytes");
+        registry.add("BOOTSTRAP_ADMIN_LOGIN", () -> "concurrency-admin");
+        registry.add("BOOTSTRAP_ADMIN_PASSWORD", () -> "concurrency-password");
     }
 
     @RepeatedTest(5)
     void onlyOneConcurrentReservationIsAcceptedForSameRoomAndTime() throws Exception {
         verifyExactlyOneAcceptedAndOneDatabaseRow(
-                index -> new CreateReservationRequest("room-shared", STARTS_AT, ENDS_AT,
-                        "professor-" + index),
+                index -> new CreateReservationRequest("room-shared", STARTS_AT, ENDS_AT),
                 "room_id",
                 "room-shared");
     }
@@ -81,8 +83,7 @@ class ReservationConcurrencyIT {
     @RepeatedTest(5)
     void onlyOneConcurrentReservationIsAcceptedForSameProfessorAndTime() throws Exception {
         verifyExactlyOneAcceptedAndOneDatabaseRow(
-                index -> new CreateReservationRequest("room-" + index, STARTS_AT, ENDS_AT,
-                        "professor-shared"),
+                index -> new CreateReservationRequest("room-" + index, STARTS_AT, ENDS_AT),
                 "professor_id",
                 "professor-shared");
     }
@@ -134,8 +135,10 @@ class ReservationConcurrencyIT {
                     if (!start.await(30, TimeUnit.SECONDS)) {
                         throw new IllegalStateException("Concurrent start latch timed out");
                     }
+                    String subject = "professor_id".equals(resourceColumn)
+                            ? "professor-shared" : "requester-" + requestIndex;
                     MvcResult result = mockMvc.perform(post("/api/reservations")
-                                    .with(jwt().jwt(token -> token.subject("requester-" + requestIndex))
+                                    .with(jwt().jwt(token -> token.subject(subject))
                                             .authorities(new SimpleGrantedAuthority("ROLE_SOLICITANTE")))
                                     .with(csrf())
                                     .contentType("application/json")

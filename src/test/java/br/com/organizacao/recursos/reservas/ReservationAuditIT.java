@@ -50,6 +50,9 @@ class ReservationAuditIT {
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.datasource.driver-class-name", POSTGRES::getDriverClassName);
+        registry.add("RECURSOS_JWT_SECRET", () -> "audit-test-secret-with-at-least-32-bytes-here");
+        registry.add("BOOTSTRAP_ADMIN_LOGIN", () -> "audit-admin");
+        registry.add("BOOTSTRAP_ADMIN_PASSWORD", () -> "audit-password");
     }
 
     @BeforeEach

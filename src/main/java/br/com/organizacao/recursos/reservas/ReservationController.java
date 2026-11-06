@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class ReservationController {
@@ -23,16 +26,19 @@ public class ReservationController {
     private final ReservationSchedulingService reservationSchedulingService;
     private final ReservationAuditService reservationAuditService;
     private final Clock clock;
+    private final Environment environment;
 
     public ReservationController(
             ReservationCatalog reservationCatalog,
             ReservationSchedulingService reservationSchedulingService,
             ReservationAuditService reservationAuditService,
-            Clock clock) {
+            Clock clock,
+            Environment environment) {
         this.reservationCatalog = reservationCatalog;
         this.reservationSchedulingService = reservationSchedulingService;
         this.reservationAuditService = reservationAuditService;
         this.clock = clock;
+        this.environment = environment;
     }
 
     @GetMapping("/api/reservations/restricted")
@@ -86,10 +92,25 @@ public class ReservationController {
     public ResponseEntity<ReservationAttemptResponse> create(
             @Valid @RequestBody CreateReservationRequest request,
             Authentication authentication) {
+        if (!environment.acceptsProfiles(Profiles.of("perf")) && request.professorId() != null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "professorId is derived from the authenticated user");
+        }
         ReservationAttemptResponse result = reservationSchedulingService.schedule(request, authentication.getName());
         HttpStatus status = result.accepted() ? HttpStatus.CREATED : HttpStatus.CONFLICT;
         return ResponseEntity.status(status).body(result);
     }
+
+        @GetMapping("/api/reservations")
+        public List<ScheduledReservationResponse> ownReservations(Authentication authentication) {
+        return reservationSchedulingService.findByRequesterId(authentication.getName()).stream()
+            .map(reservation -> new ScheduledReservationResponse(
+                reservation.id(),
+                reservation.resourceId(),
+                reservation.startsAt(),
+                reservation.endsAt()))
+            .toList();
+        }
 
     @PutMapping("/api/reservations/{id}")
     @PreAuthorize("isAuthenticated()")
@@ -177,5 +198,12 @@ public class ReservationController {
     @FunctionalInterface
     private interface ReservationAction {
         ReservationTransition prepare(Reservation reservation, User actor);
+    }
+
+    public record ScheduledReservationResponse(
+            long id,
+            String resourceId,
+            java.time.Instant startsAt,
+            java.time.Instant endsAt) {
     }
 }
