@@ -30,6 +30,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @Profile("!perf")
 public class AppSecurityConfiguration {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final org.slf4j.Logger LOGGER =
             org.slf4j.LoggerFactory.getLogger(AppSecurityConfiguration.class);
 
@@ -68,7 +69,7 @@ public class AppSecurityConfiguration {
             LOGGER.warn("app.security.jwt-secret nao definido: usando chave aleatoria desta execucao. "
                     + "Defina JWT_SECRET em ambientes reais.");
             byte[] random = new byte[32];
-            new SecureRandom().nextBytes(random);
+            SECURE_RANDOM.nextBytes(random);
             return new SecretKeySpec(random, "HmacSHA256");
         }
         byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);

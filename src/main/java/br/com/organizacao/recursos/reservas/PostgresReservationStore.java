@@ -39,6 +39,10 @@ public class PostgresReservationStore implements ReservationStore {
             FROM reservations r
             LEFT JOIN reservation_lifecycle l ON l.reservation_id = r.id::TEXT AND l.deleted = FALSE
             """;
+    private static final String LIST_ALL_SQL = SUMMARY_SQL + "ORDER BY r.starts_at DESC, r.id DESC";
+    private static final String LIST_BY_REQUESTER_SQL =
+            SUMMARY_SQL + "WHERE r.requester_id = ? ORDER BY r.starts_at DESC, r.id DESC";
+    private static final String FIND_SQL = SUMMARY_SQL + "WHERE r.id = ?";
     private static final org.springframework.jdbc.core.RowMapper<ReservationSummary> SUMMARY_MAPPER =
             (resultSet, rowNumber) -> new ReservationSummary(
                     String.valueOf(resultSet.getLong("id")),
@@ -198,17 +202,15 @@ public class PostgresReservationStore implements ReservationStore {
     @Override
     @Transactional(readOnly = true)
     public List<ReservationSummary> list(String requesterId) {
-        String where = requesterId == null ? "" : "WHERE r.requester_id = ? ";
-        String sql = SUMMARY_SQL + where + "ORDER BY r.starts_at DESC, r.id DESC";
         return requesterId == null
-                ? jdbcTemplate.query(sql, SUMMARY_MAPPER)
-                : jdbcTemplate.query(sql, SUMMARY_MAPPER, requesterId);
+                ? jdbcTemplate.query(LIST_ALL_SQL, SUMMARY_MAPPER)
+                : jdbcTemplate.query(LIST_BY_REQUESTER_SQL, SUMMARY_MAPPER, requesterId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<ReservationSummary> find(long reservationId) {
-        return jdbcTemplate.query(SUMMARY_SQL + "WHERE r.id = ?", SUMMARY_MAPPER, reservationId)
+        return jdbcTemplate.query(FIND_SQL, SUMMARY_MAPPER, reservationId)
                 .stream().findFirst();
     }
 

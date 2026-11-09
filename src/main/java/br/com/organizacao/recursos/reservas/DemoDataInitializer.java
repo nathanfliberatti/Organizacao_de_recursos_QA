@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 @Component
 @Profile("!perf")
 public class DemoDataInitializer implements ApplicationRunner {
+    private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
     private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(DemoDataInitializer.class);
 
     private final boolean enabled;
@@ -44,7 +45,7 @@ public class DemoDataInitializer implements ApplicationRunner {
         String demoSecret = configuredSecret;
         if (demoSecret.isBlank()) {
             byte[] random = new byte[12];
-            new java.security.SecureRandom().nextBytes(random);
+            SECURE_RANDOM.nextBytes(random);
             demoSecret = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(random);
             LOGGER.warn("Usuarios de demonstracao criados (admin, responsavel, solicitante) com a senha gerada: {}",
                     demoSecret);

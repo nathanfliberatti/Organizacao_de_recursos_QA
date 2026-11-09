@@ -20,6 +20,15 @@ public class PostgresNotificationStore implements NotificationStore {
             resultSet.getString("delivery"),
             resultSet.getTimestamp("created_at").toInstant());
 
+    private static final String LIST_ALL_SQL = """
+            SELECT notification_id, event_type, reservation_id, recipient_id, message, delivery, created_at
+            FROM notifications ORDER BY notification_id DESC LIMIT ?
+            """;
+    private static final String LIST_BY_RECIPIENT_SQL = """
+            SELECT notification_id, event_type, reservation_id, recipient_id, message, delivery, created_at
+            FROM notifications WHERE recipient_id = ? ORDER BY notification_id DESC LIMIT ?
+            """;
+
     private final JdbcTemplate jdbcTemplate;
 
     public PostgresNotificationStore(JdbcTemplate jdbcTemplate) {
@@ -42,11 +51,8 @@ public class PostgresNotificationStore implements NotificationStore {
 
     @Override
     public List<Notification> list(String recipientId, int limit) {
-        String where = recipientId == null ? "" : "WHERE recipient_id = ? ";
-        String sql = "SELECT notification_id, event_type, reservation_id, recipient_id, message, delivery, created_at"
-                + " FROM notifications " + where + "ORDER BY notification_id DESC LIMIT ?";
         return recipientId == null
-                ? jdbcTemplate.query(sql, MAPPER, limit)
-                : jdbcTemplate.query(sql, MAPPER, recipientId, limit);
+                ? jdbcTemplate.query(LIST_ALL_SQL, MAPPER, limit)
+                : jdbcTemplate.query(LIST_BY_RECIPIENT_SQL, MAPPER, recipientId, limit);
     }
 }
