@@ -36,7 +36,9 @@ public class AppSecurityConfiguration {
     @Bean
     SecurityFilterChain applicationSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
+                // CSRF nao se aplica: a API e stateless, autenticada apenas pelo header Authorization (Bearer),
+                // sem cookies nem sessao, entao um site de terceiros nao consegue reutilizar a credencial.
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**")) // NOSONAR java:S4502
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/index.html", "/favicon.ico", "/css/**", "/js/**").permitAll()
