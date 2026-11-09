@@ -15,19 +15,22 @@ import org.springframework.beans.factory.annotation.Value;
 @Component
 @Profile("!perf")
 public class DemoDataInitializer implements ApplicationRunner {
-    static final String DEMO_PASSWORD = "Senha@123";
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(DemoDataInitializer.class);
 
     private final boolean enabled;
+    private final String configuredSecret;
     private final UserStore userStore;
     private final ResourceStore resourceStore;
     private final PasswordEncoder passwordEncoder;
 
     public DemoDataInitializer(
             @Value("${app.demo-data.enabled:false}") boolean enabled,
+            @Value("${app.demo-data.password:}") String configuredSecret,
             UserStore userStore,
             ResourceStore resourceStore,
             PasswordEncoder passwordEncoder) {
         this.enabled = enabled;
+        this.configuredSecret = configuredSecret;
         this.userStore = userStore;
         this.resourceStore = resourceStore;
         this.passwordEncoder = passwordEncoder;
@@ -38,7 +41,15 @@ public class DemoDataInitializer implements ApplicationRunner {
         if (!enabled || userStore.count() > 0) {
             return;
         }
-        String hash = passwordEncoder.encode(DEMO_PASSWORD);
+        String demoSecret = configuredSecret;
+        if (demoSecret.isBlank()) {
+            byte[] random = new byte[12];
+            new java.security.SecureRandom().nextBytes(random);
+            demoSecret = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(random);
+            LOGGER.warn("Usuarios de demonstracao criados (admin, responsavel, solicitante) com a senha gerada: {}",
+                    demoSecret);
+        }
+        String hash = passwordEncoder.encode(demoSecret);
         List.of(
                 new AppUser("admin", hash, "Ana Administradora", UserRole.ADMINISTRADOR, true),
                 new AppUser("responsavel", hash, "Rui Responsavel", UserRole.RESPONSAVEL, true),

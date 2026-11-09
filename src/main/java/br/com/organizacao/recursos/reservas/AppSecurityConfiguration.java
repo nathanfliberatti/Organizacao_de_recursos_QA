@@ -2,6 +2,7 @@ package br.com.organizacao.recursos.reservas;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +30,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @Profile("!perf")
 public class AppSecurityConfiguration {
+    private static final org.slf4j.Logger LOGGER =
+            org.slf4j.LoggerFactory.getLogger(AppSecurityConfiguration.class);
+
     @Bean
     SecurityFilterChain applicationSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -52,14 +56,34 @@ public class AppSecurityConfiguration {
         return authenticationConverter;
     }
 
+    /**
+     * Chave HS256 do JWT. Vem de {@code app.security.jwt-secret} (variavel JWT_SECRET); sem ela, gera-se uma chave
+     * aleatoria a cada inicializacao, o que invalida os tokens ao reiniciar e nao serve para varias instancias.
+     */
     @Bean
-    JwtEncoder applicationJwtEncoder(@Value("${app.security.jwt-secret}") String secret) {
-        return new NimbusJwtEncoder(new ImmutableSecret<>(secretKey(secret)));
+    SecretKey applicationJwtKey(@Value("${app.security.jwt-secret:}") String secret) {
+        if (secret.isBlank()) {
+            LOGGER.warn("app.security.jwt-secret nao definido: usando chave aleatoria desta execucao. "
+                    + "Defina JWT_SECRET em ambientes reais.");
+            byte[] random = new byte[32];
+            new SecureRandom().nextBytes(random);
+            return new SecretKeySpec(random, "HmacSHA256");
+        }
+        byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (bytes.length < 32) {
+            throw new IllegalStateException("app.security.jwt-secret must have at least 32 bytes");
+        }
+        return new SecretKeySpec(bytes, "HmacSHA256");
     }
 
     @Bean
-    JwtDecoder applicationJwtDecoder(@Value("${app.security.jwt-secret}") String secret) {
-        return NimbusJwtDecoder.withSecretKey(secretKey(secret)).macAlgorithm(MacAlgorithm.HS256).build();
+    JwtEncoder applicationJwtEncoder(SecretKey applicationJwtKey) {
+        return new NimbusJwtEncoder(new ImmutableSecret<>(applicationJwtKey));
+    }
+
+    @Bean
+    JwtDecoder applicationJwtDecoder(SecretKey applicationJwtKey) {
+        return NimbusJwtDecoder.withSecretKey(applicationJwtKey).macAlgorithm(MacAlgorithm.HS256).build();
     }
 
     @Bean
@@ -67,11 +91,4 @@ public class AppSecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
-    private SecretKey secretKey(String secret) {
-        byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
-        if (bytes.length < 32) {
-            throw new IllegalStateException("app.security.jwt-secret must have at least 32 bytes");
-        }
-        return new SecretKeySpec(bytes, "HmacSHA256");
-    }
 }

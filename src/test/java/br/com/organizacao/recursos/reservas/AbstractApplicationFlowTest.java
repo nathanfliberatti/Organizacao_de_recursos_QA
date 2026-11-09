@@ -13,6 +13,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
@@ -21,7 +23,12 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  * manutencao, materiais e notificacoes. Executado com armazenamento em memoria e com PostgreSQL.
  */
 abstract class AbstractApplicationFlowTest {
-    protected static final String PASSWORD = "Senha@123";
+    protected static final String PASSWORD = UUID.randomUUID().toString();
+
+    @DynamicPropertySource
+    static void demoUserCredentials(DynamicPropertyRegistry registry) {
+        registry.add("app.demo-data.password", () -> PASSWORD);
+    }
 
     @Autowired
     protected MockMvc mockMvc;

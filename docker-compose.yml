@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: resource_reservations
       POSTGRES_USER: resource_app
-      POSTGRES_PASSWORD: resource_app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina a variavel DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
