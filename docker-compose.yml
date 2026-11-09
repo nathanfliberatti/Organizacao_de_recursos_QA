@@ -1,0 +1,20 @@
+# PostgreSQL local para o perfil "postgres". O usuario criado pela imagem e superusuario, o que permite
+# a extensao btree_gist exigida pelas constraints de exclusao (ADR-001).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: resource_reservations
+      POSTGRES_USER: resource_app
+      POSTGRES_PASSWORD: resource_app
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resource_app -d resource_reservations"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  pgdata:

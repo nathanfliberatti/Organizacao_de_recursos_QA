@@ -1,5 +1,6 @@
 package br.com.organizacao.recursos.reservas;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,7 +27,7 @@ public class InMemoryReservationStore implements ReservationStore {
     public OptionalLong scheduleWithId(
             String roomId, String professorId, String requesterId, ReservationPeriod period) {
         long id = reservationIds.incrementAndGet();
-        reservations.put(id, new ScheduledReservation(roomId, professorId, requesterId, period));
+        reservations.put(id, new ScheduledReservation(roomId, professorId, requesterId, period, false));
         return OptionalLong.of(id);
     }
 
@@ -54,14 +55,51 @@ public class InMemoryReservationStore implements ReservationStore {
                         org.springframework.http.HttpStatus.NOT_FOUND, "Reservation not found");
             }
             return new ScheduledReservation(
-                    reservation.roomId(), reservation.professorId(), reservation.requesterId(), period);
+                    reservation.roomId(), reservation.professorId(), reservation.requesterId(), period,
+                    reservation.cancelled());
         });
+    }
+
+    @Override
+    public List<ReservationSummary> list(String requesterId) {
+        return reservations.entrySet().stream()
+                .filter(entry -> requesterId == null || requesterId.equals(entry.getValue().requesterId()))
+                .sorted(Comparator.comparing((java.util.Map.Entry<Long, ScheduledReservation> entry) ->
+                        entry.getValue().period().startsAt()).reversed())
+                .map(entry -> summary(entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
+    @Override
+    public Optional<ReservationSummary> find(long reservationId) {
+        ScheduledReservation reservation = reservations.get(reservationId);
+        return reservation == null ? Optional.empty() : Optional.of(summary(reservationId, reservation));
+    }
+
+    @Override
+    public boolean cancel(long reservationId) {
+        boolean[] cancelled = {false};
+        reservations.computeIfPresent(reservationId, (id, reservation) -> {
+            if (reservation.cancelled()) {
+                return reservation;
+            }
+            cancelled[0] = true;
+            return new ScheduledReservation(reservation.roomId(), reservation.professorId(),
+                    reservation.requesterId(), reservation.period(), true);
+        });
+        return cancelled[0];
+    }
+
+    private ReservationSummary summary(long id, ScheduledReservation reservation) {
+        return new ReservationSummary(String.valueOf(id), reservation.roomId(), reservation.professorId(),
+                reservation.requesterId(), reservation.period().startsAt(), reservation.period().endsAt(),
+                reservation.cancelled() ? "CANCELADA" : "AGENDADA", null);
     }
 
     private record RejectedAttempt(String roomId, String professorId, ReservationPeriod period) {
     }
 
     private record ScheduledReservation(
-            String roomId, String professorId, String requesterId, ReservationPeriod period) {
+            String roomId, String professorId, String requesterId, ReservationPeriod period, boolean cancelled) {
     }
 }

@@ -1,0 +1,57 @@
+:root {
+  --bg: #f4f6f9; --surface: #fff; --text: #1d2733; --muted: #5b6b7c; --border: #d7dee6;
+  --primary: #1f5fbf; --primary-dark: #174a96; --danger: #b3261e; --ok: #1b7a3d; --warn: #9a5b00;
+  --radius: 8px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.45; }
+.skip-link { position: absolute; left: -999px; } .skip-link:focus { left: 8px; top: 8px; background: #fff; padding: 8px; z-index: 20; }
+.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; background: var(--primary-dark); color: #fff; padding: 8px 16px; }
+.brand { font-weight: 700; font-size: 1.1rem; }
+nav { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
+nav a { color: #dce8fb; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
+nav a:hover, nav a[aria-current="page"] { background: rgba(255,255,255,.18); color: #fff; }
+.session { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
+.menu-toggle { display: none; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 1.5rem; margin: 0 0 12px; } h2 { font-size: 1.15rem; margin: 0 0 8px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: end; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: .9rem; font-weight: 600; }
+label.inline { flex-direction: row; align-items: center; font-weight: 500; }
+input, select, textarea, button { font: inherit; }
+input, select, textarea { padding: 8px; border: 1px solid #9aa7b5; border-radius: 6px; background: #fff; color: var(--text); }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #f2b900; outline-offset: 1px; }
+button { padding: 8px 14px; border-radius: 6px; border: 1px solid var(--primary); background: var(--primary); color: #fff; cursor: pointer; }
+button:hover { background: var(--primary-dark); }
+button.secondary { background: #fff; color: var(--primary); }
+button.secondary:hover { background: #eaf1fc; }
+button.danger { background: var(--danger); border-color: var(--danger); }
+button.small { padding: 4px 9px; font-size: .85rem; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+.empty { color: var(--muted); padding: 12px 0; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 700; background: #e6ebf1; color: #33414f; }
+.badge.SOLICITADA { background: #fff1cf; color: var(--warn); } .badge.APROVADA { background: #dff3e6; color: var(--ok); }
+.badge.EM_USO { background: #dbe8fb; color: var(--primary-dark); } .badge.CONCLUIDA { background: #e6ebf1; }
+.badge.CANCELADA { background: #fbdedc; color: var(--danger); }
+.toast { position: fixed; right: 16px; bottom: 16px; max-width: 420px; padding: 12px 16px; border-radius: var(--radius); background: #1d2733; color: #fff; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 30; }
+.toast.show { opacity: 1; } .toast.error { background: var(--danger); } .toast.ok { background: var(--ok); }
+dialog { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; width: min(560px, 94vw); }
+dialog::backdrop { background: rgba(0,0,0,.4); }
+.login { max-width: 380px; margin: 8vh auto; }
+.hint { color: var(--muted); font-size: .85rem; }
+.error-text { color: var(--danger); }
+.kpi { font-size: 2rem; font-weight: 700; }
+ol.timeline { padding-left: 20px; } ol.timeline li { margin-bottom: 6px; }
+@media (max-width: 720px) {
+  .menu-toggle { display: inline-block; margin-left: auto; }
+  nav { display: none; flex-basis: 100%; flex-direction: column; } nav.open { display: flex; }
+  .session { flex-basis: 100%; justify-content: space-between; }
+  main { padding: 10px; }
+}

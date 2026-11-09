@@ -64,6 +64,18 @@ public class ReservationSchedulingService {
         }
     }
 
+    public java.util.List<ReservationSummary> list(String requesterId) {
+        return reservationStore.list(requesterId);
+    }
+
+    public Optional<ReservationSummary> find(long reservationId) {
+        return reservationStore.find(reservationId);
+    }
+
+    public boolean cancel(long reservationId) {
+        return reservationStore.cancel(reservationId);
+    }
+
     public boolean isAvailable(String resourceId, ReservationPeriod period) {
         return isAvailable(resourceId, null, period);
     }

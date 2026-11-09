@@ -33,6 +33,23 @@ public class PostgresReservationStore implements ReservationStore {
             )
             """;
 
+    private static final String SUMMARY_SQL = """
+            SELECT r.id, r.room_id, r.professor_id, r.requester_id, r.starts_at, r.ends_at, r.status,
+                   l.status AS lifecycle_status
+            FROM reservations r
+            LEFT JOIN reservation_lifecycle l ON l.reservation_id = r.id::TEXT AND l.deleted = FALSE
+            """;
+    private static final org.springframework.jdbc.core.RowMapper<ReservationSummary> SUMMARY_MAPPER =
+            (resultSet, rowNumber) -> new ReservationSummary(
+                    String.valueOf(resultSet.getLong("id")),
+                    resultSet.getString("room_id"),
+                    resultSet.getString("professor_id"),
+                    resultSet.getString("requester_id"),
+                    resultSet.getTimestamp("starts_at").toInstant(),
+                    resultSet.getTimestamp("ends_at").toInstant(),
+                    resultSet.getString("status"),
+                    resultSet.getString("lifecycle_status"));
+
     private final JdbcTemplate jdbcTemplate;
 
     public PostgresReservationStore(JdbcTemplate jdbcTemplate) {
@@ -176,6 +193,31 @@ public class PostgresReservationStore implements ReservationStore {
             }
             throw exception;
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservationSummary> list(String requesterId) {
+        String where = requesterId == null ? "" : "WHERE r.requester_id = ? ";
+        String sql = SUMMARY_SQL + where + "ORDER BY r.starts_at DESC, r.id DESC";
+        return requesterId == null
+                ? jdbcTemplate.query(sql, SUMMARY_MAPPER)
+                : jdbcTemplate.query(sql, SUMMARY_MAPPER, requesterId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ReservationSummary> find(long reservationId) {
+        return jdbcTemplate.query(SUMMARY_SQL + "WHERE r.id = ?", SUMMARY_MAPPER, reservationId)
+                .stream().findFirst();
+    }
+
+    @Override
+    @Transactional
+    public boolean cancel(long reservationId) {
+        return jdbcTemplate.update(
+                "UPDATE reservations SET status = 'CANCELADA' WHERE id = ? AND status = 'AGENDADA'",
+                reservationId) == 1;
     }
 
     private boolean hasSqlState(Throwable throwable, String expectedState) {

@@ -11,6 +11,27 @@ O projeto usa Maven Wrapper e requer Java 21.
 Testes unitários JUnit 5 são executados pelo Surefire. Testes de integração com
 sufixo `IT` são executados pelo Failsafe durante `verify`.
 
+## Executando a aplicação (frontend + API + banco)
+
+O frontend é estático (HTML/CSS/JS, sem build) e é servido pelo próprio Spring Boot em `/`.
+
+```bash
+docker compose up -d db
+APP_DEMO_DATA=true SPRING_PROFILES_ACTIVE=postgres ./mvnw spring-boot:run
+```
+
+Abra <http://localhost:8080>. Com `APP_DEMO_DATA=true`, e somente se a tabela `app_users` estiver vazia, são
+criados os usuários de demonstração `admin`, `responsavel` e `solicitante` (senha `Senha@123`) e alguns recursos.
+Não use dados de demonstração em produção; defina `JWT_SECRET` (mínimo de 32 bytes) em qualquer ambiente real.
+
+Variáveis do perfil `postgres`: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `APP_DEMO_DATA`.
+
+Sem o perfil `postgres` a aplicação sobe com armazenamento em memória, apenas para desenvolvimento: **esse modo
+não impede dupla reserva** (a garantia vem das constraints do PostgreSQL, ver ADR-001) e o relatório de
+utilização não está disponível.
+
+Detalhes de telas, endpoints e modelo de dados em [docs/frontend-e-banco-de-dados.md](docs/frontend-e-banco-de-dados.md).
+
 ## Integração contínua
 
 O workflow em `.github/workflows/ci.yml` executa `./mvnw -B verify` em pull

@@ -23,6 +23,7 @@ public class ReservationController {
     private final ReservationSchedulingService reservationSchedulingService;
     private final ReservationAuditService reservationAuditService;
     private final Clock clock;
+    private ReservationExtras extras;
 
     public ReservationController(
             ReservationCatalog reservationCatalog,
@@ -33,6 +34,12 @@ public class ReservationController {
         this.reservationSchedulingService = reservationSchedulingService;
         this.reservationAuditService = reservationAuditService;
         this.clock = clock;
+    }
+
+    /** Opcional: ausente em testes de fatia que nao carregam o fluxo completo de reservas. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setExtras(ReservationExtras extras) {
+        this.extras = extras;
     }
 
     @GetMapping("/api/reservations/restricted")
@@ -47,12 +54,12 @@ public class ReservationController {
         reservationAuditService.createReservation(
                 id, authentication.getName(), clock, "Solicitação criada");
         reservationCatalog.createRestrictedReservation(id, authentication.getName());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response(id, reservationCatalog.findById(id)));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response(id, loadReservation(id)));
     }
 
     @GetMapping("/api/reservations/{id}")
     public ReservationResponse findReservation(@PathVariable String id) {
-        return response(id, reservationCatalog.findById(id));
+        return response(id, loadReservation(id));
     }
 
     @GetMapping("/api/reservations/{id}/history")
@@ -68,13 +75,16 @@ public class ReservationController {
                 || hasRole(authentication, "ADMINISTRADOR");
         reservationAuditService.deleteReservation(id, authentication.getName(), canDeleteAny);
         reservationCatalog.remove(id);
+        if (extras != null) {
+            extras.onCancelled(id, authentication.getName());
+        }
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/api/reservations/{id}/approval")
     @PreAuthorize("hasRole('RESPONSAVEL')")
     public ReservationResponse approve(@PathVariable String id, Authentication authentication) {
-        Reservation reservation = reservationCatalog.findById(id);
+        Reservation reservation = loadReservation(id);
         User actor = authenticatedUser(authentication);
         ReservationTransition transition = reservation.prepareApproval(
                 actor, clock, "Reserva aprovada pelo Responsável");
@@ -87,6 +97,9 @@ public class ReservationController {
             @Valid @RequestBody CreateReservationRequest request,
             Authentication authentication) {
         ReservationAttemptResponse result = reservationSchedulingService.schedule(request, authentication.getName());
+        if (result.accepted() && extras != null) {
+            extras.onCreated(result.reservationId(), request.resourceId(), authentication.getName());
+        }
         HttpStatus status = result.accepted() ? HttpStatus.CREATED : HttpStatus.CONFLICT;
         return ResponseEntity.status(status).body(result);
     }
@@ -104,6 +117,9 @@ public class ReservationController {
                 authentication.getName(),
                 canModifyAny,
                 new ReservationPeriod(request.startsAt(), request.endsAt()));
+        if (extras != null) {
+            extras.onUpdated(String.valueOf(id), authentication.getName());
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -130,6 +146,18 @@ public class ReservationController {
         reservationAuditService.assertCanOperate(id, authentication.getName(), canManageAny(authentication));
         return applyTransition(id, authentication,
                 (reservation, actor) -> reservation.prepareComplete(actor, clock, "Reserva concluída"));
+    }
+
+    private Reservation loadReservation(String id) {
+        Reservation reservation = reservationCatalog.findById(id);
+        if (reservation == null && extras != null) {
+            reservation = extras.rehydrate(id);
+        }
+        if (reservation == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Reservation not found");
+        }
+        return reservation;
     }
 
     private boolean canManageAny(Authentication authentication) {
@@ -160,7 +188,7 @@ public class ReservationController {
             String id,
             Authentication authentication,
             ReservationAction action) {
-        Reservation reservation = reservationCatalog.findById(id);
+        Reservation reservation = loadReservation(id);
         ReservationTransition transition = action.prepare(reservation, authenticatedUser(authentication));
         recordTransition(reservation, transition);
         return response(id, reservation);
