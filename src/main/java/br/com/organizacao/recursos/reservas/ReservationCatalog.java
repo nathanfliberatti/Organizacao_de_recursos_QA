@@ -20,6 +20,11 @@ public class ReservationCatalog {
         reservations.put(id, Reservation.requestForRestrictedResource(id, requesterId));
     }
 
+    public Reservation register(Reservation reservation) {
+        Reservation existing = reservations.putIfAbsent(reservation.id(), reservation);
+        return existing == null ? reservation : existing;
+    }
+
     public Reservation findById(String id) {
         return reservations.get(id);
     }

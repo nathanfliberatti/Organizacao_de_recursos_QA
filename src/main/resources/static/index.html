@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Organização de Recursos</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Ir para o conteúdo</a>
+  <header class="topbar" id="topbar" hidden>
+    <div class="brand">Organização de Recursos</div>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav id="nav" aria-label="Principal"></nav>
+    <div class="session" id="session"></div>
+  </header>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <main id="main" tabindex="-1"></main>
+  <dialog id="dialog"></dialog>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
