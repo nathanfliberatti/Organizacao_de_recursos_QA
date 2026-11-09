@@ -89,6 +89,8 @@ class ReservationConcurrencyIT {
 
         @Test
     void roomAvailabilityQueriesPostgresWithoutProfessorFilter() throws Exception {
+        jdbcTemplate.update("DELETE FROM reservation_audit");
+        jdbcTemplate.update("DELETE FROM reservation_lifecycle");
         jdbcTemplate.update("TRUNCATE TABLE reservations RESTART IDENTITY");
         jdbcTemplate.update(
                 "INSERT INTO reservations (room_id, professor_id, requester_id, starts_at, ends_at)"
@@ -118,6 +120,8 @@ class ReservationConcurrencyIT {
             IntFunction<CreateReservationRequest> requestFactory,
             String resourceColumn,
             String resourceId) throws Exception {
+        jdbcTemplate.update("DELETE FROM reservation_audit");
+        jdbcTemplate.update("DELETE FROM reservation_lifecycle");
         jdbcTemplate.update("TRUNCATE TABLE reservations RESTART IDENTITY");
         CountDownLatch ready = new CountDownLatch(REQUEST_COUNT);
         CountDownLatch start = new CountDownLatch(1);
