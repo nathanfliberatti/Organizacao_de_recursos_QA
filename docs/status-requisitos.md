@@ -1,5 +1,28 @@
 # Auditoria de situação dos requisitos
 
+> **Atualização da entrega final (commit `d0447b0`).** A auditoria abaixo é um **retrato histórico** feito antes do PR #8 e preservado para rastreio. A situação atual é esta:
+>
+> | Requisito | Situação atual | Evidência |
+> |---|---|---|
+> | RF-01 | Feito (login JWT, autorização por método, matriz testada) | `AuthorizationMatrixIT`, `ApplicationFlowTest#loginRejectsWrongPasswordAndProtectedEndpointsRequireToken` |
+> | RF-02 | Feito | `ApplicationFlowTest#administratorRegistersAndSearchesResources` |
+> | RF-03 | Parcial — competência e texto livre sem teste dedicado | idem |
+> | RF-04 | Feito | `ApplicationFlowTest#reservationLifecycleFollowsResourceRestrictionAndNotifiesEvents`, `#anotherRequesterCannotCancelOrChangeReservation` |
+> | RF-05, RF-06 | Feito no perfil `postgres`; **o armazenamento em memória não impede sobreposição** | `ReservationConcurrencyIT`, `ApplicationFlowIT` |
+> | RF-07, RF-10, RF-15 | Feito | `ReservationApprovalTest`, `ReservationAuditIT`, `ApplicationFlowTest` |
+> | RF-08 | Feito (manutenção persistida, bloqueio e remoção) | `ApplicationFlowTest#maintenanceBlocksReservationsAndCanBeRemoved` |
+> | RF-09 | Feito | `ApplicationFlowTest#materialWithdrawalAndReturnAreRecordedAndQueryable` |
+> | RF-11 | Feito com entrega **simulada** | `ApplicationFlowTest#reservationLifecycleFollowsResourceRestrictionAndNotifiesEvents` |
+> | RF-12 | Feito para o período solicitado; tela mensal fecha o mês em UTC | `UtilizationReportApiIT` |
+> | RF-13 | Parcial — validação existe (`400`), sem teste parametrizado | — |
+> | RF-14 | Parcial — fluxo principal feito; `REJEITADA`, `NÃO_COMPARECEU` e `CANCELADA` como estado do ciclo não modelados (decisão de negócio pendente) | `ReservationLifecycleTest` |
+>
+> **Gates:** a aplicação inicializa no perfil padrão (armazenamento em memória) e no perfil `postgres`; o CI da `main` passa (`verify` + SonarCloud). Ver [rtm.md](rtm.md) para cenário e teste de cada requisito.
+
+---
+
+## Retrato histórico anterior ao PR #8
+
 **Escopo:** requisitos obrigatórios `RF-01` a `RF-14` em [requisitos-funcionais.md](requisitos-funcionais.md) e as regras classificadas como críticas em [matriz-rastreabilidade.md](matriz-rastreabilidade.md). A matriz classifica `RF-15` como crítico, embora esteja além dos 14 requisitos solicitados; ele também foi incluído para não omitir essa regra.
 
 **Critério:** “feito” exige teste executável que falhe se o comportamento requerido quebrar. “Parcial” indica comportamento implementado/testado, mas há lacuna de escopo, perfil de execução ou autorização. “Ausente” indica que não foi encontrada implementação/teste que satisfaça o requisito. A RTM foi usada como índice; suas declarações não substituem a inspeção do código e dos testes.

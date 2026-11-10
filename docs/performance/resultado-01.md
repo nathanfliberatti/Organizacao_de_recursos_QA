@@ -1,5 +1,7 @@
 # Resultado de desempenho — rodada 01
 
+> **Atualização:** esta rodada permanece inconclusiva. A [rodada 02](resultado-02.md) refez a medição com dados reprocessáveis.
+
 **Decisão: inconclusivo.** O arquivo bruto `perf/resultados/rodada-01.jtl`, o relatório do JMeter e o PostgreSQL da execução não estão disponíveis neste checkout. Portanto, não foi possível recalcular percentis, vazão ou erros, nem consultar a cardinalidade persistida. Os valores reproduzidos abaixo são apenas os que já constavam como resumo em [rnf.md](rnf.md); não foram validados contra a execução bruta.
 
 ## Ambiente

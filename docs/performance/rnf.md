@@ -19,7 +19,14 @@ Para a criação concorrente da mesma sala e do mesmo intervalo, `201 Created` e
 
 ## Pré-condição de autenticação e execução
 
-A aplicação fornece o endpoint de login e JWT somente no perfil local `perf`, vinculado a `127.0.0.1`; o CSV contém credenciais fictícias válidas apenas nesse perfil. Para validar contenção persistida, iniciar com os perfis `perf,postgres`. A carga só deve ser direcionada a `127.0.0.1`/`localhost`, nunca a ambiente compartilhado.
+A aplicação fornece o endpoint de login e JWT somente no perfil local `perf`, vinculado a `127.0.0.1`; o CSV contém credenciais fictícias válidas apenas nesse perfil. Para validar contenção persistida, iniciar com os perfis `perf,postgres` **e informar as credenciais do banco por variável de ambiente** (o perfil `postgres` não tem senha padrão e, sendo o último perfil, sobrepõe as credenciais do `perf`):
+
+```bash
+DB_USER=perf DB_PASSWORD=localperf SPRING_PROFILES_ACTIVE=perf,postgres ./mvnw spring-boot:run
+./jmeter -n -t perf/reservas.jmx -l rodada.jtl -e -o relatorio
+```
+
+Só o perfil `perf`, sem `postgres`, usa o armazenamento **em memória**, que aceita toda criação (`201` sem nenhum `409`) e **não serve para validar contenção** (ver [resultado-02](resultado-02.md#lições-da-execução)). A carga só deve ser direcionada a `127.0.0.1`/`localhost`, nunca a ambiente compartilhado.
 
 ## Evidência — rodada 01 (2026-10-26)
 

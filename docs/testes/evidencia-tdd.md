@@ -1,5 +1,8 @@
 # Evidência TDD — Aprovação, manutenção e estados
 
+> **Atualização da entrega final:** o texto abaixo registra os ciclos RED/GREEN iniciais (18 testes Surefire + 11 Failsafe). No commit `d0447b0` o `./mvnw -B verify` do CI executa **55 testes unitários** (Surefire, incluindo 6 cenários Cucumber e `ApplicationFlowTest`) e os `*IT` (Failsafe, PostgreSQL via Testcontainers, incluindo `ApplicationFlowIT` e `AuthorizationMatrixIT`), e passa. Cobertura e Quality Gate: ver [docs/evidencias/README.md](../evidencias/README.md).
+
+
 ## Estado do ciclo
 
 **Em andamento.** Foram concluídos ciclos RED/GREEN/refactor de domínio/API, seis cenários Cucumber-JVM executáveis por MockMvc e a integração concorrente PostgreSQL. `./mvnw -B verify` passou com 18 testes Surefire (12 JUnit + 6 Cucumber) e 11 testes Failsafe; JaCoCo em 91,9% de linhas e 77,3% de branches. O perfil `postgres` usa persistência PostgreSQL; o perfil padrão ainda usa a store em memória.

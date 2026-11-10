@@ -1,5 +1,6 @@
-# DEF-002: Autoridades dos perfis não são extraídas do JWT
+# DEF-011: Autoridades dos perfis não são extraídas do JWT
 
+- **Renumerado:** registrado originalmente como `DEF-002` (commit `5639986` e mensagens de commit da época citam `DEF-002`); renumerado para `DEF-011` por colisão com [DEF-002](DEF-002-deadlock-constraints-exclusao.md).
 - **Situação:** Corrigido em `5639986`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix`
 - **Causa observada:** JWTs válidos e assinados com a claim `roles` autenticam, mas não produzem as autoridades `ROLE_*` esperadas por `@PreAuthorize`.
