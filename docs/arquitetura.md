@@ -1,5 +1,46 @@
 # Arquitetura do Sistema
 
+
+> ## Estado implementado (atualização da entrega final)
+>
+> Este documento nasceu antes da implementação e **não escolhia tecnologia**. Hoje o sistema entregue é um monólito Spring Boot (Java 21) com:
+> frontend estático (HTML/CSS/JS) servido pelo próprio Spring; API REST stateless com JWT (HS256) e autorização por método (`@PreAuthorize`); PostgreSQL 16 como autoridade de integridade (ADR-001) e armazenamento em memória apenas para desenvolvimento. O job diário de treinamento descrito nas seções 5 a 12 **não foi implementado** (fora do escopo entregue). Contrato da API: [api.md](api.md).
+>
+> ```mermaid
+> flowchart LR
+>   U[Navegador: SPA estática] -->|HTTPS + Bearer JWT| API
+>   subgraph App[Aplicação Spring Boot]
+>     API[Controllers REST] --> SEC[Segurança JWT + @PreAuthorize]
+>     API --> SVC[ReservationSchedulingService / ReservationExtras]
+>     SVC --> AUD[ReservationAuditService]
+>     SVC --> NOT[NotificationService simulada]
+>     SVC --> ST[(Stores: Postgres ou memória)]
+>   end
+>   ST --> PG[(PostgreSQL 16: EXCLUDE gist + advisory locks)]
+> ```
+>
+> **Sequência de login e reserva (implementada):**
+>
+> ```mermaid
+> sequenceDiagram
+>   participant B as Navegador
+>   participant A as API
+>   participant D as PostgreSQL
+>   B->>A: POST /api/auth/login
+>   A->>D: busca usuário (hash BCrypt)
+>   A-->>B: JWT com perfil
+>   B->>A: POST /api/reservations (Bearer)
+>   A->>D: locks advisory + INSERT (constraints de exclusão)
+>   alt horário livre
+>     A->>D: cria ciclo de vida SOLICITADA (+ APROVADA automática se recurso não restrito)
+>     A-->>B: 201 {accepted:true}
+>   else conflito ou manutenção
+>     A->>D: registra tentativa recusada
+>     A-->>B: 409 {accepted:false}
+>   end
+> ```
+
+
 ## 1. Contexto e Objetivo
 
 ### Contexto

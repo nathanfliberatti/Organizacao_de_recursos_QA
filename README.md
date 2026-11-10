@@ -1,15 +1,23 @@
 # Organização de Recursos QA
 
-## Build e testes
+## Pré-requisitos
 
-O projeto usa Maven Wrapper e requer Java 21.
+| Para | Precisa de |
+|---|---|
+| Compilar e rodar os testes unitários (`./mvnw -B test`) | Java 21 (o Maven Wrapper baixa o Maven) |
+| `./mvnw -B verify` completo (inclui os `*IT`) | Java 21 **e Docker em execução**: os `*IT` sobem um PostgreSQL 16 descartável com Testcontainers. Sem Docker eles falham com `Could not find a valid Docker environment`. |
+| Rodar a aplicação com banco | Docker (`docker compose`) **ou** um PostgreSQL 16 instalado (usuário com permissão para `CREATE EXTENSION btree_gist`) |
+| Rodar a aplicação sem banco (somente demonstração) | Java 21 |
+
+## Build e testes
 
 ```bash
 ./mvnw -B verify
 ```
 
 Testes unitários JUnit 5 são executados pelo Surefire. Testes de integração com
-sufixo `IT` são executados pelo Failsafe durante `verify`.
+sufixo `IT` são executados pelo Failsafe durante `verify` (exigem Docker).
+Relatório de cobertura (JaCoCo): `target/site/jacoco/index.html`; a execução falha abaixo de 80% de linhas.
 
 ## Executando a aplicação (frontend + API + banco)
 
@@ -36,13 +44,28 @@ Sem o perfil `postgres` a aplicação sobe com armazenamento em memória, apenas
 não impede dupla reserva** (a garantia vem das constraints do PostgreSQL, ver ADR-001) e o relatório de
 utilização não está disponível.
 
-Detalhes de telas, endpoints e modelo de dados em [docs/frontend-e-banco-de-dados.md](docs/frontend-e-banco-de-dados.md).
+Sem Docker e sem PostgreSQL, apenas para ver as telas (os dados somem ao parar e **não há proteção contra dupla reserva**):
+
+```bash
+APP_DEMO_DATA=true APP_DEMO_PASSWORD='<senha>' ./mvnw spring-boot:run
+```
+
+No PowerShell use `$env:APP_DEMO_DATA="true"; $env:APP_DEMO_PASSWORD="<senha>"; .\mvnw spring-boot:run`.
+
+## Documentação
+
+- **API (endpoints, perfis, corpos e códigos):** [docs/api.md](docs/api.md)
+- Telas, modelo de dados e lacunas: [docs/frontend-e-banco-de-dados.md](docs/frontend-e-banco-de-dados.md)
+- Arquitetura: [docs/arquitetura.md](docs/arquitetura.md) · Requisitos: [docs/requisitos-funcionais.md](docs/requisitos-funcionais.md), [docs/requisitos-nao-funcionais.md](docs/requisitos-nao-funcionais.md)
+- Rastreabilidade: [docs/rtm.md](docs/rtm.md) · Defeitos: [docs/defeitos/](docs/defeitos/README.md) · Testes: [docs/testes/](docs/testes/plano-tdd.md)
+- Desempenho: [docs/performance/](docs/performance/rnf.md) · Entrega: [docs/entrega/checklist.md](docs/entrega/checklist.md)
 
 ## Integração contínua
 
 O workflow em `.github/workflows/ci.yml` executa `./mvnw -B verify` em pull
 requests e em pushes para `main`. Os relatórios Surefire/Failsafe são publicados
-como artifact da execução quando existirem.
+como artifact da execução quando existirem; o relatório do JaCoCo também é publicado como artifact
+(`jacoco-report`, retido por 30 dias). O SonarCloud analisa cada pull request e o Quality Gate bloqueia o merge.
 
 ## Relatório de utilização
 
