@@ -3,7 +3,7 @@
 **Versão avaliada:** `v1.0.0-rc1` (commit da tag; antes dela, `main` em `d0447b0`) · **Data:** 2026-11-10
 **Autores:** Nathan Ferraz Liberatti, Erick Yuji Conceição
 
-> **Como ler este relatório.** Cada afirmação aponta para uma evidência no repositório ou no CI. Onde o dado só a equipe possui (ou só aparece em ferramenta externa), o texto traz **`[PREENCHER: …]`**. Nada foi estimado: o que não foi medido está dito como não medido.
+> **Como ler este relatório.** Cada afirmação aponta para uma evidência no repositório ou no CI. Nada foi estimado: o que não foi medido ou não foi registrado aqui está dito como tal.
 
 ## 1. Escopo e resumo
 
@@ -24,17 +24,17 @@ Sistema web para organizar a alocação de salas, professores e materiais com pr
 
 Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/evidencia-tdd.md](testes/evidencia-tdd.md), [testes/mutacao-manual.md](testes/mutacao-manual.md).
 
-**Total de testes do `verify` no CI (Surefire + Failsafe):** **[PREENCHER: números do job "Maven verify" do CI do commit da tag]**
+**Total de testes do `verify` no CI** (job "Maven verify" do PR #9, commit `078e029`, [execução 42728214539](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/42728214539)): **55 testes Surefire + 103 testes Failsafe = 158, 0 falhas, 0 erros, 0 ignorados.** Os `*IT` incluem `AuthorizationMatrixIT` (69), `ReservationConcurrencyIT` (11), `ApplicationFlowIT` (9), `UtilizationReportApiIT` (7) e `ReservationAuditIT` (7).
 
 ## 3. Cobertura
 
 - Gate do POM: **80% de linhas e 70% de branches** (JaCoCo; falha o `verify` se não atingir).
 - Medição local, somente testes unitários, no commit `d0447b0`: **90,7% de linhas** (sem os `*IT`).
-- **Cobertura total do CI (com `*IT`):** **[PREENCHER: % de linhas e de branches do artifact `jacoco-report` do CI do commit da tag]**
+- **Gate no CI (com `*IT`):** o log do job registra `All coverage checks have been met.` no PR #9, ou seja, os mínimos de 80% de linhas e 70% de branches foram atingidos. **O percentual exato não foi registrado neste relatório**: está no artifact `jacoco-report` (`index.html`) da execução do CI, retido por 30 dias.
 
 ## 4. Análise estática e segurança
 
-- **SonarCloud:** o Quality Gate do PR #8 **passou** após corrigir 6 issues de código novo (2 de confiabilidade — `Random` reutilizável; 4 de segurança — SQL montado por concatenação). Notas atuais da `main` (Segurança, Confiabilidade, Manutenibilidade, duplicação, hotspots): **[PREENCHER: valores lidos no painel do SonarCloud]**.
+- **SonarCloud:** o Quality Gate do PR #8 **passou** após corrigir 6 issues de código novo (2 de confiabilidade — `Random` reutilizável; 4 de segurança — SQL montado por concatenação). No PR #9 o gate também **passou** (log do CI: `QUALITY GATE STATUS: PASSED`; comentário do bot: 0 issues novas, 0 issues aceitas, 0 security hotspots). As notas gerais da `main` (Segurança, Confiabilidade, Manutenibilidade) **não foram registradas aqui**; ver o painel do projeto.
 - **Issue aberta na `main`:** `java:S8786` (regex com backtracking) em `AuthorizationMatrixIT.java:367`, código de teste, anterior à entrega final.
 - **Autenticação e autorização:** JWT HS256, perfil por claim, autorização por método e matriz testada. Senhas com BCrypt; login com comparação de hash também para usuário inexistente.
 - **Segredos:** nenhum segredo fixo no repositório (`DB_PASSWORD` obrigatória; `JWT_SECRET` e senha de demonstração aleatórios quando ausentes).
@@ -55,7 +55,7 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 8. Revisão por pares
 
-O repositório usa pull requests, mas **os PRs de entrega não têm revisão humana registrada** (o PR #8 só recebeu comentários de bots). Revisor(es) e links: **[PREENCHER: nome do integrante que revisou cada PR e link da revisão, ou registrar que não houve]**.
+O repositório usa pull requests, mas **o PR #8 não teve revisão humana registrada** (só comentários de bots). **Erick Yuji Conceição revisou o PR #9**, conforme informado pelo grupo em 2026-11-10. **Não há aprovação formal registrada no GitHub** (a API do PR não lista nenhuma revisão); para virar evidência verificável, o revisor deve aprovar o PR na interface do GitHub antes do merge. Os PRs anteriores (#1 a #8) não têm revisão humana registrada.
 
 ## 9. Uso de ferramentas de IA
 

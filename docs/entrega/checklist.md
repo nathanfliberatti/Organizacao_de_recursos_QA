@@ -62,7 +62,7 @@ Legenda — **Existe:** sim / parcial / não · **Atualizado:** sim / não / n.a
 
 | # | Bloqueador | Situação | Onde |
 |---|---|---|---|
-| 1 | Relatório final de qualidade ausente | Corrigido (com campos `[PREENCHER]` para dados que só a equipe tem) | [../relatorio-qualidade.md](../relatorio-qualidade.md) |
+| 1 | Relatório final de qualidade ausente | Corrigido | [../relatorio-qualidade.md](../relatorio-qualidade.md) |
 | 2 | Documentação da API ausente | Corrigido | [../api.md](../api.md) |
 | 3 | RTM, status, relatório de testes e arquitetura desatualizados | Corrigido | [../rtm.md](../rtm.md), [../status-requisitos.md](../status-requisitos.md), [../testes/evidencia-tdd.md](../testes/evidencia-tdd.md), [../arquitetura.md](../arquitetura.md) |
 | 4 | Resultado de carga inconclusivo | Corrigido: rodada 02 refeita com JMeter; resumo versionado | [../performance/resultado-02.md](../performance/resultado-02.md) |
