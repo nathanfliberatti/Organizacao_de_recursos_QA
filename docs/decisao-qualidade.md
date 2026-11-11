@@ -21,7 +21,7 @@
 | C6 | Desempenho do RNF-PERF-01 (p95 ≤ 300 ms, erros < 1%) e integridade sob disputa | [performance/resultado-02.md](performance/resultado-02.md): p95 36 ms e 49 ms, 0 erros, 1 reserva aceita em 534.014 tentativas | Atendido **no ambiente local descrito**; não generalizável |
 | C7 | Aplicação reproduzível a partir do README em clone limpo | [entrega/checklist.md](entrega/checklist.md) | Atendido (com Docker para o `verify`) |
 | C8 | Rastreabilidade requisito → teste | [rtm.md](rtm.md) | Atendido com lacunas listadas (RF-03 competência/texto, RF-13 parametrizado) |
-| C9 | Revisão por pares dos PRs de entrega | [relatorio-qualidade.md §8](relatorio-qualidade.md#8-revisão-por-pares) | **Parcialmente atendido**: Erick Yuji Conceição revisou o PR #9 (informado pelo grupo), **sem aprovação formal registrada no GitHub**; PRs #1 a #8 sem revisão humana registrada → risco R5 |
+| C9 | Revisão por pares dos PRs de entrega | [relatorio-qualidade.md §8](relatorio-qualidade.md#8-revisão-por-pares) | **Parcialmente atendido**: o PR #9 foi aprovado por Erick Yuji Conceição (2 revisões `APPROVED` no GitHub, posteriores ao merge); PRs #1 a #8 e #10 sem revisão humana registrada → risco R5 |
 
 ## Riscos aceitos
 
@@ -31,7 +31,7 @@
 | R2 | Fechamento mensal do relatório em UTC | Reservas próximas à meia-noite podem cair no mês vizinho para quem usa outro fuso | Decisão de negócio pendente; a tela informa o fuso | Nathan Ferraz Liberatti |
 | R3 | Modo em memória não detecta sobreposição | Dupla reserva se alguém usar o modo sem banco como se fosse produção | Modo só para demonstração; o README e a documentação avisam; o perfil `postgres` é o suportado | Nathan Ferraz Liberatti |
 | R4 | Notificações com entrega simulada | Usuário não recebe aviso real de criação/alteração/cancelamento | O RF-11 permite entrega simulada; o evento fica registrado e consultável | Nathan Ferraz Liberatti |
-| R5 | Revisão por pares sem registro formal (PR #9 revisado pelo Erick, sem aprovação no GitHub; PRs #1 a #8 sem revisão registrada) | Defeitos e riscos podem passar sem segunda leitura | Prazo da entrega; CI e Quality Gate funcionam como controle automatizado parcial | Erick Yuji Conceição |
+| R5 | Revisão por pares incompleta: só o PR #9 tem aprovação humana registrada, e feita após o merge; PRs #1 a #8 e #10 sem revisão registrada | Defeitos e riscos podem passar sem segunda leitura | Prazo da entrega; CI e Quality Gate funcionam como controle automatizado parcial | Erick Yuji Conceição |
 | R6 | Carga medida em máquina única, uma sala disputada, sem repetição | Capacidade real e variabilidade desconhecidas; desempenho em produção não comprovado | Evidência suficiente para o RNF-PERF-01 local; ampliar exigiria ambiente separado | Erick Yuji Conceição |
 | R7 | Sem teste de segurança além da matriz de autorização; sem HTTPS, limite de tentativas de login, rotação de chave; token em `sessionStorage` | Exposição em produção (força bruta, roubo de token por XSS) | Escopo acadêmico; senhas com BCrypt, segredos fora do repositório e escape de todo texto dinâmico reduzem o risco | Erick Yuji Conceição |
 | R8 | Interface sem E2E automatizado; contrato da API escrito à mão (sem OpenAPI gerado) | Regressões de tela e divergência entre documento e código podem passar despercebidas | Interface validada manualmente; contrato conferido contra os controllers | Erick Yuji Conceição |
