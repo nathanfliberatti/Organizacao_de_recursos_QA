@@ -68,7 +68,7 @@ Legenda — **Existe:** sim / parcial / não · **Atualizado:** sim / não / n.a
 | 4 | Resultado de carga inconclusivo | Corrigido: rodada 02 refeita com JMeter; resumo versionado | [../performance/resultado-02.md](../performance/resultado-02.md) |
 | 5 | README sem pré-requisito Docker nem link da API | Corrigido | [../../README.md](../../README.md) |
 | 6 | Artifacts efêmeros (3 dias) | Corrigido: retenção de 30 dias; índice de evidências | [../evidencias/README.md](../evidencias/README.md) |
-| 7 | Revisão por pares sem registro humano | **Não corrigido** — depende de um integrante revisar; registrado como risco R5 | [../decisao-qualidade.md](../decisao-qualidade.md) |
+| 7 | Revisão por pares sem registro humano | **Parcial** — PR #9 aprovado por Erickyuji08 (após o merge); PRs #1 a #8 e #10 sem revisão registrada; risco R5 | [../decisao-qualidade.md](../decisao-qualidade.md) |
 | 8 | IDs de defeito duplicados | Corrigido: `DEF-010` e `DEF-011`, com índice | [../defeitos/README.md](../defeitos/README.md) |
 
 Achados adicionais durante a correção: o perfil `perf,postgres` deixou de subir sem `DB_USER`/`DB_PASSWORD` após o PR #8 (documentado em [../performance/rnf.md](../performance/rnf.md)); rodar a carga só com `perf` usa memória e produz resultado inválido.

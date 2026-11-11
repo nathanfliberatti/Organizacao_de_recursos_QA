@@ -78,7 +78,9 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 8. Revisão por pares
 
-O repositório usa pull requests, mas **o PR #8 não teve revisão humana registrada** (só comentários de bots). **Erick Yuji Conceição revisou o PR #9**, conforme informado pelo grupo em 2026-11-10. **Não há aprovação formal registrada no GitHub** (a API do PR não lista nenhuma revisão); para virar evidência verificável, o revisor deve aprovar o PR na interface do GitHub antes do merge. Os PRs anteriores (#1 a #8) não têm revisão humana registrada.
+O repositório usa pull requests. **Erick Yuji Conceição** (conta GitHub `Erickyuji08`, colaborador) **aprovou o PR #9** — o PR de entrega final — em duas revisões com estado `APPROVED` sobre o commit `dda4229`, registradas no GitHub em 2026-11-11: [revisão 1](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851518916) e [revisão 2](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851608090). **As aprovações foram feitas depois do merge** (o PR #9 foi mergeado em 2026-11-10), portanto não funcionaram como bloqueio prévio.
+
+Sem revisão humana registrada: os PRs #1 a #8 (o #8 só recebeu comentários de bots) e o PR #10 (somente documentação, mergeado após o CI verde).
 
 ## 9. Uso de ferramentas de IA
 
