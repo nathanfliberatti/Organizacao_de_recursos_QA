@@ -21,7 +21,7 @@
 | C6 | Desempenho do RNF-PERF-01 (p95 ≤ 300 ms, erros < 1%) e integridade sob disputa | [performance/resultado-02.md](performance/resultado-02.md): p95 36 ms e 49 ms, 0 erros, 1 reserva aceita em 534.014 tentativas | Atendido **no ambiente local descrito**; não generalizável |
 | C7 | Aplicação reproduzível a partir do README em clone limpo | [entrega/checklist.md](entrega/checklist.md) | Atendido (com Docker para o `verify`) |
 | C8 | Rastreabilidade requisito → teste | [rtm.md](rtm.md) | Atendido com lacunas listadas (RF-03 competência/texto, RF-13 parametrizado) |
-| C9 | Revisão por pares dos PRs de entrega | [relatorio-qualidade.md §8](relatorio-qualidade.md#8-revisão-por-pares) | **Parcialmente atendido**: Erick Yuji Conceição revisou o PR #9 (informado pelo grupo), **sem aprovação formal registrada no GitHub**; PRs #1 a #8 sem revisão humana registrada → risco R5 |
+| C9 | Revisão por pares dos PRs de entrega | [relatorio-qualidade.md §8](relatorio-qualidade.md#8-revisão-por-pares) | **Parcialmente atendido**: o PR #9 foi aprovado por Erick Yuji Conceição (2 revisões `APPROVED` no GitHub, posteriores ao merge); PRs #1 a #8 e #10 sem revisão humana registrada → risco R5 |
 
 ## Riscos aceitos
 
