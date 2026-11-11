@@ -30,11 +30,34 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 - Gate do POM: **80% de linhas e 70% de branches** (JaCoCo; falha o `verify` se não atingir).
 - Medição local, somente testes unitários, no commit `d0447b0`: **90,7% de linhas** (sem os `*IT`).
-- **Gate no CI (com `*IT`):** o log do job registra `All coverage checks have been met.` no PR #9, ou seja, os mínimos de 80% de linhas e 70% de branches foram atingidos. **O percentual exato não foi registrado neste relatório**: está no artifact `jacoco-report` (`index.html`) da execução do CI, retido por 30 dias.
+- **Cobertura total do CI (com `*IT`)**, lida no relatório JaCoCo (`index.html` do artifact `jacoco-report`) da execução do CI da `main` no commit `1abb9da` ([run 42921866225](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/42921866225)):
+
+| Contador | Cobertura | Perdidos / total |
+|---|---:|---|
+| Instruções | **92%** | 432 de 6.013 |
+| Linhas | **93,7%** (calculado: 1.033 de 1.103) | 70 de 1.103 |
+| Branches | **74%** | 108 de 430 |
+| Métodos | 95,3% (calculado: 323 de 339) | 16 de 339 |
+
+  O gate do POM (80% de linhas e 70% de branches) foi atendido (`All coverage checks have been met.` no log do CI). O Sonar reporta 88,4% de cobertura geral, porque calcula por outra métrica (linhas e condições juntas).
 
 ## 4. Análise estática e segurança
 
-- **SonarCloud:** o Quality Gate do PR #8 **passou** após corrigir 6 issues de código novo (2 de confiabilidade — `Random` reutilizável; 4 de segurança — SQL montado por concatenação). No PR #9 o gate também **passou** (log do CI: `QUALITY GATE STATUS: PASSED`; comentário do bot: 0 issues novas, 0 issues aceitas, 0 security hotspots). As notas gerais da `main` (Segurança, Confiabilidade, Manutenibilidade) **não foram registradas aqui**; ver o painel do projeto.
+- **SonarCloud:** o Quality Gate do PR #8 **passou** após corrigir 6 issues de código novo (2 de confiabilidade — `Random` reutilizável; 4 de segurança — SQL montado por concatenação). No PR #9 o gate também passou (0 issues novas, 0 issues aceitas, 0 security hotspots).
+- **SonarCloud, `main` (Overall Code), análise do commit `1abb9da`** (https://sonarcloud.io/summary/overall?id=nathanfliberatti_Organizacao_de_recursos_QA):
+
+| Medida | Valor |
+|---|---|
+| Quality Gate | **Passed** |
+| Segurança | **A** — 0 issues abertas |
+| Confiabilidade | **A** — 1 issue aberta (a regex `java:S8786` abaixo) |
+| Manutenibilidade | **A** — 0 issues abertas |
+| Issues aceitas | 1 (isenção de CSRF em `PerformanceAuthConfiguration`, aceita no painel) |
+| Cobertura | 88,4% (1,1 mil linhas a cobrir) |
+| Duplicação | 0,0% (3,6 mil linhas) |
+| Security hotspots | 0 |
+| Tamanho | ~3 mil linhas de código |
+
 - **Issue aberta na `main`:** `java:S8786` (regex com backtracking) em `AuthorizationMatrixIT.java:367`, código de teste, anterior à entrega final.
 - **Autenticação e autorização:** JWT HS256, perfil por claim, autorização por método e matriz testada. Senhas com BCrypt; login com comparação de hash também para usuário inexistente.
 - **Segredos:** nenhum segredo fixo no repositório (`DB_PASSWORD` obrigatória; `JWT_SECRET` e senha de demonstração aleatórios quando ausentes).

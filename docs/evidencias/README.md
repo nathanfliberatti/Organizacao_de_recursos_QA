@@ -11,7 +11,7 @@ Todas as evidências se referem ao **commit apontado pela tag `v1.0.0-rc1`**. Os
 | # | Evidência | Onde está | Observação |
 |---|---|---|---|
 | 1 | **Execução do CI no commit da tag** (`./mvnw -B verify` + SonarCloud) | Checks do commit: https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/commit/v1.0.0-rc1 → "CI / Maven verify". Execuções do workflow: https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/workflows/ci.yml | O workflow roda em `push` na `main`; o commit da tag é o do merge que o disparou. |
-| 2 | **Relatório do JaCoCo** | Artifact `jacoco-report` da execução do item 1 (retido por 30 dias) e `target/site/jacoco/index.html` ao rodar `./mvnw -B verify` | Mínimos: 80% de linhas e 70% de branches (gate do POM). O artifact expira; para guardar o valor, copie-o para o relatório de qualidade. |
+| 2 | **Relatório do JaCoCo** | Artifact `jacoco-report` da execução do item 1 (retido por 30 dias) e `target/site/jacoco/index.html` ao rodar `./mvnw -B verify` | Mínimos: 80% de linhas e 70% de branches (gate do POM). Valores lidos (commit `1abb9da`): 93,7% de linhas, 74% de branches, 92% de instruções — copiados em [relatorio-qualidade.md §3](../relatorio-qualidade.md). O artifact expira em 30 dias. |
 | 3 | **Quality Gate do SonarCloud** | https://sonarcloud.io/dashboard?id=nathanfliberatti_Organizacao_de_recursos_QA (PR do release: ver a seção "Pull requests") | O Sonar não guarda cópia no repositório; o painel é a fonte. |
 | 4 | **Resultado do teste de carga** | [docs/performance/resultado-02.md](../performance/resultado-02.md) (+ `docs/performance/rodada-02/` com `statistics.json`) | Rodada 01 permanece como histórico "inconclusivo". |
 | 5 | **Matriz de rastreabilidade** | [docs/rtm.md](../rtm.md) | — |
