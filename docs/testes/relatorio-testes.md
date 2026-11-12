@@ -55,7 +55,7 @@ Cada um fecha uma lacuna registrada na [RTM](../rtm.md):
 
 ## 5. Defeitos que os testes encontraram
 
-13 defeitos em [../defeitos/](../defeitos/README.md). Os 11 primeiros têm teste de regressão; na etapa final a execução do CI e da carga encontrou outros dois: `DEF-013` (isolamento do `ReservationConcurrencyIT`, corrigido) e `DEF-012` (perfil de carga sem credenciais, mitigado por procedimento).
+15 defeitos priorizados em [../defeitos/](../defeitos/README.md). Os 11 primeiros têm teste de regressão; na etapa final a execução do CI e da carga encontrou `DEF-013` (isolamento do `ReservationConcurrencyIT`, corrigido) e `DEF-012` (perfil de carga sem credenciais, mitigado por procedimento), e a comparação com a especificação encontrou `DEF-014` (dupla reserva em memória) e `DEF-015` (estados alternativos), ambos corrigidos com teste de regressão.
 
 ## 6. Limitações
 

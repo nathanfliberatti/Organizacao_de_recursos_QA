@@ -1,5 +1,6 @@
 # DEF-013: `ReservationConcurrencyIT` falha por colisão de ids com o ciclo de vida
 
+- **Severidade / prioridade:** Média / P2 — CI vermelho por isolamento de teste, escondendo o resultado dos testes de concorrência; sem impacto em produção.
 - **Situação:** Corrigido em `1793e76` (commit da branch; na `main` está dentro do squash `d0447b0`)
 - **Encontrado em:** 2026-11-09, no CI do PR #8 (9 erros em `ReservationConcurrencyIT`)
 - **Evidência:** `DuplicateKeyException ... reservation_lifecycle_pkey` ao inserir em `reservation_lifecycle`.

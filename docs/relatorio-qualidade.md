@@ -66,7 +66,7 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 5. Defeitos
 
-13 defeitos registrados em [defeitos/](defeitos/README.md) (concorrência, deadlock, matriz de autorização, validação, posse de reservas, perfil de carga e isolamento de teste): **12 corrigidos e 1 mitigado** (DEF-012, por procedimento documentado). Os corrigidos têm teste de regressão. Defeitos encontrados na entrega final: (a) IDs `DEF-001`/`DEF-002` duplicados — renumerados para `DEF-010`/`DEF-011`; (b) perfil `perf,postgres` não subia sem credenciais após o PR #8 — [DEF-012](defeitos/DEF-012-perfil-perf-postgres-sem-credenciais.md); (c) `ReservationConcurrencyIT` reiniciava ids sem limpar o ciclo de vida — [DEF-013](defeitos/DEF-013-concorrencia-it-ids-colidem-com-ciclo-de-vida.md).
+15 defeitos registrados e priorizados em [defeitos/](defeitos/README.md) (concorrência, deadlock, matriz de autorização, validação, posse de reservas, perfil de carga, isolamento de teste, dupla reserva em memória e estados alternativos): **14 corrigidos e 1 mitigado** (DEF-012, por procedimento documentado). Os corrigidos têm teste de regressão. Defeitos encontrados na entrega final: (a) IDs `DEF-001`/`DEF-002` duplicados — renumerados para `DEF-010`/`DEF-011`; (b) perfil `perf,postgres` não subia sem credenciais após o PR #8 — [DEF-012](defeitos/DEF-012-perfil-perf-postgres-sem-credenciais.md); (c) `ReservationConcurrencyIT` reiniciava ids sem limpar o ciclo de vida — [DEF-013](defeitos/DEF-013-concorrencia-it-ids-colidem-com-ciclo-de-vida.md).
 
 ## 6. Desempenho
 

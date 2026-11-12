@@ -1,5 +1,6 @@
 # DEF-008: Código de sucesso incorreto no cadastro de manutenção
 
+- **Severidade / prioridade:** Baixa / P3 — Código HTTP incorreto no bloqueio de manutenção; comportamento correto.
 - **Situação:** Corrigido em `b587009`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix`, após corrigir o mapeamento de JWT em [DEF-011](DEF-011-jwt-autoridades.md) (antes DEF-002).
 - **Operação:** `POST /api/resources/{resourceId}/maintenance`

@@ -1,5 +1,6 @@
 # DEF-011: Autoridades dos perfis não são extraídas do JWT
 
+- **Severidade / prioridade:** Alta / P1 — Perfis não eram extraídos do JWT: operações autorizadas eram negadas e a matriz não podia ser verificada.
 - **Renumerado:** registrado originalmente como `DEF-002` (commit `5639986` e mensagens de commit da época citam `DEF-002`); renumerado para `DEF-011` por colisão com [DEF-002](DEF-002-deadlock-constraints-exclusao.md).
 - **Situação:** Corrigido em `5639986`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix`
