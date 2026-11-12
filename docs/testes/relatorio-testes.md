@@ -9,7 +9,7 @@ Consolida os testes da entrega final: o que existe, o que foi executado, com que
 | CI da `main`, commit `75294e9` (`./mvnw -B verify`) | **158 testes, 0 falhas**: 55 Surefire + 103 Failsafe; gate JaCoCo atendido; Quality Gate do SonarCloud aprovado | [run 42931118129](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/42931118129); detalhe por classe no job "Maven verify" |
 | Esta entrega (testes adicionados, §4) | Surefire passa de 55 para **64**; o Failsafe ganha 1 teste (`searchesResourcesByCompetencyAndFreeText` roda também em `ApplicationFlowIT`) | CI do PR da entrega final e da `main` após o merge |
 | E2E da interface (manual) | **28/28** verificações em 3 execuções seguidas com PostgreSQL; 27/27 sem banco | [e2e-resultado.md](e2e-resultado.md) |
-| Carga (JMeter, local) | 1.780.105 amostras, 0 erros inesperados | [../performance/resultado-02.md](../performance/resultado-02.md) |
+| Carga (JMeter, local) | Rodada 02: 1.780.105 amostras; rodada 03 (200 mil reservas no banco): 853.042 amostras; 0 erros inesperados nas duas | [resultado-02](../performance/resultado-02.md), [resultado-03](../performance/resultado-03.md) |
 
 Reproduzir: `./mvnw -B test` (sem Docker, só os testes unitários e de API em memória) ou `./mvnw -B verify` (completo, exige Docker para os `*IT`).
 

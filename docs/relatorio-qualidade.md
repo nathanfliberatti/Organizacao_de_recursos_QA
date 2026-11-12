@@ -70,7 +70,7 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 6. Desempenho
 
-[Rodada 02](performance/resultado-02.md): 1.780.105 amostras, 0 erros inesperados; p95 de 36 ms (consulta de disponibilidade) e 49 ms (criação) contra meta de 300 ms; 1 reserva aceita e 534.013 recusadas na disputa pela mesma sala, confirmadas no banco. **Ambiente local de máquina única, uma sala disputada; não vale como garantia de produção.** A rodada 01 ficou inconclusiva.
+[Rodada 02](performance/resultado-02.md): 1.780.105 amostras, 0 erros inesperados; p95 de 36 ms (consulta de disponibilidade) e 49 ms (criação) contra meta de 300 ms; 1 reserva aceita e 534.013 recusadas na disputa pela mesma sala, confirmadas no banco. **Ambiente local de máquina única, uma sala disputada; não vale como garantia de produção.** [Rodada 03](performance/resultado-03.md), com 200.000 reservas já no banco: 853.042 amostras, 0 erros, p95 de 33 ms e 44 ms, 1 aceita e 255.895 recusadas. As metas (p95 ≤ 300 ms, erros < 1%, 50 usuários) foram aprovadas pelo grupo em [performance/rnf.md](performance/rnf.md). A rodada 01 ficou inconclusiva.
 
 ## 7. Rastreabilidade
 

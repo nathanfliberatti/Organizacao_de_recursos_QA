@@ -51,6 +51,7 @@ A [rodada 01](resultado-01.md) ficou **inconclusiva** por falta do `.jtl`; seu r
 ## Limitações
 
 - Máquina única, sem isolamento entre gerador de carga, aplicação e banco; resultados absolutos dependem desse ambiente.
+- O banco começou vazio; o efeito do **volume de dados** foi medido na [rodada 03](resultado-03.md).
 - Uma única sala disputada; a maioria das criações termina em `409` (caminho de conflito), o que **não** representa a mistura real de uso (muitas reservas livres).
 - Não mede o frontend, o login real (BCrypt) nem as telas; o login medido é o do perfil `perf`.
 - Sem repetição da rodada: não há medida de variabilidade entre execuções.
