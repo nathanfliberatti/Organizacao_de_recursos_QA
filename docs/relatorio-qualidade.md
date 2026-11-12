@@ -20,7 +20,7 @@ Sistema web para organizar a alocação de salas, professores e materiais com pr
 | Concorrência | `ReservationConcurrencyIT` (20 requisições, 5 repetições por cenário) e `ApplicationFlowIT` (8 requisições) | Exatamente uma reserva aceita por disputa | idem |
 | Autorização | `AuthorizationMatrixIT` (matriz perfil × operação) | Passa | [seguranca/matriz-autorizacao.md](seguranca/matriz-autorizacao.md) |
 | Fluxo ponta a ponta da API | `ApplicationFlowTest` (memória) e `ApplicationFlowIT` (PostgreSQL) | Passam | [rtm.md](rtm.md) |
-| Interface | Verificação manual no navegador (Chromium, 3 perfis, 375 px e 1200 px) | Sem erro de console além das respostas `401`/`409` esperadas | **Sem E2E automatizado versionado** |
+| Interface (E2E) | Playwright, script versionado [`e2e/e2e.js`](../e2e/e2e.js), 3 perfis, 375 px e 1200 px | **28/28 verificações**, 3 execuções seguidas com PostgreSQL; 27/27 sem banco | [testes/e2e-resultado.md](testes/e2e-resultado.md). **Executado manualmente, fora do CI** |
 
 Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/evidencia-tdd.md](testes/evidencia-tdd.md), [testes/mutacao-manual.md](testes/mutacao-manual.md).
 
@@ -66,7 +66,7 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 5. Defeitos
 
-11 defeitos registrados em [defeitos/](defeitos/README.md) (concorrência, deadlock, matriz de autorização, validação, posse de reservas etc.), **todos corrigidos**, cada um com teste de regressão. Defeitos encontrados na entrega final: (a) IDs `DEF-001`/`DEF-002` duplicados — renumerados; (b) perfil `perf,postgres` não subia sem credenciais após o PR #8 — documentado em [performance/rnf.md](performance/rnf.md); (c) `ReservationConcurrencyIT` reiniciava ids sem limpar o ciclo de vida — corrigido no próprio PR #8.
+13 defeitos registrados em [defeitos/](defeitos/README.md) (concorrência, deadlock, matriz de autorização, validação, posse de reservas, perfil de carga e isolamento de teste): **12 corrigidos e 1 mitigado** (DEF-012, por procedimento documentado). Os corrigidos têm teste de regressão. Defeitos encontrados na entrega final: (a) IDs `DEF-001`/`DEF-002` duplicados — renumerados para `DEF-010`/`DEF-011`; (b) perfil `perf,postgres` não subia sem credenciais após o PR #8 — [DEF-012](defeitos/DEF-012-perfil-perf-postgres-sem-credenciais.md); (c) `ReservationConcurrencyIT` reiniciava ids sem limpar o ciclo de vida — [DEF-013](defeitos/DEF-013-concorrencia-it-ids-colidem-com-ciclo-de-vida.md).
 
 ## 6. Desempenho
 
@@ -74,7 +74,7 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 7. Rastreabilidade
 
-[rtm.md](rtm.md) liga cada requisito a cenário e teste. Cobertura de requisitos: ver [status-requisitos.md](status-requisitos.md). Lacunas: pesquisa por competência e texto livre (RF-03), teste parametrizado de intervalo (RF-13), estados alternativos do RF-14, E2E (RNF-04) e OpenAPI gerado (RNF-05).
+[rtm.md](rtm.md) liga cada requisito a cenário e teste. Cobertura de requisitos: ver [status-requisitos.md](status-requisitos.md). Lacunas fechadas na entrega final: pesquisa por competência e texto (RF-03), teste parametrizado de intervalo (RF-13), E2E (RNF-04, fora do CI) e verificação automática de que a API está documentada (`ApiDocumentationTest`, RNF-05). Lacunas que permanecem: estados alternativos do RF-14 e ausência de OpenAPI gerado (o contrato é escrito à mão, mas protegido pelo teste anterior).
 
 ## 8. Revisão por pares
 

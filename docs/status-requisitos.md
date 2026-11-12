@@ -6,7 +6,7 @@
 > |---|---|---|
 > | RF-01 | Feito (login JWT, autorização por método, matriz testada) | `AuthorizationMatrixIT`, `ApplicationFlowTest#loginRejectsWrongPasswordAndProtectedEndpointsRequireToken` |
 > | RF-02 | Feito | `ApplicationFlowTest#administratorRegistersAndSearchesResources` |
-> | RF-03 | Parcial — competência e texto livre sem teste dedicado | idem |
+> | RF-03 | Feito (competência e texto livre cobertos por `searchesResourcesByCompetencyAndFreeText`) | `ApplicationFlowTest`, `ApplicationFlowIT` |
 > | RF-04 | Feito | `ApplicationFlowTest#reservationLifecycleFollowsResourceRestrictionAndNotifiesEvents`, `#anotherRequesterCannotCancelOrChangeReservation` |
 > | RF-05, RF-06 | Feito no perfil `postgres`; **o armazenamento em memória não impede sobreposição** | `ReservationConcurrencyIT`, `ApplicationFlowIT` |
 > | RF-07, RF-10, RF-15 | Feito | `ReservationApprovalTest`, `ReservationAuditIT`, `ApplicationFlowTest` |
@@ -14,7 +14,7 @@
 > | RF-09 | Feito | `ApplicationFlowTest#materialWithdrawalAndReturnAreRecordedAndQueryable` |
 > | RF-11 | Feito com entrega **simulada** | `ApplicationFlowTest#reservationLifecycleFollowsResourceRestrictionAndNotifiesEvents` |
 > | RF-12 | Feito para o período solicitado; tela mensal fecha o mês em UTC | `UtilizationReportApiIT` |
-> | RF-13 | Parcial — validação existe (`400`), sem teste parametrizado | — |
+> | RF-13 | Feito | `ReservationIntervalValidationTest` (parametrizado) |
 > | RF-14 | Parcial — fluxo principal feito; `REJEITADA`, `NÃO_COMPARECEU` e `CANCELADA` como estado do ciclo não modelados (decisão de negócio pendente) | `ReservationLifecycleTest` |
 >
 > **Gates:** a aplicação inicializa no perfil padrão (armazenamento em memória) e no perfil `postgres`; o CI da `main` passa (`verify` + SonarCloud). Ver [rtm.md](rtm.md) para cenário e teste de cada requisito.

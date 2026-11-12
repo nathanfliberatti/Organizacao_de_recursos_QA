@@ -1,5 +1,8 @@
 # Matriz de Rastreabilidade de Requisitos (RTM)
 
+> **Documento histórico.** Esta é a matriz **planejada**, escrita antes da implementação (as colunas de "validação planejada" e os "gates" refletem aquele momento). A matriz atual, com testes e commits reais, é [rtm.md](rtm.md). A classificação de **criticidade** dos requisitos usada no projeto continua sendo a daqui.
+
+
 ## Objetivo
 
 Relacionar requisitos documentados a estratégias de validação e evidências, para permitir verificar a cobertura de escopo e comprovar qualidade. A fonte dos requisitos é [Requisitos Funcionais](requisitos-funcionais.md) e [Requisitos Não Funcionais](requisitos-nao-funcionais.md); os perfis são definidos em [Personas](personas/).

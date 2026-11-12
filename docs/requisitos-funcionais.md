@@ -135,13 +135,19 @@ O sistema não deve permitir apagar uma reserva depois que ela entrar no estado 
 | Itens 1 a 7 da lista inicial | RF-01 a RF-07 |
 | Itens 1 a 5 da lista complementar | RF-08 a RF-12 |
 
-## Decisões pendentes
+## Decisões: situação na entrega final
 
-- Definir a matriz detalhada de permissões, em especial quem inicia, conclui ou marca uma reserva como `NÃO_COMPARECEU`, e as transições permitidas para `REJEITADA` e `CANCELADA`.
-- Definir quais atributos podem ser pesquisados para cada tipo de recurso.
-- Definir quais recursos são restritos; solicitações restritas devem ser aprovadas pelo perfil Responsável.
-- Escolher entrega simulada ou integração externa para notificações; os eventos já definidos são criação, alteração e cancelamento de reserva.
-- Definir fórmulas de utilização, carga horária e conflitos evitados, além do fuso horário usado para fechar o mês dos relatórios.
-- Definir os dados obrigatórios e o prazo de retenção do histórico auditável.
-- Definir como tratar reservas existentes quando um período de manutenção for cadastrado.
-- Definir a regra para reservas cujos horários apenas encostam nos limites do intervalo.
+As decisões que estavam pendentes na especificação, com o que foi adotado na implementação. "Adotada" significa decisão técnica tomada pelo grupo no código, **não** validada com usuários reais.
+
+| Decisão | Situação | O que foi adotado ou o que falta |
+|---|---|---|
+| Matriz de permissões do ciclo de vida (quem inicia, conclui; transições alternativas) | **Parcial** | Adotada para o fluxo principal: aprovar = só `RESPONSAVEL` e nunca o próprio solicitante; iniciar e concluir = dono, `RESPONSAVEL` ou `ADMINISTRADOR` ([matriz](seguranca/matriz-autorizacao.md)). **Pendente:** origens, destinos e perfis de `REJEITADA`, `CANCELADA` (como estado) e `NÃO_COMPARECEU` (risco R1) |
+| Atributos pesquisáveis por tipo de recurso | Adotada | Tipo, capacidade mínima, localização, competência, texto (id ou nome) e disponibilidade, para qualquer tipo |
+| Quais recursos são restritos | Adotada | Cada recurso tem o atributo `restricted`, definido pelo Administrador; reservas de recurso restrito aguardam o Responsável |
+| Notificações: simulada ou externa | Adotada | Entrega **simulada**, gravada em `notifications` e consultável na API (risco R4) |
+| Fórmulas de utilização, carga e conflitos evitados | Adotada | Horas por recurso e por professor = interseção da reserva com o período `[início, fim)`, sem reservas canceladas; conflitos evitados = tentativas recusadas cujo intervalo se sobrepõe ao período ([README](../README.md#relatório-de-utilização)) |
+| Fuso do fechamento mensal | **Pendente** | A tela fecha o mês em UTC (risco R2) |
+| Dados obrigatórios do histórico | Adotada | Ação (estado anterior e novo), registro, usuário, instante e motivo, em `reservation_audit`, sem exclusão (`ON DELETE RESTRICT`) |
+| Prazo de retenção do histórico | **Pendente** | Não implementado nem definido |
+| Reservas existentes ao cadastrar manutenção | **Pendente** | A manutenção só bloqueia novas reservas; as existentes permanecem (risco R9) |
+| Reservas que apenas encostam nos limites | Adotada | Intervalos semiabertos `[início, fim)`: contato exato **não** é conflito, nem para reservas nem para manutenção (`ApplicationFlowIT` cobre o caso de reservas) |
