@@ -103,8 +103,8 @@ Reavaliação em **novo clone limpo** da branch final da entrega (commit `148cd0
 | Plano de testes | sim | sim | [../testes/plano-tdd.md](../testes/plano-tdd.md) |
 | Relatório de testes | sim | sim | [../testes/relatorio-testes.md](../testes/relatorio-testes.md), [../testes/e2e-resultado.md](../testes/e2e-resultado.md) |
 | Pipeline de CI | sim | sim | `.github/workflows/ci.yml` |
-| Relatório do SonarCloud | sim (capturas e números) | sim | [../evidencias/README.md](../evidencias/README.md), [../relatorio-qualidade.md](../relatorio-qualidade.md) §4 |
-| Relatório do JaCoCo | sim (captura e números) | sim | [../evidencias/imagens/](../evidencias/imagens/), [../relatorio-qualidade.md](../relatorio-qualidade.md) §3; artifact `jacoco-report` do CI |
+| Relatório do SonarCloud | sim (capturas e números) | sim | [../evidencias/README.md](../evidencias/README.md), [../relatorio-qualidade.md](../relatorio-qualidade.md) §4.4 |
+| Relatório do JaCoCo | sim (captura e números) | sim | [../evidencias/imagens/](../evidencias/imagens/), [../relatorio-qualidade.md](../relatorio-qualidade.md) §4.1; artifact `jacoco-report` do CI |
 | Plano do teste de carga | sim | sim | [../performance/rnf.md](../performance/rnf.md), `perf/reservas.jmx`, `perf/gerar-volume.sql` |
 | Resultado do teste de carga | sim | sim | [../performance/resultado-02.md](../performance/resultado-02.md), [resultado-03.md](../performance/resultado-03.md) |
 | Registro de defeitos (priorizado) | sim | sim | [../defeitos/README.md](../defeitos/README.md) (15 defeitos, com severidade e prioridade) |

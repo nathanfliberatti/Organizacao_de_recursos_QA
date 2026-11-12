@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -145,6 +146,52 @@ class ReservationAuditIT {
                 """,
                 Integer.class,
                 "reservation-rollback"));
+    }
+
+    @Test
+    void failedAuditInsertRollsBackTheStateChangeWithoutAnOuterTransaction() {
+        reservationAuditService.createReservation(
+                "reservation-atomic", "requester-1", clock, "Solicitação criada");
+        jdbcTemplate.execute("ALTER TABLE reservation_audit ADD CONSTRAINT test_reject_reason "
+                + "CHECK (reason <> 'FALHAR NA AUDITORIA')");
+        try {
+            assertThrows(DataAccessException.class, () -> reservationAuditService.changeState(
+                    "reservation-atomic", ReservationStatus.APROVADA, "responsible-1", clock,
+                    "FALHAR NA AUDITORIA"));
+        } finally {
+            jdbcTemplate.execute("ALTER TABLE reservation_audit DROP CONSTRAINT test_reject_reason");
+        }
+
+        assertEquals("SOLICITADA", jdbcTemplate.queryForObject(
+                "SELECT status FROM reservation_lifecycle WHERE reservation_id = ?",
+                String.class,
+                "reservation-atomic"));
+        assertEquals(1, jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM reservation_audit WHERE reservation_id = ?",
+                Integer.class,
+                "reservation-atomic"));
+    }
+
+    @Test
+    void startedReservationCannotBeCancelledThroughTheAuditedTransition() {
+        reservationAuditService.createReservation(
+                "reservation-cancel-started", "requester-1", clock, "Solicitação criada");
+        reservationAuditService.changeState(
+                "reservation-cancel-started", ReservationStatus.APROVADA, "responsible-1", clock, "Aprovada");
+        reservationAuditService.changeState(
+                "reservation-cancel-started", ReservationStatus.EM_USO, "requester-1", clock, "Uso iniciado");
+
+        assertThrows(ReservationDeletionConflictException.class, () -> reservationAuditService.cancelReservation(
+                "reservation-cancel-started", "requester-1", false, clock, "Cancelamento tardio"));
+
+        assertEquals("EM_USO", jdbcTemplate.queryForObject(
+                "SELECT status FROM reservation_lifecycle WHERE reservation_id = ?",
+                String.class,
+                "reservation-cancel-started"));
+        assertEquals(3, jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM reservation_audit WHERE reservation_id = ?",
+                Integer.class,
+                "reservation-cancel-started"));
     }
 
     @Test

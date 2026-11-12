@@ -1,73 +1,75 @@
 # Matriz de autorização da API
 
-## Escopo e interpretação
+Contrato de autorização de **todas** as rotas da API: o que cada perfil recebe ao chamar cada operação. A tabela abaixo é a **fonte única**: os testes `AuthorizationMatrixDocumentTest` e `AuthorizationMatrixFullIT` **leem estas linhas** (não há cópia no código), então apagar ou alterar uma célula para fazer um teste passar não funciona.
 
-Esta matriz inventaria as operações declaradas nos controllers e compara a
-política esperada com o código atual. Os códigos indicam sucesso esperado para
-uma solicitação válida ou a resposta de autenticação/autorização: `200`, `201`,
-`204`, `401` ou `403`. Erros de validação e de regra de negócio, como `400` e
-`409`, não são representados nas células.
+## Como ler
 
-Para operações sobre uma reserva, “própria” significa que o identificador do
-usuário autenticado corresponde ao solicitante/proprietário persistido na
-reserva. Solicitante só pode alterar, cancelar, iniciar ou concluir a própria
-reserva. A política de leitura por Solicitante não foi especificada; a matriz
-espera `200` para uma consulta válida autenticada. Aprovação de reserva restrita
-é exclusiva do Responsável — Administrador não substitui esse papel.
-
-As células abaixo representam o contrato da API. A suíte
-`AuthorizationMatrixIT` percorre cada célula com MockMvc, JWTs HS256 assinados
-por perfil e os perfis `perf` e `postgres` ativos. No perfil `perf`, o filtro
-JWT exige autenticação em todas as rotas, converte a claim assinada `roles` em
-authorities Spring e deixa somente o login público. O perfil `postgres` habilita
-o relatório e a persistência usados pela suíte.
+- **Operação:** método HTTP e caminho. Os nomes das variáveis de caminho não importam (`{id}` e `{resourceId}` equivalem).
+- **Cenário:** `padrão`, ou a **regra de posse** para operações sobre uma reserva: `reserva própria` (o Solicitante que chama é o dono) e `reserva alheia` (o dono é outro Solicitante).
+- **Células:** o código HTTP esperado para uma solicitação **válida** feita por aquele perfil. `401` = sem credencial; `403` = autenticado sem permissão; `200`, `201` e `204` = sucesso. Erros de validação e de regra de negócio (`400`, `404`, `409`) não são representados.
+- **Perfis:** Anônimo (sem token), Solicitante, Responsável e Administrador, todos com JWT real emitido pelo login.
 
 ## Operações
 
-| Operação | Anônimo | Solicitante | Responsável | Administrador | Código atual / divergência |
-|---|---:|---:|---:|---:|---|
-| `POST /api/auth/login` *(perfil `perf`)* | 200 | 200 | 200 | 200 | Rota pública; credenciais inválidas resultam em `401`. O token de login local recebe perfil Solicitante. |
-| `GET /api/reservations/restricted` | 401 | 200 | 200 | 200 | Qualquer identidade autenticada pode consultar o estado inicial demonstrativo. |
-| `POST /api/reservations/restricted` | 401 | 201 | 201 | 201 | Retorna `201`; a identidade autenticada fica registrada como solicitante. |
-| `GET /api/reservations/{id}` | 401 | 200 | 200 | 200 | Não há restrição de posse para leitura. Para reserva inexistente, a resposta ainda depende do tratamento de ausência no catálogo. |
-| `GET /api/reservations/{id}/history` | 401 | 403 | 200 | 200 | `@PreAuthorize` permite Responsável e Administrador; JWTs assinados são convertidos em authorities. |
-| `DELETE /api/reservations/{id}` *(cancelamento/exclusão lógica)* | 401 | 204 própria; 403 alheia | 204 | 204 | Solicitante é validado contra o proprietário persistido. Reservas iniciadas/concluídas produzem `409`. |
-| `POST /api/reservations/{id}/approval` | 401 | 403 | 200 | 403 | `@PreAuthorize` restringe a operação ao Responsável; Administrador não substitui esse papel. |
-| `POST /api/reservations` | 401 | 201 | 201 | 201 | Retorna o `reservationId` criado para permitir alteração posterior; conflito de agenda resulta em `409`. |
-| `GET /api/resources/{resourceId}/availability` | 401 | 200 | 200 | 200 | Qualquer identidade autenticada pode consultar disponibilidade. |
-| `POST /api/reservations/{id}/start` | 401 | 200 própria; 403 alheia | 200 | 200 | A posse é verificada antes da transição; o teste também confirma o estado `EM_USO` em transição válida. |
-| `POST /api/reservations/{id}/complete` | 401 | 200 própria; 403 alheia | 200 | 200 | A posse é verificada antes da transição; o teste também confirma o estado `CONCLUIDA` em transição válida. |
-| `POST /api/resources/{resourceId}/maintenance` | 401 | 403 | 403 | 201 | `@PreAuthorize` restringe ao Administrador e o controller retorna `201`. |
-| `GET /relatorios/utilizacao` *(perfil `postgres`)* | 401 | 403 | 200 | 200 | Disponível no perfil `postgres`; Responsável e Administrador podem consultar. |
-| `PUT /api/reservations/{id}` | 401 | 200 própria; 403 alheia | 200 | 200 | Atualiza `startsAt`/`endsAt`; o proprietário é persistido e validado para Solicitante. |
-| `POST /api/resources` | 401 | 403 | 403 | 201 | Cadastro persistido permitido somente a Administrador; `id` obrigatório e `capacity` positiva. |
+| Operação | Cenário | Anônimo | Solicitante | Responsável | Administrador | Controle no código |
+|---|---|---:|---:|---:|---:|---|
+| `POST /api/auth/login` | padrão | 200 | 200 | 200 | 200 | Rota pública (`permitAll`); credenciais inválidas dão `401` |
+| `GET /api/auth/me` | padrão | 401 | 200 | 200 | 200 | `isAuthenticated()` |
+| `GET /api/users` | padrão | 401 | 403 | 403 | 200 | `hasRole('ADMINISTRADOR')` |
+| `POST /api/users` | padrão | 401 | 403 | 403 | 201 | `hasRole('ADMINISTRADOR')` |
+| `GET /api/resources` | padrão | 401 | 200 | 200 | 200 | `isAuthenticated()` |
+| `GET /api/resources/{id}` | padrão | 401 | 200 | 200 | 200 | `isAuthenticated()` |
+| `POST /api/resources` | padrão | 401 | 403 | 403 | 201 | `hasRole('ADMINISTRADOR')` |
+| `PUT /api/resources/{id}` | padrão | 401 | 403 | 403 | 200 | `hasRole('ADMINISTRADOR')` |
+| `GET /api/resources/{id}/availability` | padrão | 401 | 200 | 200 | 200 | autenticação do filtro de segurança (`anyRequest().authenticated()`) |
+| `GET /api/maintenance` | padrão | 401 | 200 | 200 | 200 | `isAuthenticated()` |
+| `POST /api/resources/{id}/maintenance` | padrão | 401 | 403 | 403 | 201 | `hasRole('ADMINISTRADOR')` |
+| `DELETE /api/resources/{id}/maintenance` | padrão | 401 | 403 | 403 | 204 | `hasRole('ADMINISTRADOR')` |
+| `GET /api/reservations` | padrão | 401 | 200 | 200 | 200 | `isAuthenticated()`; o Solicitante só vê as próprias reservas |
+| `POST /api/reservations` | padrão | 401 | 201 | 201 | 201 | filtro de segurança; conflito de agenda dá `409` |
+| `GET /api/reservations/restricted` | padrão | 401 | 200 | 200 | 200 | filtro de segurança |
+| `POST /api/reservations/restricted` | padrão | 401 | 201 | 201 | 201 | filtro de segurança; o autor fica como solicitante |
+| `GET /api/reservations/{id}` | padrão | 401 | 200 | 200 | 200 | filtro de segurança; a política de posse para leitura não foi especificada |
+| `GET /api/reservations/{id}/history` | padrão | 401 | 403 | 200 | 200 | `hasAnyRole('RESPONSAVEL','ADMINISTRADOR')` |
+| `PUT /api/reservations/{id}` | reserva própria | 401 | 200 | 200 | 200 | `isAuthenticated()` + posse no serviço |
+| `PUT /api/reservations/{id}` | reserva alheia | 401 | 403 | 200 | 200 | `isAuthenticated()` + posse no serviço |
+| `DELETE /api/reservations/{id}` | reserva própria | 401 | 204 | 204 | 204 | `isAuthenticated()` + posse; reserva iniciada dá `409` (RF-15) |
+| `DELETE /api/reservations/{id}` | reserva alheia | 401 | 403 | 204 | 204 | `isAuthenticated()` + posse; reserva iniciada dá `409` (RF-15) |
+| `POST /api/reservations/{id}/approval` | padrão | 401 | 403 | 200 | 403 | `hasRole('RESPONSAVEL')`; o Administrador não substitui o Responsável |
+| `POST /api/reservations/{id}/rejection` | padrão | 401 | 403 | 200 | 403 | `hasRole('RESPONSAVEL')` |
+| `POST /api/reservations/{id}/no-show` | padrão | 401 | 403 | 200 | 200 | `hasAnyRole('RESPONSAVEL','ADMINISTRADOR')` |
+| `POST /api/reservations/{id}/start` | reserva própria | 401 | 200 | 200 | 200 | filtro de segurança + posse no serviço |
+| `POST /api/reservations/{id}/start` | reserva alheia | 401 | 403 | 200 | 200 | filtro de segurança + posse no serviço |
+| `POST /api/reservations/{id}/complete` | reserva própria | 401 | 200 | 200 | 200 | filtro de segurança + posse no serviço |
+| `POST /api/reservations/{id}/complete` | reserva alheia | 401 | 403 | 200 | 200 | filtro de segurança + posse no serviço |
+| `POST /api/materials/{id}/withdrawals` | padrão | 401 | 403 | 201 | 201 | `hasAnyRole('RESPONSAVEL','ADMINISTRADOR')` |
+| `POST /api/loans/{id}/return` | padrão | 401 | 403 | 200 | 200 | `hasAnyRole('RESPONSAVEL','ADMINISTRADOR')` |
+| `GET /api/loans/{id}` | padrão | 401 | 403 | 200 | 200 | `hasAnyRole('RESPONSAVEL','ADMINISTRADOR')` |
+| `GET /api/loans` | padrão | 401 | 403 | 200 | 200 | `hasAnyRole('RESPONSAVEL','ADMINISTRADOR')` |
+| `GET /api/notifications` | padrão | 401 | 200 | 200 | 200 | `isAuthenticated()`; só Responsável e Administrador veem as de todos (`all=true`) |
+| `GET /relatorios/utilizacao` | padrão | 401 | 403 | 200 | 200 | `hasAnyRole('RESPONSAVEL','ADMINISTRADOR')`; existe só no perfil `postgres` |
 
-### Regra de posse e transições
+## Regras de posse e de papel
 
-- **Consulta:** a política de posse para leitura não foi especificada no escopo
-  desta matriz. A rota não aplica restrição de posse.
-- **Alteração e cancelamento:** Solicitante deve receber `200`/`204` somente
-  para a própria reserva; para reserva alheia, `403`. `PUT` altera o período e
-  `DELETE` realiza cancelamento/exclusão lógica.
-- **Aprovação restrita:** somente o papel `RESPONSAVEL` deve efetivar a
-  transição. Solicitante, Administrador e anônimo recebem `403`/`401`.
-- **Início e conclusão:** são mutações da reserva e devem observar a posse do
-  Solicitante. Responsável e Administrador podem operar qualquer reserva.
+- **Alterar e cancelar:** o Solicitante só tem sucesso na **própria** reserva; na alheia recebe `403`. Responsável e Administrador atuam em qualquer reserva.
+- **Iniciar e concluir:** mesma regra de posse; só reserva `APROVADA` pode iniciar e só `EM_USO` pode concluir (outro estado deixa o estado inalterado).
+- **Aprovar e rejeitar:** exclusivos do Responsável, e nunca o próprio solicitante da reserva. O Administrador recebe `403`.
+- **Não comparecimento:** Responsável ou Administrador, e só a partir de `APROVADA`.
+- **Reserva iniciada** (`EM_USO` ou `CONCLUIDA`) não pode ser cancelada nem apagada (`409`), para qualquer perfil (RF-15).
+- **Leitura:** a política de posse para leitura de uma reserva específica não foi especificada; a matriz espera `200` para qualquer identidade autenticada. A listagem `GET /api/reservations` já limita o Solicitante às próprias reservas.
 
-## Rotas sem regra específica por operação
+## Como a matriz é verificada
 
-As rotas abaixo não têm `@PreAuthorize` próprio; no perfil `perf`, são cobertas
-por `anyRequest().authenticated()`. Regras de posse para início e conclusão
-também são aplicadas no serviço:
+| Teste | O que garante | Roda em |
+|---|---|---|
+| `AuthorizationMatrixDocumentTest` | **Toda rota mapeada no código está nesta tabela** e toda linha da tabela corresponde a uma rota real (exceção explícita: o relatório, que só existe no perfil `postgres`); cada linha tem caso de teste e vice-versa; células só com códigos válidos | memória, sem Docker |
+| `AuthorizationMatrixFullIT` | **Cada célula** (linha × perfil) contra a API real com PostgreSQL e JWT de cada perfil | Testcontainers |
+| `AuthorizationMatrixIT` | Matriz do perfil de carga (`perf`) e validação de entrada com `ProblemDetail` seguro (sem stack trace, SQL nem nome de classe interna) | Testcontainers |
 
-- `GET /api/reservations/restricted`
-- `POST /api/reservations/restricted`
-- `GET /api/reservations/{id}`
-- `POST /api/reservations`
-- `GET /api/resources/{resourceId}/availability`
-- `POST /api/reservations/{id}/start`
-- `POST /api/reservations/{id}/complete`
+## Rotas sem regra de método própria
 
-`POST /api/auth/login` tem regra explícita `permitAll()` no perfil `perf`;
-histórico, exclusão, aprovação, alteração, cadastro de recurso, manutenção e
-relatório têm regras de método ou de posse explícitas, descritas na tabela.
+As rotas que não têm `@PreAuthorize` (`availability`, `POST /api/reservations`, `GET /api/reservations/{id}`, `GET` e `POST /api/reservations/restricted`, `start` e `complete`) dependem do filtro de segurança, que exige autenticação em todas as rotas exceto o login (`anyRequest().authenticated()`). A posse de `start` e `complete` é verificada no serviço de auditoria. Nenhuma rota fica sem proteção: o teste `AuthorizationMatrixFullIT` confirma o `401` do anônimo em todas elas.
+
+## Divergências entre o código e a matriz
+
+Nenhuma. Os defeitos de autorização encontrados e corrigidos ao longo do projeto (DEF-003, DEF-005, DEF-009 e DEF-011) estão em [../defeitos/](../defeitos/README.md).

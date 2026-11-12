@@ -247,6 +247,23 @@ abstract class AbstractApplicationFlowTest {
     }
 
     @Test
+    void startedReservationCannotBeCancelledAndKeepsItsState() throws Exception {
+        String admin = login("admin");
+        String solicitante = login("solicitante");
+        String resource = "em-uso-" + suffix();
+        createResource(admin, resource, false);
+        long id = createReservation(solicitante, resource, "2028-02-12T10:00:00Z", "2028-02-12T11:00:00Z");
+        mockMvc.perform(as(post("/api/reservations/" + id + "/start"), solicitante))
+                .andExpect(jsonPath("$.status").value("EM_USO"));
+
+        mockMvc.perform(as(delete("/api/reservations/" + id), solicitante))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(as(get("/api/reservations/" + id), solicitante))
+                .andExpect(jsonPath("$.status").value("EM_USO"));
+    }
+
+    @Test
     void noShowIsRestrictedToResponsibleAndAdministratorAndOnlyForApprovedReservations() throws Exception {
         String admin = login("admin");
         String responsavel = login("responsavel");
