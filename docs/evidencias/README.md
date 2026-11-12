@@ -22,6 +22,20 @@ Todas as evidências se referem ao **commit apontado pela tag `v1.0.0-rc1`**. Os
 | 10 | Documentação da API | [docs/api.md](../api.md) | — |
 | 11 | Changelog | [CHANGELOG.md](../../CHANGELOG.md) | — |
 
+## Capturas versionadas
+
+Cópias em [imagens/](imagens/), porque os artifacts do CI expiram (30 dias) e o Sonar não guarda histórico no repositório. Cada print traz, na própria imagem, o commit ou o PR a que se refere.
+
+| Arquivo | O que mostra | Referência |
+|---|---|---|
+| [jacoco-total-main-1abb9da.png](imagens/jacoco-total-main-1abb9da.png) | Relatório JaCoCo, linha Total: 92% de instruções, 74% de branches, 1.103 linhas (70 perdidas) | CI da `main`, commit `1abb9da` |
+| [sonarcloud-main-overall-1abb9da.png](imagens/sonarcloud-main-overall-1abb9da.png) | SonarCloud `main` (Overall Code): Quality Gate Passed, Segurança/Confiabilidade/Manutenibilidade A, cobertura 88,4%, duplicação 0,0% | Análise do commit `1abb9da` |
+| [sonarcloud-pr9-quality-gate.png](imagens/sonarcloud-pr9-quality-gate.png) | PR #9: Quality Gate passed (0 issues novas, 0 hotspots) e checks verdes | PR #9 |
+| [ci-maven-verify-pr9.png](imagens/ci-maven-verify-pr9.png) | Execução "Maven verify" do PR #9 com todos os passos verdes (análise Sonar, upload do JaCoCo) | [run 42728214539](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/42728214539) |
+| [github-aprovacoes-pr9.png](imagens/github-aprovacoes-pr9.png) | Duas aprovações de `Erickyuji08` no PR #9 | PR #9 |
+| [sonarcloud-pr8-issues-parte1.png](imagens/sonarcloud-pr8-issues-parte1.png), [parte2](imagens/sonarcloud-pr8-issues-parte2.png) | As 6 issues do SonarCloud no PR #8 **antes da correção** (2 de confiabilidade, 4 de segurança) | PR #8 |
+| [e2e-recursos-admin.png](imagens/e2e-recursos-admin.png), [e2e-reservas-solicitante.png](imagens/e2e-reservas-solicitante.png), [e2e-mobile.png](imagens/e2e-mobile.png) | Telas capturadas pelo E2E (Administrador, Solicitante, 375 px) | [e2e-resultado.md](../testes/e2e-resultado.md) |
+
 ## Como reproduzir
 
 ```bash
