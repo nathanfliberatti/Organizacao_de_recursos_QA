@@ -22,6 +22,7 @@ Todas as evidências se referem ao **commit apontado pela tag `v1.0.0-rc1`**. Os
 | 10 | Documentação da API | [docs/api.md](../api.md) | Protegida por `ApiDocumentationTest` |
 | 12 | Arquitetura do sistema implementado (C4 e sequências) | [docs/arquitetura-implementada.md](../arquitetura-implementada.md), imagens em [docs/diagramas/](../diagramas/) | — |
 | 13 | Relatório de testes e E2E | [docs/testes/relatorio-testes.md](../testes/relatorio-testes.md), [docs/testes/e2e-resultado.md](../testes/e2e-resultado.md) | — |
+| 14 | Apresentação (slides) e roteiro da demonstração | [docs/apresentacao/apresentacao.pptx](../apresentacao/apresentacao.pptx), [docs/apresentacao/roteiro-demonstracao.md](../apresentacao/roteiro-demonstracao.md) | 13 slides com notas do apresentador |
 | 11 | Changelog | [CHANGELOG.md](../../CHANGELOG.md) | — |
 
 ## Capturas versionadas

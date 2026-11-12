@@ -107,10 +107,12 @@ Reavaliação em **novo clone limpo** da branch final da entrega (commit `148cd0
 | Relatório do JaCoCo | sim (captura e números) | sim | [../evidencias/imagens/](../evidencias/imagens/), [../relatorio-qualidade.md](../relatorio-qualidade.md) §3; artifact `jacoco-report` do CI |
 | Plano do teste de carga | sim | sim | [../performance/rnf.md](../performance/rnf.md), `perf/reservas.jmx`, `perf/gerar-volume.sql` |
 | Resultado do teste de carga | sim | sim | [../performance/resultado-02.md](../performance/resultado-02.md), [resultado-03.md](../performance/resultado-03.md) |
-| Registro de defeitos | sim | sim | [../defeitos/README.md](../defeitos/README.md) (13 defeitos) |
+| Registro de defeitos (priorizado) | sim | sim | [../defeitos/README.md](../defeitos/README.md) (15 defeitos, com severidade e prioridade) |
 | Relatório final de qualidade | sim | sim | [../relatorio-qualidade.md](../relatorio-qualidade.md) |
 | Decisão de qualidade | sim | sim | [../decisao-qualidade.md](../decisao-qualidade.md) |
 | Pacote de evidências | sim | sim | [../evidencias/README.md](../evidencias/README.md) |
 | `CHANGELOG.md` | sim | sim | [../../CHANGELOG.md](../../CHANGELOG.md) |
+| Apresentação e demonstração do sistema (entregável da especificação) | sim | sim | [../apresentacao/apresentacao.pptx](../apresentacao/apresentacao.pptx) (13 slides com notas), [../apresentacao/roteiro-demonstracao.md](../apresentacao/roteiro-demonstracao.md) |
+| Registro de riscos (coluna de risco da RTM) | sim | sim | [../riscos.md](../riscos.md), [../rtm.md](../rtm.md) |
 | Tag `v1.0.0-rc1` | **ainda não** | — | A criar no commit da `main` após o merge desta entrega |
 | Formulário de entrega | **ainda não** | — | Depende do link do Hub; texto pronto em [../decisao-qualidade.md](../decisao-qualidade.md) |

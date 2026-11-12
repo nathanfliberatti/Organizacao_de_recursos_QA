@@ -15,7 +15,7 @@ Sistema web para organizar a alocação de salas, professores e materiais com pr
 
 | Nível | Ferramenta | Resultado | Evidência |
 |---|---|---|---|
-| Unitário / API em memória / BDD | JUnit 5, MockMvc, Cucumber | **64 testes, 0 falhas** (Surefire) | `./mvnw -B test`; artifact `test-reports` do CI |
+| Unitário / API em memória / BDD | JUnit 5, MockMvc, Cucumber | **177 testes, 0 falhas** (Surefire) | `./mvnw -B test`; artifact `test-reports` do CI |
 | Integração com PostgreSQL real | Testcontainers (Failsafe, classes `*IT`) | Passam no CI | Execução do CI do commit da tag ([índice de evidências](evidencias/README.md)) |
 | Concorrência | `ReservationConcurrencyIT` (20 requisições, 5 repetições por cenário) e `ApplicationFlowIT` (8 requisições) | Exatamente uma reserva aceita por disputa | idem |
 | Autorização | `AuthorizationMatrixIT` (matriz perfil × operação) | Passa | [seguranca/matriz-autorizacao.md](seguranca/matriz-autorizacao.md) |
@@ -24,7 +24,7 @@ Sistema web para organizar a alocação de salas, professores e materiais com pr
 
 Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/evidencia-tdd.md](testes/evidencia-tdd.md), [testes/mutacao-manual.md](testes/mutacao-manual.md).
 
-**Total de testes do `verify` no CI** (job "Maven verify" do PR #12, [execução 43129180145](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/43129180145)): **64 testes Surefire + 104 testes Failsafe = 168, 0 falhas, 0 erros, 0 ignorados.** Os `*IT` incluem `AuthorizationMatrixIT` (69), `ReservationConcurrencyIT` (11), `ApplicationFlowIT` (10), `UtilizationReportApiIT` (7) e `ReservationAuditIT` (7). No PR #9 (entrega anterior) eram 55 + 103 = 158. Detalhe por nível: [testes/relatorio-testes.md](testes/relatorio-testes.md).
+**Total de testes do `verify` no CI** (job "Maven verify" do PR #13, [execução 43134310856](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/43134310856)): **177 testes Surefire + 116 testes Failsafe = 293, 0 falhas, 0 erros, 0 ignorados.** Os `*IT` incluem `AuthorizationMatrixIT` (77), `ReservationConcurrencyIT` (11), `ApplicationFlowIT` (14), `UtilizationReportApiIT` (7) e `ReservationAuditIT` (7); o Surefire inclui 15 cenários Cucumber. Nas entregas anteriores eram 158 (PR #9) e 168 (PR #12). Detalhe por nível: [testes/relatorio-testes.md](testes/relatorio-testes.md).
 
 ## 3. Cobertura
 
