@@ -173,6 +173,112 @@ abstract class AbstractApplicationFlowTest {
     }
 
     @Test
+    void rejectedReservationReleasesTheSlotAndIsAudited() throws Exception {
+        String admin = login("admin");
+        String responsavel = login("responsavel");
+        String solicitante = login("solicitante");
+        String restricted = "restrita-" + suffix();
+        createResource(admin, restricted, true);
+        long id = createReservation(solicitante, restricted, "2028-01-10T10:00:00Z", "2028-01-10T11:00:00Z");
+
+        mockMvc.perform(as(post("/api/reservations/" + id + "/rejection"), solicitante)).andExpect(status().isForbidden());
+        mockMvc.perform(as(post("/api/reservations/" + id + "/rejection"), admin)).andExpect(status().isForbidden());
+        mockMvc.perform(as(post("/api/reservations/" + id + "/rejection"), responsavel))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJEITADA"));
+        mockMvc.perform(as(get("/api/reservations/" + id), solicitante)).andExpect(jsonPath("$.status").value("REJEITADA"));
+        mockMvc.perform(as(get("/api/reservations/" + id + "/history"), responsavel))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[1].from").value("SOLICITADA"))
+                .andExpect(jsonPath("$[1].to").value("REJEITADA"))
+                .andExpect(jsonPath("$[1].actorId").value("responsavel"));
+        // estado final: repetir não muda nada
+        mockMvc.perform(as(post("/api/reservations/" + id + "/rejection"), responsavel))
+                .andExpect(jsonPath("$.status").value("REJEITADA"));
+        mockMvc.perform(as(post("/api/reservations/" + id + "/approval"), responsavel))
+                .andExpect(jsonPath("$.status").value("REJEITADA"));
+        mockMvc.perform(as(get("/api/reservations"), solicitante))
+                .andExpect(jsonPath("$[?(@.id=='" + id + "')].lifecycleStatus").value("REJEITADA"))
+                .andExpect(jsonPath("$[?(@.id=='" + id + "')].schedulingStatus").value("CANCELADA"));
+
+        // o horário voltou para a agenda
+        String other = createUserAndLogin(admin, "outro-" + suffix());
+        createReservation(other, restricted, "2028-01-10T10:00:00Z", "2028-01-10T11:00:00Z");
+    }
+
+    @Test
+    void responsibleCannotRejectOwnRequestAndUnknownReservationIsNotFound() throws Exception {
+        String admin = login("admin");
+        String responsavel = login("responsavel");
+        String restricted = "restrita-" + suffix();
+        createResource(admin, restricted, true);
+        long id = createReservation(responsavel, restricted, "2028-01-11T10:00:00Z", "2028-01-11T11:00:00Z");
+
+        mockMvc.perform(as(post("/api/reservations/" + id + "/rejection"), responsavel))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SOLICITADA"));
+        mockMvc.perform(as(post("/api/reservations/999999999/rejection"), responsavel)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void cancelledReservationKeepsItsHistoryReleasesTheSlotAndCannotAdvance() throws Exception {
+        String admin = login("admin");
+        String responsavel = login("responsavel");
+        String solicitante = login("solicitante");
+        String resource = "livre-" + suffix();
+        createResource(admin, resource, false);
+        long id = createReservation(solicitante, resource, "2028-01-12T10:00:00Z", "2028-01-12T11:00:00Z");
+
+        mockMvc.perform(as(delete("/api/reservations/" + id), solicitante)).andExpect(status().isNoContent());
+        mockMvc.perform(as(get("/api/reservations/" + id), solicitante)).andExpect(jsonPath("$.status").value("CANCELADA"));
+        mockMvc.perform(as(get("/api/reservations/" + id + "/history"), responsavel))
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[2].to").value("CANCELADA"))
+                .andExpect(jsonPath("$[2].actorId").value("solicitante"));
+        // estado final
+        mockMvc.perform(as(delete("/api/reservations/" + id), solicitante)).andExpect(status().isConflict());
+        mockMvc.perform(as(post("/api/reservations/" + id + "/start"), solicitante))
+                .andExpect(jsonPath("$.status").value("CANCELADA"));
+        mockMvc.perform(as(get("/api/reservations"), solicitante))
+                .andExpect(jsonPath("$[?(@.id=='" + id + "')].lifecycleStatus").value("CANCELADA"));
+
+        String other = createUserAndLogin(admin, "outro-" + suffix());
+        createReservation(other, resource, "2028-01-12T10:00:00Z", "2028-01-12T11:00:00Z");
+    }
+
+    @Test
+    void noShowIsRestrictedToResponsibleAndAdministratorAndOnlyForApprovedReservations() throws Exception {
+        String admin = login("admin");
+        String responsavel = login("responsavel");
+        String solicitante = login("solicitante");
+        String open = "livre-" + suffix();
+        String restricted = "restrita-" + suffix();
+        createResource(admin, open, false);
+        createResource(admin, restricted, true);
+        long approved = createReservation(solicitante, open, "2028-01-13T10:00:00Z", "2028-01-13T11:00:00Z");
+        long requested = createReservation(solicitante, restricted, "2028-01-14T10:00:00Z", "2028-01-14T11:00:00Z");
+
+        mockMvc.perform(as(post("/api/reservations/" + approved + "/no-show"), solicitante)).andExpect(status().isForbidden());
+        mockMvc.perform(as(post("/api/reservations/" + approved + "/no-show"), responsavel))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("NAO_COMPARECEU"));
+        mockMvc.perform(as(post("/api/reservations/" + approved + "/no-show"), admin))
+                .andExpect(jsonPath("$.status").value("NAO_COMPARECEU"));
+        mockMvc.perform(as(post("/api/reservations/" + approved + "/start"), solicitante))
+                .andExpect(jsonPath("$.status").value("NAO_COMPARECEU"));
+        mockMvc.perform(as(get("/api/reservations/" + approved + "/history"), responsavel))
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[2].to").value("NAO_COMPARECEU"));
+        // solicitação ainda não aprovada não tem "não compareceu"
+        mockMvc.perform(as(post("/api/reservations/" + requested + "/no-show"), admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SOLICITADA"));
+
+        String other = createUserAndLogin(admin, "outro-" + suffix());
+        createReservation(other, open, "2028-01-13T10:00:00Z", "2028-01-13T11:00:00Z");
+    }
+
+    @Test
     void anotherRequesterCannotCancelOrChangeReservation() throws Exception {
         String admin = login("admin");
         String solicitante = login("solicitante");

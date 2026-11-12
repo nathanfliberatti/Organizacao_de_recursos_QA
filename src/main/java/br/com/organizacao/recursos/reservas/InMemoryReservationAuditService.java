@@ -110,6 +110,25 @@ public class InMemoryReservationAuditService extends ReservationAuditService {
         deleted.put(reservationId, true);
     }
 
+    @Override
+    public synchronized ReservationTransition cancelReservation(
+            String reservationId, String actorId, boolean canCancelAny, Clock clock, String reason) {
+        ReservationStatus status = currentStatus(reservationId);
+        if (!canCancelAny && !requesterIds.get(reservationId).equals(actorId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to cancel this reservation");
+        }
+        if (status.started()) {
+            throw new ReservationDeletionConflictException();
+        }
+        if (!status.canMoveTo(ReservationStatus.CANCELADA)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Reservation can no longer be cancelled");
+        }
+        ReservationTransition transition = new ReservationTransition(
+                reservationId, status, ReservationStatus.CANCELADA, actorId, clock.instant(), reason);
+        recordTransition(transition);
+        return transition;
+    }
+
     private ReservationStatus currentStatus(String reservationId) {
         if (Boolean.TRUE.equals(deleted.get(reservationId))) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation not found");
@@ -122,11 +141,6 @@ public class InMemoryReservationAuditService extends ReservationAuditService {
     }
 
     private boolean isAllowedInMemoryTransition(ReservationStatus previousStatus, ReservationStatus newStatus) {
-        return switch (previousStatus) {
-            case SOLICITADA -> newStatus == ReservationStatus.APROVADA;
-            case APROVADA -> newStatus == ReservationStatus.EM_USO;
-            case EM_USO -> newStatus == ReservationStatus.CONCLUIDA;
-            case CONCLUIDA -> false;
-        };
+        return previousStatus.canMoveTo(newStatus);
     }
 }

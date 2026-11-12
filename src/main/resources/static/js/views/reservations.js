@@ -46,18 +46,28 @@ export async function render(container, { user }) {
     return { ...data, startsAt: toIso(data.startsAt), endsAt: toIso(data.endsAt) };
   }
 
+  const FINAL_STATES = ['CONCLUIDA', 'REJEITADA', 'CANCELADA', 'NAO_COMPARECEU'];
+
+  function statusOf(r) {
+    return r.lifecycleStatus || (r.schedulingStatus === 'CANCELADA' ? 'CANCELADA' : 'SOLICITADA');
+  }
+
   function actionsFor(r) {
-    if (r.schedulingStatus === 'CANCELADA') return '';
-    const status = r.lifecycleStatus;
+    const status = statusOf(r);
     const owner = r.requesterId === user.username;
     const manager = user.role !== 'SOLICITANTE';
     const started = status === 'EM_USO' || status === 'CONCLUIDA';
     const buttons = [];
-    if (status === 'SOLICITADA' && user.role === 'RESPONSAVEL' && !owner) buttons.push(['approve', 'Aprovar', '']);
-    if (status === 'APROVADA' && (owner || manager)) buttons.push(['start', 'Iniciar uso', '']);
-    if (status === 'EM_USO' && (owner || manager)) buttons.push(['complete', 'Concluir', '']);
-    if (!started && (owner || manager)) {
-      buttons.push(['edit', 'Alterar período', 'secondary'], ['cancel', 'Cancelar', 'danger']);
+    if (!FINAL_STATES.includes(status)) {
+      if (status === 'SOLICITADA' && user.role === 'RESPONSAVEL' && !owner) {
+        buttons.push(['approve', 'Aprovar', ''], ['reject', 'Rejeitar', 'danger']);
+      }
+      if (status === 'APROVADA' && (owner || manager)) buttons.push(['start', 'Iniciar uso', '']);
+      if (status === 'APROVADA' && manager) buttons.push(['noshow', 'Não compareceu', 'secondary']);
+      if (status === 'EM_USO' && (owner || manager)) buttons.push(['complete', 'Concluir', '']);
+      if (!started && (owner || manager)) {
+        buttons.push(['edit', 'Alterar período', 'secondary'], ['cancel', 'Cancelar', 'danger']);
+      }
     }
     if (manager) buttons.push(['history', 'Histórico', 'secondary']);
     return buttons.map(([action, label, style]) =>
@@ -73,7 +83,7 @@ export async function render(container, { user }) {
         <tbody>${rows.map((r) => html`<tr>
           <td>${r.id}</td><td>${byId[r.resourceId]?.name || r.resourceId}</td><td>${r.professorId}</td><td>${r.requesterId}</td>
           <td>${fmtDate(r.startsAt)}</td><td>${fmtDate(r.endsAt)}</td>
-          <td>${badge(r.schedulingStatus === 'CANCELADA' ? 'CANCELADA' : (r.lifecycleStatus || 'SOLICITADA'))}</td>
+          <td>${badge(statusOf(r))}</td>
           <td class="actions">${actionsFor(r)}</td></tr>`)}</tbody>
       </table>`);
   }
@@ -111,10 +121,12 @@ export async function render(container, { user }) {
       if (action === 'cancel') {
         if (!window.confirm(`Cancelar a reserva ${id}?`)) return;
         await del(`/api/reservations/${id}`); toast('Reserva cancelada.', 'ok'); load();
-      } else if (action === 'approve' || action === 'start' || action === 'complete') {
-        const path = { approve: 'approval', start: 'start', complete: 'complete' }[action];
+      } else if (['approve', 'reject', 'noshow', 'start', 'complete'].includes(action)) {
+        if (action === 'noshow' && !window.confirm(`Registrar que o solicitante não compareceu (reserva ${id})? O horário será liberado.`)) return;
+        if (action === 'reject' && !window.confirm(`Rejeitar a solicitação ${id}? O horário será liberado.`)) return;
+        const path = { approve: 'approval', reject: 'rejection', noshow: 'no-show', start: 'start', complete: 'complete' }[action];
         const { data } = await post(`/api/reservations/${id}/${path}`);
-        const expected = { approve: 'APROVADA', start: 'EM_USO', complete: 'CONCLUIDA' }[action];
+        const expected = { approve: 'APROVADA', reject: 'REJEITADA', noshow: 'NAO_COMPARECEU', start: 'EM_USO', complete: 'CONCLUIDA' }[action];
         if (data.status === expected) toast('Estado atualizado.', 'ok');
         else toast('A transição não foi aplicada (regra de negócio).', 'error');
         load();

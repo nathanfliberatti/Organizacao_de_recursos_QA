@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS reservation_conflict_attempts (
 CREATE TABLE IF NOT EXISTS reservation_lifecycle (
     reservation_id TEXT PRIMARY KEY,
     requester_id TEXT NOT NULL,
-    status TEXT NOT NULL CHECK (status IN ('SOLICITADA', 'APROVADA', 'EM_USO', 'CONCLUIDA')),
+    status TEXT NOT NULL CHECK (status IN ('SOLICITADA', 'APROVADA', 'EM_USO', 'CONCLUIDA', 'REJEITADA', 'CANCELADA', 'NAO_COMPARECEU')),
     deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS reservation_audit (
     audit_id BIGSERIAL PRIMARY KEY,
     reservation_id TEXT NOT NULL REFERENCES reservation_lifecycle (reservation_id) ON DELETE RESTRICT,
     previous_status TEXT,
-    new_status TEXT NOT NULL CHECK (new_status IN ('SOLICITADA', 'APROVADA', 'EM_USO', 'CONCLUIDA')),
+    new_status TEXT NOT NULL CHECK (new_status IN ('SOLICITADA', 'APROVADA', 'EM_USO', 'CONCLUIDA', 'REJEITADA', 'CANCELADA', 'NAO_COMPARECEU')),
     user_id TEXT NOT NULL,
     occurred_at TIMESTAMPTZ NOT NULL,
     reason TEXT NOT NULL CHECK (length(trim(reason)) > 0),
@@ -127,3 +127,12 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS notifications_recipient_idx ON notifications (recipient_id, notification_id DESC);
+
+-- Estados alternativos do ciclo de vida (RF-14): REJEITADA, CANCELADA e NAO_COMPARECEU.
+-- As constraints sao recriadas para bancos criados antes desta versao (idempotente).
+ALTER TABLE reservation_lifecycle DROP CONSTRAINT IF EXISTS reservation_lifecycle_status_check;
+ALTER TABLE reservation_lifecycle ADD CONSTRAINT reservation_lifecycle_status_check
+    CHECK (status IN ('SOLICITADA', 'APROVADA', 'EM_USO', 'CONCLUIDA', 'REJEITADA', 'CANCELADA', 'NAO_COMPARECEU'));
+ALTER TABLE reservation_audit DROP CONSTRAINT IF EXISTS reservation_audit_new_status_check;
+ALTER TABLE reservation_audit ADD CONSTRAINT reservation_audit_new_status_check
+    CHECK (new_status IN ('SOLICITADA', 'APROVADA', 'EM_USO', 'CONCLUIDA', 'REJEITADA', 'CANCELADA', 'NAO_COMPARECEU'));

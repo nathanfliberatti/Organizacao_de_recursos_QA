@@ -119,6 +119,30 @@ public class ReservationAuditService {
         }
     }
 
+    /**
+     * Cancela a reserva como transição auditada para CANCELADA (RF-14). O registro continua consultável.
+     * 404 se não existe, 403 se não é do solicitante (e o ator não é Responsável/Administrador) e 409 se a
+     * reserva já foi iniciada (RF-15) ou já está em estado final.
+     */
+    @Transactional
+    public ReservationTransition cancelReservation(
+            String reservationId, String actorId, boolean canCancelAny, Clock clock, String reason) {
+        ReservationLifecycle reservation = lockCurrentReservation(reservationId);
+        if (!canCancelAny && !reservation.requesterId().equals(actorId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to cancel this reservation");
+        }
+        if (reservation.status().started()) {
+            throw new ReservationDeletionConflictException();
+        }
+        if (!reservation.status().canMoveTo(ReservationStatus.CANCELADA)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Reservation can no longer be cancelled");
+        }
+        ReservationTransition transition = new ReservationTransition(reservationId, reservation.status(),
+                ReservationStatus.CANCELADA, actorId, clock.instant(), reason);
+        persistTransition(transition);
+        return transition;
+    }
+
     private ReservationLifecycle lockCurrentReservation(String reservationId) {
         try {
             return jdbcTemplate.queryForObject("""
@@ -188,12 +212,7 @@ public class ReservationAuditService {
     }
 
     private boolean isAllowedTransition(ReservationStatus previousStatus, ReservationStatus newStatus) {
-        return switch (previousStatus) {
-            case SOLICITADA -> newStatus == ReservationStatus.APROVADA;
-            case APROVADA -> newStatus == ReservationStatus.EM_USO;
-            case EM_USO -> newStatus == ReservationStatus.CONCLUIDA;
-            case CONCLUIDA -> false;
-        };
+        return previousStatus.canMoveTo(newStatus);
     }
 
     private record ReservationLifecycle(String requesterId, ReservationStatus status) {

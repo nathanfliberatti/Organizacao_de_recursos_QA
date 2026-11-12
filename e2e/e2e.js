@@ -12,7 +12,7 @@ fs.mkdirSync(OUT, { recursive: true });
 const results = [];
 const check = (name, ok, detail = '') => { results.push({ name, ok: !!ok, detail }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ' — ' + detail : ''}`); };
 const tag = Math.random().toString(36).slice(2, 8);
-const futureDay = () => 10 + Math.floor(Math.random() * 18); // evita colisão entre execuções repetidas
+const futureDay = () => 10 + Math.floor(Math.random() * 13); // dia 10 a 22; evita colisão entre execuções e deixa folga para +4 dias
 const day = String(futureDay()).padStart(2, '0');
 const month = String(1 + Math.floor(Math.random() * 12)).padStart(2, '0');
 const year = 2030 + Math.floor(Math.random() * 60);
@@ -23,6 +23,7 @@ async function open(browser, viewport) {
   const page = await ctx.newPage();
   page.pageErrors = [];
   page.on('pageerror', (e) => page.pageErrors.push(e.message));
+  page.on('dialog', (d) => d.accept()); // confirmações de Cancelar, Rejeitar e Não compareceu
   await page.goto(BASE + '/');
   return page;
 }
@@ -145,6 +146,57 @@ const goTo = async (page, label, heading) => { await page.click(`nav a:has-text(
     await goTo(s, 'Notificações', 'Notificações');
     await s.waitForSelector('#list table');
     check('notificação de criação registrada', (await s.textContent('#list')).includes('Criação'));
+
+    // ---- Estados alternativos (RF-14): rejeitar, não comparecer e cancelar
+    const dayAt = (offset) => `${year}-${month}-${String(Number(day) + offset).padStart(2, '0')}`;
+    const reserveAt = async (offset) => {
+      await goTo(s, 'Recursos', 'Recursos');
+      await goTo(s, 'Reservas', 'Reservas');
+      await s.selectOption('#reserve [name=resourceId]', resId);
+      await s.fill('#reserve [name=startsAt]', `${dayAt(offset)}T09:00`);
+      await s.fill('#reserve [name=endsAt]', `${dayAt(offset)}T10:00`);
+      const text = await expectToast(s, () => s.click('#reserve button[type=submit]'));
+      const match = text.match(/Reserva (\d+) criada/);
+      return match ? match[1] : null;
+    };
+    const rowOf = (page, id) => page.locator(`tr:has(td:first-child:text-is("${id}"))`);
+    const refresh = async (page) => { await goTo(page, 'Recursos', 'Recursos'); await goTo(page, 'Reservas', 'Reservas'); };
+    const actionsIn = async (page, id) => page.$$eval(`tr:has(td:first-child:text-is("${id}")) button`, (b) => b.map((x) => x.textContent.trim()));
+
+    const rejectedId = await reserveAt(2);
+    check('nova solicitação de recurso restrito criada', !!rejectedId);
+    await refresh(r);
+    await rowOf(r, rejectedId).locator('button[data-action=reject]').click();
+    await r.waitForSelector(`tr:has(td:first-child:text-is("${rejectedId}")) .badge.REJEITADA`);
+    check('Responsável rejeita e a reserva vira REJEITADA', true);
+    const afterReject = await actionsIn(r, rejectedId);
+    check('reserva REJEITADA só oferece Histórico', afterReject.length === 1 && afterReject[0] === 'Histórico', afterReject.join(', '));
+
+    const noShowId = await reserveAt(3);
+    await refresh(r);
+    await rowOf(r, noShowId).locator('button[data-action=approve]').click();
+    await r.waitForSelector(`tr:has(td:first-child:text-is("${noShowId}")) .badge.APROVADA`);
+    await rowOf(r, noShowId).locator('button[data-action=noshow]').click();
+    await r.waitForSelector(`tr:has(td:first-child:text-is("${noShowId}")) .badge.NAO_COMPARECEU`);
+    check('Responsável registra não comparecimento e a reserva vira NÃO COMPARECEU', true);
+    const afterNoShow = await actionsIn(r, noShowId);
+    check('reserva NÃO COMPARECEU só oferece Histórico', afterNoShow.length === 1 && afterNoShow[0] === 'Histórico', afterNoShow.join(', '));
+
+    const cancelId = await reserveAt(4);
+    await refresh(s);
+    await rowOf(s, cancelId).locator('button[data-action=cancel]').click();
+    await s.waitForSelector(`tr:has(td:first-child:text-is("${cancelId}")) .badge.CANCELADA`);
+    check('Solicitante cancela e a reserva vira CANCELADA', true);
+    check('reserva CANCELADA não oferece ações ao Solicitante', (await actionsIn(s, cancelId)).length === 0);
+    const again = await reserveAt(4);
+    check('horário liberado pelo cancelamento pode ser reservado de novo', !!again && again !== cancelId);
+    await refresh(r);
+    await rowOf(r, cancelId).locator('button[data-action=history]').click();
+    await r.waitForSelector('ol.timeline li');
+    check('histórico da reserva cancelada registra a transição para CANCELADA', (await r.textContent('ol.timeline')).includes('CANCELADA'));
+    await r.click('[data-close]');
+    await refresh(r);
+    await r.screenshot({ path: `${OUT}/e2e-estados-alternativos.png`, fullPage: true });
 
     // ---- Responsividade (RNF-04)
     const m = await open(browser, { width: 375, height: 700 });
