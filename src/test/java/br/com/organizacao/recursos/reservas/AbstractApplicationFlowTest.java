@@ -1,6 +1,7 @@
 package br.com.organizacao.recursos.reservas;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -9,7 +10,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -266,5 +271,48 @@ abstract class AbstractApplicationFlowTest {
                         + "\",\"displayName\":\"Outro\",\"role\":\"SOLICITANTE\"}"), adminToken))
                 .andExpect(status().isCreated());
         return login(username);
+    }
+
+    @Test
+    void overlappingReservationForSameResourceIsRejectedWithConflict() throws Exception {
+        String admin = login("admin");
+        String solicitante = login("solicitante");
+        String resource = "sala-" + suffix();
+        createResource(admin, resource, false);
+        createReservation(solicitante, resource, "2027-06-01T10:00:00Z", "2027-06-01T11:00:00Z");
+
+        mockMvc.perform(as(post("/api/reservations").content("{\"resourceId\":\"" + resource
+                        + "\",\"professorId\":\"outro-prof\",\"startsAt\":\"2027-06-01T10:30:00Z\","
+                        + "\"endsAt\":\"2027-06-01T11:30:00Z\"}"), solicitante))
+                .andExpect(status().isConflict());
+        // Periodos que apenas encostam nao conflitam.
+        createReservation(solicitante, resource, "2027-06-01T11:00:00Z", "2027-06-01T12:00:00Z");
+    }
+
+    @Test
+    void concurrentRequestsForSameSlotConfirmOnlyOneReservation() throws Exception {
+        String admin = login("admin");
+        String solicitante = login("solicitante");
+        String resource = "sala-" + suffix();
+        createResource(admin, resource, false);
+        ExecutorService executor = Executors.newFixedThreadPool(8);
+        try {
+            List<CompletableFuture<Integer>> calls = java.util.stream.IntStream.range(0, 8)
+                    .mapToObj(i -> CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return mockMvc.perform(as(post("/api/reservations").content("{\"resourceId\":\"" + resource
+                                            + "\",\"professorId\":\"prof-" + i + "\",\"startsAt\":\"2027-07-01T10:00:00Z\","
+                                            + "\"endsAt\":\"2027-07-01T11:00:00Z\"}"), solicitante))
+                                    .andReturn().getResponse().getStatus();
+                        } catch (Exception exception) {
+                            throw new IllegalStateException(exception);
+                        }
+                    }, executor))
+                    .toList();
+            long created = calls.stream().map(CompletableFuture::join).filter(code -> code == 201).count();
+            assertEquals(1, created);
+        } finally {
+            executor.shutdownNow();
+        }
     }
 }
