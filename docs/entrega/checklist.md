@@ -77,6 +77,9 @@ Achados adicionais durante a correção: o perfil `perf,postgres` deixou de subi
 
 ## 6. Estado final por item da especificação
 
+> **Pendências conhecidas da seção 4, atualizadas:** os estados `REJEITADA`, `CANCELADA` e `NAO_COMPARECEU` (RF-14) foram implementados e o modo em memória passou a impedir sobreposição (DEF-014 e DEF-015). Continuam valendo o fuso UTC do relatório, o CSRF isento em `/api/**` e a issue `java:S8786` em teste.
+
+
 Reavaliação em **novo clone limpo** da branch final da entrega (commit `148cd0f`), seguindo só o README:
 
 | Passo | Resultado |
@@ -89,7 +92,7 @@ Reavaliação em **novo clone limpo** da branch final da entrega (commit `148cd0
 
 | Item da especificação | Existe | Atualizado | Caminho |
 |---|---|---|---|
-| Repositório com revisão por pares | parcial | sim | [PR #9 com 2 aprovações do Erickyuji08](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9) (após o merge); demais PRs sem revisão registrada — risco R5 |
+| Repositório com revisão por pares | parcial | sim | [PR #13 aprovado por Erickyuji08 antes do merge](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/13#pullrequestreview-5867927078) e [PR #9 aprovado depois do merge](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9); demais PRs sem revisão registrada — risco R5 |
 | Aplicação executável | sim | sim | `README.md`, `docker-compose.yml` |
 | README | sim | sim | `README.md` (pré-requisitos, execução com e sem banco, documentação) |
 | Documentação da API | sim | sim | [../api.md](../api.md), protegida por `ApiDocumentationTest` |
@@ -104,10 +107,12 @@ Reavaliação em **novo clone limpo** da branch final da entrega (commit `148cd0
 | Relatório do JaCoCo | sim (captura e números) | sim | [../evidencias/imagens/](../evidencias/imagens/), [../relatorio-qualidade.md](../relatorio-qualidade.md) §3; artifact `jacoco-report` do CI |
 | Plano do teste de carga | sim | sim | [../performance/rnf.md](../performance/rnf.md), `perf/reservas.jmx`, `perf/gerar-volume.sql` |
 | Resultado do teste de carga | sim | sim | [../performance/resultado-02.md](../performance/resultado-02.md), [resultado-03.md](../performance/resultado-03.md) |
-| Registro de defeitos | sim | sim | [../defeitos/README.md](../defeitos/README.md) (13 defeitos) |
+| Registro de defeitos (priorizado) | sim | sim | [../defeitos/README.md](../defeitos/README.md) (15 defeitos, com severidade e prioridade) |
 | Relatório final de qualidade | sim | sim | [../relatorio-qualidade.md](../relatorio-qualidade.md) |
 | Decisão de qualidade | sim | sim | [../decisao-qualidade.md](../decisao-qualidade.md) |
 | Pacote de evidências | sim | sim | [../evidencias/README.md](../evidencias/README.md) |
 | `CHANGELOG.md` | sim | sim | [../../CHANGELOG.md](../../CHANGELOG.md) |
+| Apresentação e demonstração do sistema (entregável da especificação) | sim | sim | [../apresentacao/apresentacao.pptx](../apresentacao/apresentacao.pptx) (13 slides com notas), [../apresentacao/roteiro-demonstracao.md](../apresentacao/roteiro-demonstracao.md) |
+| Registro de riscos (coluna de risco da RTM) | sim | sim | [../riscos.md](../riscos.md), [../rtm.md](../rtm.md) |
 | Tag `v1.0.0-rc1` | **ainda não** | — | A criar no commit da `main` após o merge desta entrega |
 | Formulário de entrega | **ainda não** | — | Depende do link do Hub; texto pronto em [../decisao-qualidade.md](../decisao-qualidade.md) |

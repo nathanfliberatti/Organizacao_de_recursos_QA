@@ -8,14 +8,14 @@
 > | RF-02 | Feito | `ApplicationFlowTest#administratorRegistersAndSearchesResources` |
 > | RF-03 | Feito (competência e texto livre cobertos por `searchesResourcesByCompetencyAndFreeText`) | `ApplicationFlowTest`, `ApplicationFlowIT` |
 > | RF-04 | Feito | `ApplicationFlowTest#reservationLifecycleFollowsResourceRestrictionAndNotifiesEvents`, `#anotherRequesterCannotCancelOrChangeReservation` |
-> | RF-05, RF-06 | Feito no perfil `postgres`; **o armazenamento em memória não impede sobreposição** | `ReservationConcurrencyIT`, `ApplicationFlowIT` |
+> | RF-05, RF-06 | Feito no PostgreSQL e **também no modo em memória** (DEF-014) | `ReservationConcurrencyIT`, `ApplicationFlowIT`/`ApplicationFlowTest`, `InMemoryReservationStoreTest` |
 > | RF-07, RF-10, RF-15 | Feito | `ReservationApprovalTest`, `ReservationAuditIT`, `ApplicationFlowTest` |
 > | RF-08 | Feito (manutenção persistida, bloqueio e remoção) | `ApplicationFlowTest#maintenanceBlocksReservationsAndCanBeRemoved` |
 > | RF-09 | Feito | `ApplicationFlowTest#materialWithdrawalAndReturnAreRecordedAndQueryable` |
-> | RF-11 | Feito com entrega **simulada** | `ApplicationFlowTest#reservationLifecycleFollowsResourceRestrictionAndNotifiesEvents` |
+> | RF-11 | Feito: entrega **simulada** por padrão e webhook externo opcional testado com WireMock | `ApplicationFlowTest#reservationLifecycleFollowsResourceRestrictionAndNotifiesEvents`, `NotificationWebhookTest`, `NotificationWebhookApiTest` |
 > | RF-12 | Feito para o período solicitado; tela mensal fecha o mês em UTC | `UtilizationReportApiIT` |
 > | RF-13 | Feito | `ReservationIntervalValidationTest` (parametrizado) |
-> | RF-14 | Parcial — fluxo principal feito; `REJEITADA`, `NÃO_COMPARECEU` e `CANCELADA` como estado do ciclo não modelados (decisão de negócio pendente) | `ReservationLifecycleTest` |
+> | RF-14 | **Feito** — fluxo principal e estados alternativos `REJEITADA`, `CANCELADA` e `NAO_COMPARECEU`, matriz de 49 pares testada | `ReservationStatusTransitionTest`, `ReservationAlternativeStatesTest`, `ApplicationFlowTest`/`IT` |
 >
 > **Gates:** a aplicação inicializa no perfil padrão (armazenamento em memória) e no perfil `postgres`; o CI da `main` passa (`verify` + SonarCloud). Ver [rtm.md](rtm.md) para cenário e teste de cada requisito.
 

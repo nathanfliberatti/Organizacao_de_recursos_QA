@@ -1,6 +1,6 @@
 # Plano TDD — Organização de Recursos
 
-> **Atualização da entrega final:** este plano foi escrito antes da implementação (por isso diz que o workspace não tinha classes de produção). O que foi de fato executado, com resultados e o estado de cada exigência do RNF-07, está em [relatorio-testes.md](relatorio-testes.md).
+> **Atualização da entrega final:** este plano foi escrito antes da implementação (por isso diz que o workspace não tinha classes de produção). Os itens marcados "Pendente" ou "BLOQUEADO" para `RF-11` (notificação) e `RF-14` (estados alternativos) foram resolvidos na etapa final. O que foi de fato executado, com resultados e o estado de cada exigência do RNF-07, está em [relatorio-testes.md](relatorio-testes.md).
 
 
 ## Objetivo e limites

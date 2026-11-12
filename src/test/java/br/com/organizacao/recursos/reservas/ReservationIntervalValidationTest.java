@@ -37,6 +37,7 @@ class ReservationIntervalValidationTest {
         mockMvc.perform(post("/api/reservations").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"resourceId\":\"room-" + startsAt.hashCode() + endsAt.hashCode()
+                                + "\",\"professorId\":\"professor-" + startsAt.hashCode() + endsAt.hashCode()
                                 + "\",\"startsAt\":\"" + startsAt + "\",\"endsAt\":\"" + endsAt + "\"}"))
                 .andExpect(status().is(expectedStatus));
     }

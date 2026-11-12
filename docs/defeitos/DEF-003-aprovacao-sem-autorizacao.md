@@ -1,5 +1,6 @@
 # DEF-003: Aprovação responde sucesso a perfis não autorizados
 
+- **Severidade / prioridade:** Alta / P1 — Perfil sem permissão aprovava reserva: falha de autorização (limitador de nota).
 - **Situação:** Corrigido em `85a1106`; regressão Cucumber em `7ea7894`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix`
 - **Operação:** `POST /api/reservations/{id}/approval`

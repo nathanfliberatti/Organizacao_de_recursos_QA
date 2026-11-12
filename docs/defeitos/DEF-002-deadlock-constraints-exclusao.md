@@ -1,5 +1,6 @@
 # DEF-002 — Deadlock durante disputas simultâneas por sala/professor
 
+- **Severidade / prioridade:** Alta / P1 — Concorrência gerava erro 500 em vez de 409; afetava a proteção contra dupla reserva.
 - **Data:** 2026-10-25
 - **Severidade:** Alta — uma solicitação concorrente recebe erro 500 em vez de HTTP 409
 - **Requisitos:** RF-05, RF-06, RNF-02

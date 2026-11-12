@@ -13,11 +13,11 @@ C4Context
   Person(responsavel, "Responsável", "Aprova reservas de recursos restritos; registra retirada/devolução; vê relatórios")
   Person(admin, "Administrador", "Cadastra recursos e usuários; bloqueia recursos em manutenção")
   System(sistema, "Sistema de Organização de Recursos", "Aloca salas, professores e materiais evitando conflitos de horário")
-  System_Ext(notificacao, "Canal de notificação", "Simulado: o evento é registrado no banco; sem integração externa")
+  System_Ext(notificacao, "API externa de notificação", "Opcional (webhook): se configurada, recebe cada evento; por padrão a entrega é simulada e só registrada no banco")
   Rel(solicitante, sistema, "Usa", "HTTPS, navegador")
   Rel(responsavel, sistema, "Usa", "HTTPS, navegador")
   Rel(admin, sistema, "Usa", "HTTPS, navegador")
-  Rel(sistema, notificacao, "Registra criação, alteração e cancelamento", "simulado")
+  Rel(sistema, notificacao, "Envia eventos de reserva", "POST JSON, opcional")
 ```
 
 ## 2. Contêineres (C4 nível 2)
@@ -42,7 +42,7 @@ Dois modos de execução, escolhidos por perfil do Spring:
 | Perfil | Armazenamento | Uso |
 |---|---|---|
 | `postgres` | PostgreSQL (`Postgres*Store`, `PostgresMaintenanceCatalog`) | Suportado; garante integridade sob concorrência (ADR-001) |
-| (padrão) | Memória (`InMemory*Store`) | Somente demonstração; **não detecta sobreposição de horários** |
+| (padrão) | Memória (`InMemory*Store`) | Somente demonstração: **também impede sobreposição** de sala e professor (atômico, uma instância), mas os dados somem ao parar |
 | `perf` | Login de carga (`PerformanceAuthController`), usado com `postgres` | Teste de desempenho local |
 
 ## 3. Componentes da aplicação (C4 nível 3)
@@ -69,7 +69,8 @@ flowchart TB
     EXTRAS["ReservationExtras<br/>liga agenda ao ciclo de vida e notificações"]
     AUDIT["ReservationAuditService<br/>estado + trilha de auditoria transacional"]
     CAT["ReservationCatalog<br/>estado em memória do ciclo (reconstruído da auditoria)"]
-    NS[NotificationService]
+    NS["NotificationService<br/>(registro + webhook opcional)"]
+    ST_ENUM["ReservationStatus<br/>matriz de transições"]
     MC[MaintenanceCatalog]
     RULE[MaintenanceRule]
     RSVC[UtilizationReportService]
@@ -106,6 +107,9 @@ flowchart TB
   EXTRAS --> NS
   EXTRAS --> RES_S
   NS --> NS_S
+  NS -. "POST JSON, opcional" .-> EXT["API externa de notificação"]
+  AUDIT --> ST_ENUM
+  CAT --> ST_ENUM
   RS --> DB
   RES_S --> DB
   US --> DB
@@ -115,6 +119,26 @@ flowchart TB
   MC --> DB
   RSVC --> DB
 ```
+
+### 3.1 Máquina de estados da reserva (RF-14)
+
+```mermaid
+stateDiagram-v2
+  [*] --> SOLICITADA: criar reserva
+  SOLICITADA --> APROVADA: Responsável aprova (ou o sistema, se o recurso não é restrito)
+  SOLICITADA --> REJEITADA: Responsável rejeita
+  SOLICITADA --> CANCELADA: dono, Responsável ou Administrador cancela
+  APROVADA --> EM_USO: iniciar uso
+  APROVADA --> CANCELADA: dono, Responsável ou Administrador cancela
+  APROVADA --> NAO_COMPARECEU: Responsável ou Administrador registra a ausência
+  EM_USO --> CONCLUIDA: concluir
+  CONCLUIDA --> [*]
+  REJEITADA --> [*]
+  CANCELADA --> [*]
+  NAO_COMPARECEU --> [*]
+```
+
+`REJEITADA`, `CANCELADA` e `NAO_COMPARECEU` devolvem o horário à agenda. Uma reserva `EM_USO` ou `CONCLUIDA` não pode ser cancelada nem apagada (RF-15). Toda transição grava um registro de auditoria. A regra vive em um só lugar, `ReservationStatus.canMoveTo`.
 
 Pontos de projeto relevantes:
 
@@ -252,6 +276,39 @@ sequenceDiagram
   L-->>R: 200 { returnedAt }
 ```
 
+### 4.6 Rejeição, cancelamento e não comparecimento (RF-14)
+
+```mermaid
+sequenceDiagram
+  actor R as Responsável
+  actor S as Solicitante
+  participant C as ReservationController
+  participant D as Reservation (domínio)
+  participant AU as ReservationAuditService
+  participant X as ReservationExtras
+  participant ST as ReservationStore
+  R->>C: POST /api/reservations/{id}/rejection
+  C->>D: prepareRejection (só RESPONSAVEL, nunca o próprio solicitante)
+  alt transição permitida (estava SOLICITADA)
+    C->>AU: recordTransition SOLICITADA → REJEITADA (estado + auditoria na mesma transação)
+    C->>X: onScheduleReleased
+    X->>ST: cancel (libera sala e professor)
+    X->>X: notifica o solicitante (ALTERACAO)
+  else não permitida
+    C-->>R: 200 com o estado inalterado
+  end
+  S->>C: DELETE /api/reservations/{id}
+  C->>AU: cancelReservation (404 inexistente, 403 de outro, 409 iniciada ou final)
+  AU->>AU: persiste a transição para CANCELADA (registro mantido)
+  C->>X: onCancelled
+  X->>ST: cancel (libera o horário)
+  X->>X: notifica (CANCELAMENTO)
+  R->>C: POST /api/reservations/{id}/no-show
+  C->>D: prepareNoShow (RESPONSAVEL ou ADMINISTRADOR, só de APROVADA)
+  C->>AU: recordTransition APROVADA → NAO_COMPARECEU
+  C->>X: onScheduleReleased
+```
+
 ## 5. Rastreabilidade com o código
 
 | Diagrama | Teste que exercita |
@@ -261,3 +318,5 @@ sequenceDiagram
 | 4.3 | `ReservationLifecycleTest`, `ReservationApprovalTest`, `ReservationAuditIT`, cenários Cucumber de aprovação |
 | 4.4 | `ReservationConcurrencyIT`, `ApplicationFlowIT#concurrentRequestsForSameSlotConfirmOnlyOneReservation` e a [rodada 02 de carga](performance/resultado-02.md) |
 | 4.5 | `ApplicationFlowTest#materialWithdrawalAndReturnAreRecordedAndQueryable` |
+| 3.1 e 4.6 | `ReservationStatusTransitionTest` (49 pares), `ReservationAlternativeStatesTest`, `ApplicationFlowTest`/`IT` (`rejectedReservationReleasesTheSlotAndIsAudited`, `cancelledReservationKeepsItsHistoryReleasesTheSlotAndCannotAdvance`, `noShowIsRestrictedToResponsibleAndAdministratorAndOnlyForApprovedReservations`), E2E |
+| Webhook (4.2, notificação) | `NotificationWebhookTest`, `NotificationWebhookApiTest` (WireMock) |

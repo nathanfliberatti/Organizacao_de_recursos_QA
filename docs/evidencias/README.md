@@ -15,13 +15,14 @@ Todas as evidências se referem ao **commit apontado pela tag `v1.0.0-rc1`**. Os
 | 3 | **Quality Gate do SonarCloud** | https://sonarcloud.io/dashboard?id=nathanfliberatti_Organizacao_de_recursos_QA (PR do release: ver a seção "Pull requests") | O Sonar não guarda cópia no repositório; o painel é a fonte. |
 | 4 | **Resultado do teste de carga** | [resultado-02.md](../performance/resultado-02.md) (banco vazio) e [resultado-03.md](../performance/resultado-03.md) (200 mil reservas), com `statistics.json` em `docs/performance/rodada-02/` e `rodada-03/` | Rodada 01 permanece como histórico "inconclusivo". |
 | 5 | **Matriz de rastreabilidade** | [docs/rtm.md](../rtm.md) | — |
-| 6 | **Registro de defeitos** | [docs/defeitos/](../defeitos/README.md) | 13 defeitos: 12 corrigidos e 1 mitigado (DEF-012). |
+| 6 | **Registro de defeitos** | [docs/defeitos/](../defeitos/README.md) | 15 defeitos priorizados: 14 corrigidos e 1 mitigado (DEF-012). |
 | 7 | **Relatório de qualidade** | [docs/relatorio-qualidade.md](../relatorio-qualidade.md) | Dados não registrados estão indicados no texto (percentual de cobertura e notas gerais do Sonar). |
 | 8 | Decisão de qualidade | [docs/decisao-qualidade.md](../decisao-qualidade.md) | — |
 | 9 | Checklist da entrega em clone limpo | [docs/entrega/checklist.md](../entrega/checklist.md) | — |
 | 10 | Documentação da API | [docs/api.md](../api.md) | Protegida por `ApiDocumentationTest` |
 | 12 | Arquitetura do sistema implementado (C4 e sequências) | [docs/arquitetura-implementada.md](../arquitetura-implementada.md), imagens em [docs/diagramas/](../diagramas/) | — |
 | 13 | Relatório de testes e E2E | [docs/testes/relatorio-testes.md](../testes/relatorio-testes.md), [docs/testes/e2e-resultado.md](../testes/e2e-resultado.md) | — |
+| 14 | Apresentação (slides) e roteiro da demonstração | [docs/apresentacao/apresentacao.pptx](../apresentacao/apresentacao.pptx), [docs/apresentacao/roteiro-demonstracao.md](../apresentacao/roteiro-demonstracao.md) | 13 slides com notas do apresentador |
 | 11 | Changelog | [CHANGELOG.md](../../CHANGELOG.md) | — |
 
 ## Capturas versionadas
@@ -36,7 +37,7 @@ Cópias em [imagens/](imagens/), porque os artifacts do CI expiram (30 dias) e o
 | [ci-maven-verify-pr9.png](imagens/ci-maven-verify-pr9.png) | Execução "Maven verify" do PR #9 com todos os passos verdes (análise Sonar, upload do JaCoCo) | [run 42728214539](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/42728214539) |
 | [github-aprovacoes-pr9.png](imagens/github-aprovacoes-pr9.png) | Duas aprovações de `Erickyuji08` no PR #9 | PR #9 |
 | [sonarcloud-pr8-issues-parte1.png](imagens/sonarcloud-pr8-issues-parte1.png), [parte2](imagens/sonarcloud-pr8-issues-parte2.png) | As 6 issues do SonarCloud no PR #8 **antes da correção** (2 de confiabilidade, 4 de segurança) | PR #8 |
-| [e2e-recursos-admin.png](imagens/e2e-recursos-admin.png), [e2e-reservas-solicitante.png](imagens/e2e-reservas-solicitante.png), [e2e-mobile.png](imagens/e2e-mobile.png) | Telas capturadas pelo E2E (Administrador, Solicitante, 375 px) | [e2e-resultado.md](../testes/e2e-resultado.md) |
+| [e2e-recursos-admin.png](imagens/e2e-recursos-admin.png), [e2e-reservas-solicitante.png](imagens/e2e-reservas-solicitante.png), [e2e-estados-alternativos.png](imagens/e2e-estados-alternativos.png), [e2e-mobile.png](imagens/e2e-mobile.png) | Telas capturadas pelo E2E (Administrador, Solicitante, estados REJEITADA/NÃO COMPARECEU/CANCELADA, 375 px) | [e2e-resultado.md](../testes/e2e-resultado.md) |
 
 ## Como reproduzir
 

@@ -114,6 +114,15 @@ class AuthorizationMatrixIT {
             assertEquals("EM_USO", objectMapper.readTree(result.getResponse().getContentAsString())
                     .get("status").asText());
         }
+        if (testCase.operation().endsWith("/rejection") && testCase.role() == Role.RESPONSAVEL) {
+            assertEquals("REJEITADA", objectMapper.readTree(result.getResponse().getContentAsString())
+                    .get("status").asText());
+        }
+        if (testCase.operation().endsWith("/no-show") && testCase.role() != Role.ANONYMOUS
+                && testCase.expectedStatus() == 200) {
+            assertEquals("NAO_COMPARECEU", objectMapper.readTree(result.getResponse().getContentAsString())
+                    .get("status").asText());
+        }
         if (testCase.operation().endsWith("/complete") && testCase.role() != Role.ANONYMOUS) {
             assertEquals("CONCLUIDA", objectMapper.readTree(result.getResponse().getContentAsString())
                     .get("status").asText());
@@ -204,6 +213,12 @@ class AuthorizationMatrixIT {
                 matrix("POST /api/reservations/{id}/approval", "POST",
                         "/api/reservations/" + RESERVATION_ID + "/approval",
                         Fixture.SOLICITADA, 401, 403, 200, 403),
+                matrix("POST /api/reservations/{id}/rejection", "POST",
+                        "/api/reservations/" + RESERVATION_ID + "/rejection",
+                        Fixture.SOLICITADA, 401, 403, 200, 403),
+                matrix("POST /api/reservations/{id}/no-show", "POST",
+                        "/api/reservations/" + RESERVATION_ID + "/no-show",
+                        Fixture.APROVADA, 401, 403, 200, 200),
                 matrix("POST /api/reservations", "POST", "/api/reservations",
                         Fixture.NONE, 401, 201, 201, 201),
                 matrix("GET /api/resources/{resourceId}/availability", "GET",

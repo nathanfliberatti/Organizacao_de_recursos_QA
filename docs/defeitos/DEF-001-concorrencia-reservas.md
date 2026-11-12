@@ -1,5 +1,6 @@
 # DEF-001 — API de reservas não persiste nem serializa concorrência
 
+- **Severidade / prioridade:** Alta / P1 — Permite confirmar solicitações incompatíveis (dupla reserva) e não persistia a reserva: viola regra crítica.
 - **Data:** 2026-10-25
 - **Severidade:** Alta — permite confirmar solicitações incompatíveis e não persiste a reserva
 - **Requisitos:** RF-05, RF-06, RNF-02

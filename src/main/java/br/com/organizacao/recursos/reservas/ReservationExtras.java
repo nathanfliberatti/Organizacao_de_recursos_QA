@@ -62,6 +62,14 @@ public class ReservationExtras {
                 "Reserva " + id + " cancelada por " + actorId + ".");
     }
 
+    /** Rejeição ou não comparecimento: devolve o horário à agenda e avisa o solicitante (evento ALTERACAO). */
+    public void onScheduleReleased(String id, String actorId, String outcome) {
+        String recipient = recipient(id, actorId);
+        parseId(id).ifPresent(schedulingService::cancel);
+        notificationService.notify(NotificationEvent.ALTERACAO, id, recipient,
+                "Reserva " + id + " " + outcome + " por " + actorId + ".");
+    }
+
     /** Reconstroi o estado em memoria a partir da trilha de auditoria (ex.: apos reiniciar a aplicacao). */
     public Reservation rehydrate(String id) {
         List<ReservationTransition> history = auditService.history(id);
@@ -79,7 +87,7 @@ public class ReservationExtras {
     public List<ReservationSummary> list(String requesterId) {
         return schedulingService.list(requesterId).stream()
                 .map(summary -> {
-                    if (summary.lifecycleStatus() != null || "CANCELADA".equals(summary.schedulingStatus())) {
+                    if (summary.lifecycleStatus() != null) {
                         return summary;
                     }
                     Reservation reservation = catalog.findById(summary.id());

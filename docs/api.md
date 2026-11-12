@@ -39,16 +39,31 @@ Um período de bloqueio por recurso; ele torna o recurso indisponível no interv
 
 ## Reservas (RF-04 a RF-07, RF-10, RF-13 a RF-15)
 
-Toda reserva criada é `SOLICITADA`. Em recurso **restrito** ela só avança após a aprovação de um `RESPONSAVEL` diferente do solicitante (RF-07); em recurso não restrito o sistema aprova automaticamente (ator `sistema`). Fluxo: `SOLICITADA → APROVADA → EM_USO → CONCLUIDA`. Cancelar (`DELETE`) é permitido ao dono, ao Responsável e ao Administrador, exceto em `EM_USO`/`CONCLUIDA` (RF-15, `409`). Cada transição gera um registro de auditoria (RF-10) e, para criação, alteração e cancelamento, uma notificação (RF-11).
+Toda reserva criada é `SOLICITADA`. Em recurso **restrito** ela só avança após a aprovação de um `RESPONSAVEL` diferente do solicitante (RF-07); em recurso não restrito o sistema aprova automaticamente (ator `sistema`).
+
+**Estados e transições (RF-14).** Toda transição gera um registro de auditoria (RF-10).
+
+| De | Para | Quem pode |
+|---|---|---|
+| `SOLICITADA` | `APROVADA` | Responsável (nunca o próprio solicitante) |
+| `SOLICITADA` | `REJEITADA` | Responsável (nunca o próprio solicitante) |
+| `SOLICITADA`, `APROVADA` | `CANCELADA` | dono, Responsável ou Administrador |
+| `APROVADA` | `EM_USO` | dono, Responsável ou Administrador |
+| `APROVADA` | `NAO_COMPARECEU` | Responsável ou Administrador |
+| `EM_USO` | `CONCLUIDA` | dono, Responsável ou Administrador |
+
+`CONCLUIDA`, `REJEITADA`, `CANCELADA` e `NAO_COMPARECEU` são estados finais. `REJEITADA`, `CANCELADA` e `NAO_COMPARECEU` **devolvem o horário à agenda** (a sala e o professor ficam livres). Uma reserva iniciada (`EM_USO` ou `CONCLUIDA`) **não pode ser cancelada nem apagada** (RF-15, `409`), e o registro permanece consultável. Criação, alteração e cancelamento geram uma notificação (RF-11); rejeição e não comparecimento geram uma notificação do tipo `ALTERACAO`.
 
 | Método e caminho | Perfil | Corpo / parâmetros | Resposta |
 |---|---|---|---|
 | `POST /api/reservations` | autenticado | `{resourceId, startsAt, endsAt, professorId?}` (professor padrão = solicitante) | `201` `{accepted:true, reservationId}`; `409` `{accepted:false}` por sobreposição de sala/professor ou manutenção; `400` intervalo inválido (término ≤ início) |
-| `GET /api/reservations` | autenticado | `mine` (bool) | `200` lista de `{id, resourceId, professorId, requesterId, startsAt, endsAt, schedulingStatus (AGENDADA/CANCELADA), lifecycleStatus}`; SOLICITANTE vê só as próprias |
+| `GET /api/reservations` | autenticado | `mine` (bool) | `200` lista de `{id, resourceId, professorId, requesterId, startsAt, endsAt, schedulingStatus (AGENDADA = ocupa o horário, CANCELADA = horário liberado), lifecycleStatus (estado do ciclo de vida)}`; SOLICITANTE vê só as próprias |
 | `GET /api/reservations/{id}` | autenticado | — | `200` `{id, status, approvalDecision, transitions[]}`; `404` |
 | `PUT /api/reservations/{id}` | dono, RESPONSAVEL ou ADMINISTRADOR | `{startsAt, endsAt}` | `200`; `403`; `404`; `409` sobreposição; `400` |
-| `DELETE /api/reservations/{id}` | dono, RESPONSAVEL ou ADMINISTRADOR | — | `204`; `403`; `404`; `409` se `EM_USO`/`CONCLUIDA` |
+| `DELETE /api/reservations/{id}` | dono, RESPONSAVEL ou ADMINISTRADOR | — | `204` e a reserva passa a `CANCELADA` (transição auditada, horário liberado, registro mantido); `403`; `404`; `409` se `EM_USO`/`CONCLUIDA` ou já em estado final |
 | `POST /api/reservations/{id}/approval` | RESPONSAVEL | — | `200` `{status}` (`APROVADA`; permanece `SOLICITADA` se o Responsável for o próprio solicitante); `403` |
+| `POST /api/reservations/{id}/rejection` | RESPONSAVEL | — | `200` `{status:"REJEITADA"}` se estava `SOLICITADA`; permanece como estava se o Responsável for o próprio solicitante ou a transição não for permitida; `403` para outros perfis; `404` |
+| `POST /api/reservations/{id}/no-show` | RESPONSAVEL, ADMINISTRADOR | — | `200` `{status:"NAO_COMPARECEU"}` se estava `APROVADA`; permanece como estava se a transição não for permitida; `403` para o Solicitante; `404` |
 | `POST /api/reservations/{id}/start` | dono, RESPONSAVEL ou ADMINISTRADOR | — | `200` `{status:"EM_USO"}` se estava `APROVADA`; `403`; `404` |
 | `POST /api/reservations/{id}/complete` | dono, RESPONSAVEL ou ADMINISTRADOR | — | `200` `{status:"CONCLUIDA"}` se estava `EM_USO`; `403`; `404` |
 | `GET /api/reservations/{id}/history` | RESPONSAVEL, ADMINISTRADOR | — | `200` lista `{from, to, actorId, changedAt, reason}` |
@@ -71,7 +86,9 @@ Perfis: RESPONSAVEL e ADMINISTRADOR. Só recursos do tipo `MATERIAL`; no máximo
 
 | Método e caminho | Perfil | Parâmetros | Resposta |
 |---|---|---|---|
-| `GET /api/notifications` | autenticado | `all` (somente RESPONSAVEL/ADMINISTRADOR), `limit` (1–500, padrão 100) | `200` lista `{id, event (CRIACAO/ALTERACAO/CANCELAMENTO), reservationId, recipientId, message, delivery:"SIMULADA", createdAt}` |
+| `GET /api/notifications` | autenticado | `all` (somente RESPONSAVEL/ADMINISTRADOR), `limit` (1–500, padrão 100) | `200` lista `{id, event (CRIACAO/ALTERACAO/CANCELAMENTO), reservationId, recipientId, message, delivery, createdAt}` |
+
+`delivery` é `SIMULADA` por padrão (o evento só é registrado). Com `app.notifications.webhook-url` (variável `NOTIFICATION_WEBHOOK_URL`) definido, cada evento também é enviado como `POST` JSON `{event, reservationId, recipientId, message, createdAt}` a essa URL (http/https, timeout de 3 s, sem reenvio): `WEBHOOK` quando a API externa responde 2xx e `WEBHOOK_FALHOU` caso contrário. **Uma falha do webhook nunca impede nem desfaz a reserva.**
 
 ## Relatório de utilização (RF-12)
 

@@ -1,5 +1,6 @@
 # DEF-010: Código de sucesso da criação de reserva restrita
 
+- **Severidade / prioridade:** Baixa / P3 — Código de sucesso `200` em vez de `201`; contrato HTTP, sem perda de função.
 - **Renumerado:** registrado originalmente como `DEF-001` (commit `7d3c96b` e mensagens de commit da época citam `DEF-001`); renumerado para `DEF-010` por colisão com [DEF-001](DEF-001-concorrencia-reservas.md).
 - **Situação:** Corrigido em `7d3c96b`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix`

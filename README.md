@@ -37,14 +37,17 @@ criados os usuários de demonstração `admin`, `responsavel` e `solicitante` e 
 Nenhum segredo fica no repositório. Sem `JWT_SECRET`, a chave do JWT é aleatória a cada execução (tokens expiram ao
 reiniciar). Não use dados de demonstração em produção.
 
+Notificações: por padrão a entrega é simulada (registro em `/api/notifications`). Para integrar uma API externa, defina `NOTIFICATION_WEBHOOK_URL` (http ou https); cada evento de reserva vira um `POST` JSON nessa URL, e uma falha dela não afeta a reserva.
+
 Variáveis do perfil `postgres`: `DB_URL`, `DB_USER`, `DB_PASSWORD` (obrigatória), `JWT_SECRET`, `APP_DEMO_DATA`,
 `APP_DEMO_PASSWORD`.
 
-Sem o perfil `postgres` a aplicação sobe com armazenamento em memória, apenas para desenvolvimento: **esse modo
-não impede dupla reserva** (a garantia vem das constraints do PostgreSQL, ver ADR-001) e o relatório de
+Sem o perfil `postgres` a aplicação sobe com armazenamento em memória, apenas para desenvolvimento: ele **também
+impede dupla reserva** (sobreposição de sala e de professor, de forma atômica) dentro de uma instância, mas os dados
+somem ao parar, a garantia entre várias instâncias vem das constraints do PostgreSQL (ver ADR-001) e o relatório de
 utilização não está disponível.
 
-Sem Docker e sem PostgreSQL, apenas para ver as telas (os dados somem ao parar e **não há proteção contra dupla reserva**):
+Sem Docker e sem PostgreSQL, para ver as telas e experimentar os fluxos (os dados somem ao parar):
 
 ```bash
 APP_DEMO_DATA=true APP_DEMO_PASSWORD='<senha>' ./mvnw spring-boot:run
@@ -58,7 +61,7 @@ No PowerShell use `$env:APP_DEMO_DATA="true"; $env:APP_DEMO_PASSWORD="<senha>"; 
 - Telas, modelo de dados e lacunas: [docs/frontend-e-banco-de-dados.md](docs/frontend-e-banco-de-dados.md)
 - Arquitetura do sistema entregue (C4 e sequências): [docs/arquitetura-implementada.md](docs/arquitetura-implementada.md) · Desenho original: [docs/arquitetura.md](docs/arquitetura.md) · Requisitos: [docs/requisitos-funcionais.md](docs/requisitos-funcionais.md), [docs/requisitos-nao-funcionais.md](docs/requisitos-nao-funcionais.md)
 - Rastreabilidade: [docs/rtm.md](docs/rtm.md) · Defeitos: [docs/defeitos/](docs/defeitos/README.md) · Testes: [docs/testes/relatorio-testes.md](docs/testes/relatorio-testes.md) (plano em [plano-tdd.md](docs/testes/plano-tdd.md)) · E2E da interface: [e2e/README.md](e2e/README.md)
-- Desempenho: [docs/performance/](docs/performance/rnf.md) · Qualidade: [docs/relatorio-qualidade.md](docs/relatorio-qualidade.md), [docs/decisao-qualidade.md](docs/decisao-qualidade.md) · Evidências: [docs/evidencias/README.md](docs/evidencias/README.md) · Entrega: [docs/entrega/checklist.md](docs/entrega/checklist.md)
+- Desempenho: [docs/performance/](docs/performance/rnf.md) · Apresentação e demonstração: [docs/apresentacao/](docs/apresentacao/roteiro-demonstracao.md) · Qualidade: [docs/relatorio-qualidade.md](docs/relatorio-qualidade.md), [docs/decisao-qualidade.md](docs/decisao-qualidade.md) · Evidências: [docs/evidencias/README.md](docs/evidencias/README.md) · Entrega: [docs/entrega/checklist.md](docs/entrega/checklist.md)
 
 ## Integração contínua
 

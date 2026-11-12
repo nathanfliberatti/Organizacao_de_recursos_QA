@@ -141,10 +141,10 @@ As decisões que estavam pendentes na especificação, com o que foi adotado na 
 
 | Decisão | Situação | O que foi adotado ou o que falta |
 |---|---|---|
-| Matriz de permissões do ciclo de vida (quem inicia, conclui; transições alternativas) | **Parcial** | Adotada para o fluxo principal: aprovar = só `RESPONSAVEL` e nunca o próprio solicitante; iniciar e concluir = dono, `RESPONSAVEL` ou `ADMINISTRADOR` ([matriz](seguranca/matriz-autorizacao.md)). **Pendente:** origens, destinos e perfis de `REJEITADA`, `CANCELADA` (como estado) e `NÃO_COMPARECEU` (risco R1) |
+| Matriz de permissões do ciclo de vida (quem inicia, conclui; transições alternativas) | Adotada | Aprovar e rejeitar = só `RESPONSAVEL` e nunca o próprio solicitante (de `SOLICITADA`); cancelar = dono, `RESPONSAVEL` ou `ADMINISTRADOR` (de `SOLICITADA` ou `APROVADA`); iniciar e concluir = dono, `RESPONSAVEL` ou `ADMINISTRADOR`; `NAO_COMPARECEU` = `RESPONSAVEL` ou `ADMINISTRADOR` (de `APROVADA`). Estados finais não avançam; reserva iniciada não pode ser cancelada (RF-15). Ver [arquitetura-implementada.md](arquitetura-implementada.md#31-máquina-de-estados-da-reserva-rf-14) e [matriz](seguranca/matriz-autorizacao.md). Não validada com usuários reais; sem regra de tempo para "não compareceu" (risco R1) |
 | Atributos pesquisáveis por tipo de recurso | Adotada | Tipo, capacidade mínima, localização, competência, texto (id ou nome) e disponibilidade, para qualquer tipo |
 | Quais recursos são restritos | Adotada | Cada recurso tem o atributo `restricted`, definido pelo Administrador; reservas de recurso restrito aguardam o Responsável |
-| Notificações: simulada ou externa | Adotada | Entrega **simulada**, gravada em `notifications` e consultável na API (risco R4) |
+| Notificações: simulada ou externa | Adotada | Entrega **simulada** por padrão (gravada em `notifications` e consultável na API) e **webhook externo opcional** (`NOTIFICATION_WEBHOOK_URL`), testado com WireMock (risco R4) |
 | Fórmulas de utilização, carga e conflitos evitados | Adotada | Horas por recurso e por professor = interseção da reserva com o período `[início, fim)`, sem reservas canceladas; conflitos evitados = tentativas recusadas cujo intervalo se sobrepõe ao período ([README](../README.md#relatório-de-utilização)) |
 | Fuso do fechamento mensal | **Pendente** | A tela fecha o mês em UTC (risco R2) |
 | Dados obrigatórios do histórico | Adotada | Ação (estado anterior e novo), registro, usuário, instante e motivo, em `reservation_audit`, sem exclusão (`ON DELETE RESTRICT`) |

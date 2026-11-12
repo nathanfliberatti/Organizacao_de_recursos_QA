@@ -1,6 +1,8 @@
 # Evidência TDD — Aprovação, manutenção e estados
 
-> **Atualização da entrega final:** o texto abaixo registra os ciclos RED/GREEN iniciais (18 testes Surefire + 11 Failsafe). No commit `d0447b0` o `./mvnw -B verify` do CI executa **55 testes unitários** (Surefire, incluindo 6 cenários Cucumber e `ApplicationFlowTest`) e os `*IT` (Failsafe, PostgreSQL via Testcontainers, incluindo `ApplicationFlowIT` e `AuthorizationMatrixIT`), e passa. Cobertura e Quality Gate: ver [docs/evidencias/README.md](../evidencias/README.md).
+> **Atualização da entrega final (estados alternativos e webhook):** as linhas "Pendente" sobre `REJEITADA`, `CANCELADA` e `NÃO_COMPARECEU` abaixo foram resolvidas na etapa final: a matriz foi adotada e implementada, com testes (`ReservationStatusTransitionTest`, `ReservationAlternativeStatesTest`, fluxos de API). **Atenção:** nessa etapa final os estados e o webhook foram implementados junto com os testes, **sem registrar ciclos RED/GREEN separados**; o registro TDD/BDD que vale como evidência da técnica continua sendo o das funcionalidades de aprovação e bloqueio, descrito neste documento e em [bdd-aprovacao-bloqueio.md](bdd-aprovacao-bloqueio.md).
+>
+> **Atualização anterior:** o texto abaixo registra os ciclos RED/GREEN iniciais (18 testes Surefire + 11 Failsafe). No commit `d0447b0` o `./mvnw -B verify` do CI executa **55 testes unitários** (Surefire, incluindo 6 cenários Cucumber e `ApplicationFlowTest`) e os `*IT` (Failsafe, PostgreSQL via Testcontainers, incluindo `ApplicationFlowIT` e `AuthorizationMatrixIT`), e passa. Cobertura e Quality Gate: ver [docs/evidencias/README.md](../evidencias/README.md).
 
 
 ## Estado do ciclo

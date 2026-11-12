@@ -47,9 +47,9 @@ um `401` encerra a sessão. Todo texto dinâmico é escapado (`js/util.js`, tag 
 
 ## Lacunas conhecidas (decisões ainda em aberto na documentação)
 
-- Estados `REJEITADA`, `CANCELADA` e `NÃO_COMPARECEU` do ciclo de vida (RF-14) não foram modelados: a matriz de
+- ~~Estados `REJEITADA`, `CANCELADA` e `NÃO_COMPARECEU` do ciclo de vida (RF-14) não foram modelados~~ **(resolvido na entrega final: [arquitetura-implementada.md](arquitetura-implementada.md#31-máquina-de-estados-da-reserva-rf-14)).** Texto original: a matriz de
   transições e de perfis ainda precisa ser definida. O cancelamento hoje é a exclusão lógica já existente.
 - O fuso para fechar o mês do relatório é UTC (a tela informa isso); a decisão de negócio continua pendente.
-- O armazenamento em memória (sem perfil `postgres`) não detecta sobreposição de horários.
+- ~~O armazenamento em memória não detecta sobreposição de horários~~ **(resolvido: DEF-014)**. O modo em memória vale para uma única instância e perde os dados ao parar.
 - Manutenção cadastrada não afeta reservas já existentes (decisão pendente em `requisitos-funcionais.md`).
 - Os testes `ApplicationFlowIT` e os demais `*IT` exigem Docker (Testcontainers).

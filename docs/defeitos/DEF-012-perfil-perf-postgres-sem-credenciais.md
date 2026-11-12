@@ -1,5 +1,6 @@
 # DEF-012: Perfil `perf,postgres` não sobe sem credenciais por ambiente
 
+- **Severidade / prioridade:** Média / P2 — Procedimento de carga documentado deixou de funcionar; afeta a evidência de desempenho, não o produto.
 - **Situação:** Mitigado por procedimento documentado em [`docs/performance/rnf.md`](../performance/rnf.md); o comportamento do código foi mantido de propósito (ver Correção)
 - **Encontrado em:** 2026-11-10, ao preparar a rodada 02 do teste de carga
 - **Evidência:** com `SPRING_PROFILES_ACTIVE=perf,postgres` e sem `DB_USER`/`DB_PASSWORD`, a aplicação falha na inicialização (`Failed to execute database script`) e o JMeter registra **100% de erro** (608.117 amostras com erro em 18 s). Com as variáveis informadas, a aplicação sobe e a carga roda sem erro.

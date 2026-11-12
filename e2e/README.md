@@ -4,7 +4,7 @@ Verifica os fluxos principais no navegador (Chromium): login e perfis, cadastro/
 
 ## Como executar
 
-1. Suba a aplicação com usuários de demonstração (perfil `postgres` para validar também o conflito de horário; sem o perfil funciona, mas defina `E2E_EXPECT_CONFLICT=false`):
+1. Suba a aplicação com usuários de demonstração (com o perfil `postgres`; sem o perfil também funciona, porque o modo em memória recusa conflito de horário):
 
    ```bash
    export DB_PASSWORD='<senha-do-banco>' APP_DEMO_DATA=true APP_DEMO_PASSWORD='<senha-demo>'
@@ -16,7 +16,7 @@ Verifica os fluxos principais no navegador (Chromium): login e perfis, cadastro/
    ```bash
    cd e2e
    npm install playwright   # uma vez; baixa o Chromium com: npx playwright install chromium
-   E2E_PASSWORD='<senha-demo>' E2E_EXPECT_CONFLICT=true node e2e.js
+   E2E_PASSWORD='<senha-demo>' E2E_EXPECT_CONFLICT=true node e2e.js   # 37 verificações
    ```
 
-Variáveis: `E2E_PASSWORD` (obrigatória), `BASE_URL` (padrão `http://127.0.0.1:8080`), `E2E_OUT` (pasta dos prints, padrão `e2e-out`), `E2E_EXPECT_CONFLICT` (`true` só com `postgres`). O script cria recursos com sufixo aleatório e datas futuras aleatórias, então pode ser repetido. Código de saída `0` = tudo passou.
+Variáveis: `E2E_PASSWORD` (obrigatória), `BASE_URL` (padrão `http://127.0.0.1:8080`), `E2E_OUT` (pasta dos prints, padrão `e2e-out`), `E2E_EXPECT_CONFLICT` (`true` verifica que o mesmo horário é recusado; vale nos dois modos). O script cria recursos com sufixo aleatório e datas futuras aleatórias, então pode ser repetido. Código de saída `0` = tudo passou.

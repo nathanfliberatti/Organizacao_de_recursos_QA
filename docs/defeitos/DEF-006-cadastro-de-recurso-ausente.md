@@ -1,5 +1,6 @@
 # DEF-006: Cadastro de recurso e validação de capacidade ausentes
 
+- **Severidade / prioridade:** Média / P2 — Cadastro de recurso ausente: bloqueia o uso do sistema, sem risco de segurança.
 - **Situação:** Corrigido em `16fb9ae`
 - **Evidência:** `AuthorizationMatrixIT.apiMatchesAuthorizationMatrix` e `AuthorizationMatrixIT.invalidInputReturnsSafeProblemDetail`
 - **Operação:** `POST /api/resources`, payload com `id` e `capacity`.

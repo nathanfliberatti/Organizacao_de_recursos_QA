@@ -85,6 +85,27 @@ public final class Reservation {
         return prepareTransition(ReservationStatus.APROVADA, approver, clock.instant(), reason);
     }
 
+    /** Rejeição: só o Responsável, e nunca o próprio solicitante (mesma regra da aprovação). */
+    public ReservationTransition prepareRejection(User actor, Clock clock, String reason) {
+        if (!isEligibleResponsible(actor)) {
+            return null;
+        }
+        return prepareTransition(ReservationStatus.REJEITADA, actor, clock.instant(), reason);
+    }
+
+    /** Cancelamento: a posse (dono, Responsável ou Administrador) é verificada pelo serviço de auditoria. */
+    public ReservationTransition prepareCancellation(User actor, Clock clock, String reason) {
+        return prepareTransition(ReservationStatus.CANCELADA, actor, clock.instant(), reason);
+    }
+
+    /** Não comparecimento: só Responsável ou Administrador. */
+    public ReservationTransition prepareNoShow(User actor, Clock clock, String reason) {
+        if (actor.role() != UserRole.RESPONSAVEL && actor.role() != UserRole.ADMINISTRADOR) {
+            return null;
+        }
+        return prepareTransition(ReservationStatus.NAO_COMPARECEU, actor, clock.instant(), reason);
+    }
+
     public ReservationTransition prepareStartUse(User actor, Clock clock, String reason) {
         return prepareTransition(ReservationStatus.EM_USO, actor, clock.instant(), reason);
     }
@@ -124,12 +145,7 @@ public final class Reservation {
     }
 
     private boolean isAllowedTransitionTo(ReservationStatus nextStatus) {
-        return switch (currentStatus) {
-            case SOLICITADA -> nextStatus == ReservationStatus.APROVADA;
-            case APROVADA -> nextStatus == ReservationStatus.EM_USO;
-            case EM_USO -> nextStatus == ReservationStatus.CONCLUIDA;
-            case CONCLUIDA -> false;
-        };
+        return currentStatus.canMoveTo(nextStatus);
     }
 
     private boolean isEligibleResponsible(User approver) {

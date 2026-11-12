@@ -9,13 +9,13 @@
 
 Sistema web para organizar a alocação de salas, professores e materiais com prevenção de conflitos de horário: API Spring Boot (Java 21), PostgreSQL 16 e frontend estático. Requisitos: [RF-01 a RF-15](requisitos-funcionais.md) e [RNF-01 a RNF-07](requisitos-nao-funcionais.md); contrato da API em [api.md](api.md).
 
-**Conclusão resumida:** os requisitos críticos (sobreposição e concorrência, autorização por perfil, ciclo de vida auditado, preservação de reservas iniciadas) têm teste automatizado que passa no CI; não há defeito conhecido em aberto. Permanecem lacunas de escopo (estados alternativos do RF-14, notificação real) e de evidência (revisão por pares, E2E da interface, carga em ambiente separado). A decisão e os riscos aceitos estão em [decisao-qualidade.md](decisao-qualidade.md).
+**Conclusão resumida:** os requisitos críticos (sobreposição e concorrência, autorização por perfil, ciclo de vida auditado, preservação de reservas iniciadas) têm teste automatizado que passa no CI; não há defeito conhecido em aberto. O RF-14 está completo (estados alternativos incluídos) e o modo em memória também impede dupla reserva. Permanecem lacunas de evidência (revisão por pares, E2E fora do CI, carga em ambiente separado) e a notificação é simulada por padrão (a integração externa é opcional e testada com WireMock). A decisão e os riscos aceitos estão em [decisao-qualidade.md](decisao-qualidade.md).
 
 ## 2. Testes
 
 | Nível | Ferramenta | Resultado | Evidência |
 |---|---|---|---|
-| Unitário / API em memória / BDD | JUnit 5, MockMvc, Cucumber | **64 testes, 0 falhas** (Surefire) | `./mvnw -B test`; artifact `test-reports` do CI |
+| Unitário / API em memória / BDD | JUnit 5, MockMvc, Cucumber | **177 testes, 0 falhas** (Surefire) | `./mvnw -B test`; artifact `test-reports` do CI |
 | Integração com PostgreSQL real | Testcontainers (Failsafe, classes `*IT`) | Passam no CI | Execução do CI do commit da tag ([índice de evidências](evidencias/README.md)) |
 | Concorrência | `ReservationConcurrencyIT` (20 requisições, 5 repetições por cenário) e `ApplicationFlowIT` (8 requisições) | Exatamente uma reserva aceita por disputa | idem |
 | Autorização | `AuthorizationMatrixIT` (matriz perfil × operação) | Passa | [seguranca/matriz-autorizacao.md](seguranca/matriz-autorizacao.md) |
@@ -24,7 +24,7 @@ Sistema web para organizar a alocação de salas, professores e materiais com pr
 
 Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/evidencia-tdd.md](testes/evidencia-tdd.md), [testes/mutacao-manual.md](testes/mutacao-manual.md).
 
-**Total de testes do `verify` no CI** (job "Maven verify" do PR #12, [execução 43129180145](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/43129180145)): **64 testes Surefire + 104 testes Failsafe = 168, 0 falhas, 0 erros, 0 ignorados.** Os `*IT` incluem `AuthorizationMatrixIT` (69), `ReservationConcurrencyIT` (11), `ApplicationFlowIT` (10), `UtilizationReportApiIT` (7) e `ReservationAuditIT` (7). No PR #9 (entrega anterior) eram 55 + 103 = 158. Detalhe por nível: [testes/relatorio-testes.md](testes/relatorio-testes.md).
+**Total de testes do `verify` no CI** (job "Maven verify" do PR #13, [execução 43134310856](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/43134310856)): **177 testes Surefire + 116 testes Failsafe = 293, 0 falhas, 0 erros, 0 ignorados.** Os `*IT` incluem `AuthorizationMatrixIT` (77), `ReservationConcurrencyIT` (11), `ApplicationFlowIT` (14), `UtilizationReportApiIT` (7) e `ReservationAuditIT` (7); o Surefire inclui 15 cenários Cucumber. Nas entregas anteriores eram 158 (PR #9) e 168 (PR #12). Detalhe por nível: [testes/relatorio-testes.md](testes/relatorio-testes.md).
 
 ## 3. Cobertura
 
@@ -66,7 +66,7 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 5. Defeitos
 
-13 defeitos registrados em [defeitos/](defeitos/README.md) (concorrência, deadlock, matriz de autorização, validação, posse de reservas, perfil de carga e isolamento de teste): **12 corrigidos e 1 mitigado** (DEF-012, por procedimento documentado). Os corrigidos têm teste de regressão. Defeitos encontrados na entrega final: (a) IDs `DEF-001`/`DEF-002` duplicados — renumerados para `DEF-010`/`DEF-011`; (b) perfil `perf,postgres` não subia sem credenciais após o PR #8 — [DEF-012](defeitos/DEF-012-perfil-perf-postgres-sem-credenciais.md); (c) `ReservationConcurrencyIT` reiniciava ids sem limpar o ciclo de vida — [DEF-013](defeitos/DEF-013-concorrencia-it-ids-colidem-com-ciclo-de-vida.md).
+15 defeitos registrados e priorizados em [defeitos/](defeitos/README.md) (concorrência, deadlock, matriz de autorização, validação, posse de reservas, perfil de carga, isolamento de teste, dupla reserva em memória e estados alternativos): **14 corrigidos e 1 mitigado** (DEF-012, por procedimento documentado). Os corrigidos têm teste de regressão. Defeitos encontrados na entrega final: (a) IDs `DEF-001`/`DEF-002` duplicados — renumerados para `DEF-010`/`DEF-011`; (b) perfil `perf,postgres` não subia sem credenciais após o PR #8 — [DEF-012](defeitos/DEF-012-perfil-perf-postgres-sem-credenciais.md); (c) `ReservationConcurrencyIT` reiniciava ids sem limpar o ciclo de vida — [DEF-013](defeitos/DEF-013-concorrencia-it-ids-colidem-com-ciclo-de-vida.md).
 
 ## 6. Desempenho
 
@@ -74,13 +74,18 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 7. Rastreabilidade
 
-[rtm.md](rtm.md) liga cada requisito a cenário e teste. Cobertura de requisitos: ver [status-requisitos.md](status-requisitos.md). Lacunas fechadas na entrega final: pesquisa por competência e texto (RF-03), teste parametrizado de intervalo (RF-13), E2E (RNF-04, fora do CI) e verificação automática de que a API está documentada (`ApiDocumentationTest`, RNF-05). Lacunas que permanecem: estados alternativos do RF-14 e ausência de OpenAPI gerado (o contrato é escrito à mão, mas protegido pelo teste anterior).
+[rtm.md](rtm.md) liga cada requisito a cenário e teste. Cobertura de requisitos: ver [status-requisitos.md](status-requisitos.md). Lacunas fechadas na entrega final: pesquisa por competência e texto (RF-03), teste parametrizado de intervalo (RF-13), E2E (RNF-04, fora do CI) e verificação automática de que a API está documentada (`ApiDocumentationTest`, RNF-05). Lacuna que permanece: ausência de OpenAPI gerado (o contrato é escrito à mão, mas protegido pelo teste anterior). A RTM agora tem coluna de risco ([riscos.md](riscos.md)).
 
 ## 8. Revisão por pares
 
-O repositório usa pull requests. **Erick Yuji Conceição** (conta GitHub `Erickyuji08`, colaborador) **aprovou o PR #9** — o PR de entrega final — em duas revisões com estado `APPROVED` sobre o commit `dda4229`, registradas no GitHub em 2026-11-11: [revisão 1](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851518916) e [revisão 2](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851608090). **As aprovações foram feitas depois do merge** (o PR #9 foi mergeado em 2026-11-10), portanto não funcionaram como bloqueio prévio.
+O repositório usa pull requests. **Erick Yuji Conceição** (conta GitHub `Erickyuji08`, colaborador) aprovou dois PRs de entrega:
 
-Sem revisão humana registrada: os PRs #1 a #8 (o #8 só recebeu comentários de bots) e o PR #10 (somente documentação, mergeado após o CI verde).
+| PR | Aprovação | Quando | Observação |
+|---|---|---|---|
+| **#13** (conformidade com a especificação: estados alternativos, dupla reserva em memória, WireMock, RTM com risco, apresentação) | [revisão `APPROVED`](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/13#pullrequestreview-5867927078) sobre o commit `114fa27` | **Antes do merge**, em 2026-11-12 | O commit seguinte, só de documentação, registra esta própria aprovação |
+| #9 (entrega final anterior) | duas revisões `APPROVED` ([1](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851518916), [2](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851608090)) sobre o commit `dda4229` | **Depois do merge**, em 2026-11-11 | Não funcionou como bloqueio prévio |
+
+**Sem revisão humana registrada:** os PRs #1 a #8 (o #8 só recebeu comentários de bots), #10, #11 e #12. O PR #13 é o maior da entrega final e foi revisado antes do merge; os PRs pequenos de documentação não foram. Os PRs são abertos pela conta do autor, e o GitHub não permite que o autor aprove o próprio PR, por isso a aprovação é sempre de outro integrante.
 
 ## 9. Uso de ferramentas de IA
 

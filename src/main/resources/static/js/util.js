@@ -22,7 +22,8 @@ export function toLocalInput(iso) {
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);
 }
-export const badge = (status) => html`<span class="badge ${status}">${status.replace('_', ' ')}</span>`;
+const STATUS_LABEL = { EM_USO: 'EM USO', NAO_COMPARECEU: 'NÃO COMPARECEU' };
+export const badge = (status) => html`<span class="badge ${status}">${STATUS_LABEL[status] || status}</span>`;
 export const TYPE_LABEL = { SALA: 'Sala', PROFESSOR: 'Professor', MATERIAL: 'Material' };
 
 export function toast(message, kind = '') {

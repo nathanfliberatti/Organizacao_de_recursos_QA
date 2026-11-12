@@ -68,13 +68,19 @@ public class ReservationController {
         return reservationAuditService.history(id);
     }
 
+    /**
+     * Cancela a reserva (RF-04): transição auditada para CANCELADA, que libera o horário. O registro continua
+     * consultável. Reservas iniciadas (EM_USO/CONCLUIDA) não podem ser canceladas nem apagadas (RF-15, 409).
+     */
     @DeleteMapping("/api/reservations/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable String id, Authentication authentication) {
-        boolean canDeleteAny = hasRole(authentication, "RESPONSAVEL")
-                || hasRole(authentication, "ADMINISTRADOR");
-        reservationAuditService.deleteReservation(id, authentication.getName(), canDeleteAny);
-        reservationCatalog.remove(id);
+        ReservationTransition transition = reservationAuditService.cancelReservation(
+                id, authentication.getName(), canManageAny(authentication), clock, "Reserva cancelada");
+        Reservation reservation = reservationCatalog.findById(id);
+        if (reservation != null) {
+            reservation.applyTransition(transition);
+        }
         if (extras != null) {
             extras.onCancelled(id, authentication.getName());
         }
@@ -90,6 +96,22 @@ public class ReservationController {
                 actor, clock, "Reserva aprovada pelo Responsável");
         recordTransition(reservation, transition);
         return response(id, reservation);
+    }
+
+    /** Rejeição de uma solicitação pelo Responsável (RF-14); libera o horário. */
+    @PostMapping("/api/reservations/{id}/rejection")
+    @PreAuthorize("hasRole('RESPONSAVEL')")
+    public ReservationResponse reject(@PathVariable String id, Authentication authentication) {
+        return applyReleasingTransition(id, authentication, "rejeitada",
+                (reservation, actor) -> reservation.prepareRejection(actor, clock, "Reserva rejeitada pelo Responsável"));
+    }
+
+    /** Registro de não comparecimento (RF-14) por Responsável ou Administrador; libera o horário. */
+    @PostMapping("/api/reservations/{id}/no-show")
+    @PreAuthorize("hasAnyRole('RESPONSAVEL', 'ADMINISTRADOR')")
+    public ReservationResponse noShow(@PathVariable String id, Authentication authentication) {
+        return applyReleasingTransition(id, authentication, "marcada como não compareceu",
+                (reservation, actor) -> reservation.prepareNoShow(actor, clock, "Solicitante não compareceu"));
     }
 
     @PostMapping("/api/reservations")
@@ -165,8 +187,12 @@ public class ReservationController {
     }
 
     private User authenticatedUser(Authentication authentication) {
-        boolean responsible = hasRole(authentication, "RESPONSAVEL");
-        UserRole role = responsible ? UserRole.RESPONSAVEL : UserRole.SOLICITANTE;
+        UserRole role = UserRole.SOLICITANTE;
+        if (hasRole(authentication, "RESPONSAVEL")) {
+            role = UserRole.RESPONSAVEL;
+        } else if (hasRole(authentication, "ADMINISTRADOR")) {
+            role = UserRole.ADMINISTRADOR;
+        }
         return new User(authentication.getName(), role);
     }
 
@@ -191,6 +217,17 @@ public class ReservationController {
         Reservation reservation = loadReservation(id);
         ReservationTransition transition = action.prepare(reservation, authenticatedUser(authentication));
         recordTransition(reservation, transition);
+        return response(id, reservation);
+    }
+
+    private ReservationResponse applyReleasingTransition(
+            String id, Authentication authentication, String outcome, ReservationAction action) {
+        Reservation reservation = loadReservation(id);
+        ReservationTransition transition = action.prepare(reservation, authenticatedUser(authentication));
+        recordTransition(reservation, transition);
+        if (transition != null && extras != null) {
+            extras.onScheduleReleased(id, authentication.getName(), outcome);
+        }
         return response(id, reservation);
     }
 

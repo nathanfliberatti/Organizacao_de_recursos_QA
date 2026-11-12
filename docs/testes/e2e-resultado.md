@@ -1,15 +1,15 @@
 # Resultado do teste E2E da interface
 
-Script: [`e2e/e2e.js`](../../e2e/e2e.js) (Playwright, Chromium). Procedimento: [`e2e/README.md`](../../e2e/README.md). **Não roda no CI**; foi executado manualmente no commit `75294e9` + as alterações desta entrega.
+Script: [`e2e/e2e.js`](../../e2e/e2e.js) (Playwright, Chromium). Procedimento: [`e2e/README.md`](../../e2e/README.md). **Não roda no CI**; foi executado manualmente na versão da entrega final (com os estados alternativos do RF-14).
 
 ## Ambiente e execuções
 
 | Item | Valor |
 |---|---|
-| Aplicação | perfil `postgres`, PostgreSQL 16.15 local, `APP_DEMO_DATA=true`, `E2E_EXPECT_CONFLICT=true` |
+| Aplicação | PostgreSQL 16.15 local com `APP_DEMO_DATA=true`, e também o modo em memória |
 | Navegador | Chromium do Playwright (headless), janelas de 1200×800 e 375×700 |
-| Execuções com PostgreSQL | 3 seguidas, **28/28 verificações em cada** |
-| Execução sem banco (memória) | `27/27 verificações passaram` (sem a verificação de conflito de horário, que só vale com PostgreSQL) |
+| Execuções com PostgreSQL | 4 seguidas, **37/37 verificações em cada** |
+| Execução em memória (sem banco) | **37/37** (o modo em memória também recusa conflito de horário, então a verificação de conflito vale nos dois modos) |
 
 Uma primeira versão do script teve 3 falhas **do próprio script** (lia um aviso antigo na tela e checava a tabela da tela anterior). Foram corrigidas no script; o aplicativo não mudou.
 
@@ -37,6 +37,15 @@ PASS  histórico registra criação e aprovação
 PASS  iniciar uso muda a reserva para EM USO
 PASS  reserva EM USO não oferece cancelar
 PASS  notificação de criação registrada
+PASS  nova solicitação de recurso restrito criada
+PASS  Responsável rejeita e a reserva vira REJEITADA
+PASS  reserva REJEITADA só oferece Histórico — Histórico
+PASS  Responsável registra não comparecimento e a reserva vira NÃO COMPARECEU
+PASS  reserva NÃO COMPARECEU só oferece Histórico — Histórico
+PASS  Solicitante cancela e a reserva vira CANCELADA
+PASS  reserva CANCELADA não oferece ações ao Solicitante
+PASS  horário liberado pelo cancelamento pode ser reservado de novo
+PASS  histórico da reserva cancelada registra a transição para CANCELADA
 PASS  menu recolhido em tela estreita
 PASS  menu abre ao tocar em Menu
 PASS  sair volta ao login
@@ -45,7 +54,7 @@ PASS  sem erros de JavaScript não tratados
 PASS  sem erros de JavaScript não tratados
 PASS  sem erros de JavaScript não tratados
 
-28/28 verificações passaram
+37/37 verificações passaram
 ```
 
 ## O que cada verificação cobre
@@ -55,13 +64,14 @@ PASS  sem erros de JavaScript não tratados
 | RF-01 (perfis na interface) | Login inválido com mensagem compreensível; navegação por perfil (Administrador × Solicitante × Responsável); redirecionamento de rota proibida; sair volta ao login |
 | RF-02, RF-03 | Cadastro de recurso pela tela, pesquisa por localização, nome com HTML exibido como texto |
 | RF-04, RF-13 | Reserva criada; término antes do início recusado com mensagem |
-| RF-05, RF-06 | Mesmo horário recusado por conflito (PostgreSQL) |
-| RF-07, RF-10, RF-14, RF-15 | Recurso restrito nasce SOLICITADA; Solicitante sem botão Aprovar; aprovação pelo Responsável; histórico; iniciar uso; sem cancelar em EM USO |
+| RF-05, RF-06 | Mesmo horário recusado por conflito |
+| RF-07, RF-10 | Recurso restrito nasce SOLICITADA; Solicitante sem botão Aprovar; aprovação pelo Responsável; histórico |
 | RF-08 | Período de manutenção cadastrado e reserva no período recusada |
 | RF-11 | Notificação de criação registrada |
+| **RF-14, RF-15** | Iniciar uso; reserva EM USO sem cancelar; **rejeitar** (REJEITADA só oferece Histórico); **não comparecer** (NÃO COMPARECEU só oferece Histórico); **cancelar** (CANCELADA sem ações para o Solicitante); horário liberado pelo cancelamento pode ser reservado de novo; histórico registra CANCELADA |
 | RNF-04 | Menu recolhido e funcional em 375 px; sem erros de JavaScript não tratados em nenhuma sessão |
 
-Prints desta execução: ![Recursos (Administrador)](../evidencias/imagens/e2e-recursos-admin.png) ![Reservas (Solicitante)](../evidencias/imagens/e2e-reservas-solicitante.png) ![Tela estreita](../evidencias/imagens/e2e-mobile.png)
+Prints desta execução: ![Recursos (Administrador)](../evidencias/imagens/e2e-recursos-admin.png) ![Reservas (Solicitante)](../evidencias/imagens/e2e-reservas-solicitante.png) ![Estados alternativos](../evidencias/imagens/e2e-estados-alternativos.png) ![Tela estreita](../evidencias/imagens/e2e-mobile.png)
 
 ## Limitações
 

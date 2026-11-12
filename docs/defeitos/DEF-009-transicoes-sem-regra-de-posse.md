@@ -1,5 +1,6 @@
 # DEF-009: Solicitante pode iniciar ou concluir reserva alheia
 
+- **Severidade / prioridade:** Alta / P1 — Solicitante avançava o ciclo de vida de reserva alheia: falha de autorização.
 - **Situação:** Corrigido em `0e4d8f6`
 - **Evidência:** `AuthorizationMatrixIT.requesterCannotStartAnotherRequestersReservation` e `AuthorizationMatrixIT.requesterCannotCompleteAnotherRequestersReservation`
 - **Operações:** `POST /api/reservations/{id}/start` e `POST /api/reservations/{id}/complete`.

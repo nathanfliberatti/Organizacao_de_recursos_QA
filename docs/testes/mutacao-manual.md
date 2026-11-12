@@ -1,6 +1,6 @@
 # Auditoria de rastreabilidade e mutação manual
 
-> **Atualização da entrega final:** os números desta análise (137 testes, "CI 0/10") são do momento em que ela foi feita, quando o status do Actions não podia ser consultado. Hoje o CI da `main` executa `./mvnw -B verify` com 158 testes passando e Quality Gate aprovado ([relatorio-testes.md](relatorio-testes.md)). A tabela de mutações **não foi refeita** para a entrega final.
+> **Atualização da entrega final:** os números desta análise (137 testes, "CI 0/10") são do momento em que ela foi feita, quando o status do Actions não podia ser consultado. Hoje o CI da `main` executa `./mvnw -B verify` com 158 testes passando e Quality Gate aprovado ([relatorio-testes.md](relatorio-testes.md)). A tabela de mutações **não foi refeita** para a entrega final. O RF-14, que aqui consta como parcial por falta dos estados alternativos, foi completado depois. Uma mutação pontual foi repetida nos testes de webhook (tratar qualquer resposta como sucesso fez 5 testes falharem).
 
 
 ## Escopo e critério de evidência
