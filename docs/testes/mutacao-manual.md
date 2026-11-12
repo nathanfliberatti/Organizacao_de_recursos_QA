@@ -8,7 +8,7 @@ Rodada refeita no commit atual da entrega. Substitui a rodada anterior (commit `
 |---|---|
 | Código de produção avaliado | `src/main` idêntico ao da `main` em `3e849fa` (merge do PR #13). Nenhuma linha de produção foi alterada nesta rodada, só testes. |
 | Commit onde as mutações foram aplicadas | `736598a` (branch `entrega/matriz-mutacao-relatorio`) |
-| Commit com os testes que fecharam as lacunas | `3f2ed8f` |
+| Commit com os testes que fecharam as lacunas | `3f2ed8f` (CI no commit `30bae72`, que inclui os documentos) |
 | Data | 2026-11-12 |
 | Ambiente | Contêiner Linux, Java 21, Maven Wrapper, PostgreSQL 16 local (sem Docker) |
 | Executor | Claude Code, a pedido de Nathan Ferraz Liberatti |
@@ -18,7 +18,7 @@ Rodada refeita no commit atual da entrega. Substitui a rodada anterior (commit `
 Mutação **manual**, não estatística: para cada regra crítica, introduzi uma quebra pequena e plausível no código de produção, executei os testes que deveriam proteger a regra e voltei o arquivo com `git checkout` antes da mutação seguinte. O script que executa o ciclo (aplicar, testar, restaurar) fica fora do repositório; cada linha da tabela abaixo é reproduzível com a quebra e o comando descritos.
 
 - **Mutantes de regra de negócio** rodaram a suíte unitária completa (`./mvnw test`, 181–182 testes).
-- **Mutantes de PostgreSQL** (SQL, restrição de exclusão, transações) rodaram cópias dos ITs apontadas para o PostgreSQL 16 local, porque o sandbox não tem Docker. Os ITs originais, com Testcontainers, rodam no CI. As cópias são idênticas, salvo a origem do banco, e passaram 100% sem mutação antes de cada bateria (158 testes no baseline: `ReservationConcurrencyIT` 11, `ReservationAuditIT` 7, `AuthorizationMatrixFullIT` 140).
+- **Mutantes de PostgreSQL** (SQL, restrição de exclusão, transações) rodaram cópias dos ITs apontadas para o PostgreSQL 16 local, porque o sandbox não tem Docker. Os ITs originais, com Testcontainers, rodam no CI. As cópias são idênticas, salvo a origem do banco, e passaram 100% sem mutação antes de cada bateria (158 testes no baseline: `ReservationConcurrencyIT` 11, `ReservationAuditIT` 7, `AuthorizationMatrixFullIT` 140); depois dos testes novos, `ReservationAuditIT` tem 9 e `ApplicationFlowIT` 15.
 - **Limite:** 21 mutantes escolhidos por mim. Não substituem uma ferramenta como PIT, não cobrem todas as linhas e o escore abaixo vale somente para este conjunto.
 
 ## 3. Resultado por mutante
@@ -74,24 +74,24 @@ Critérios, todos exigidos: (a) risco identificado em [riscos.md](../riscos.md) 
 
 | Requisito | (a) Risco | (b) Teste localizável | (c) Executado | (d) Mutantes detectados | (e) CI no commit final |
 |---|---|---|---|---|---|
-| RF-05 Sobreposição | Sim | Sim | Sim | M01, M02 | ver §6 |
-| RF-06 Dupla reserva | Sim | Sim | Sim | M03c | ver §6 |
-| RF-07 Aprovação de restrito | Sim | Sim | Sim | M04 | ver §6 |
-| RF-08 Manutenção | Sim | Sim | Sim | M05, M06, M07 | ver §6 |
-| RF-10 Auditoria | Sim | Sim | Sim | M10, M11 | ver §6 |
-| RF-13 Intervalo | Sim | Sim | Sim | M08 | ver §6 |
-| RF-14 Ciclo de vida | Sim | Sim | Sim | M09, M12 | ver §6 |
-| RF-15 Preservação após início | Sim | Sim | Sim | M13, M14, M15 | ver §6 |
-| RNF-02 Integridade concorrente | Sim | Sim | Sim | M03c | ver §6 |
-| RNF-03 Rastreabilidade | Sim | Sim | Sim | M10, M11 | ver §6 |
+| RF-05 Sobreposição | Sim | Sim | Sim | M01, M02 | Sim, PR #14 |
+| RF-06 Dupla reserva | Sim | Sim | Sim | M03c | Sim, PR #14 |
+| RF-07 Aprovação de restrito | Sim | Sim | Sim | M04 | Sim, PR #14 |
+| RF-08 Manutenção | Sim | Sim | Sim | M05, M06, M07 | Sim, PR #14 |
+| RF-10 Auditoria | Sim | Sim | Sim | M10, M11 | Sim, PR #14 |
+| RF-13 Intervalo | Sim | Sim | Sim | M08 | Sim, PR #14 |
+| RF-14 Ciclo de vida | Sim | Sim | Sim | M09, M12 | Sim, PR #14 |
+| RF-15 Preservação após início | Sim | Sim | Sim | M13, M14, M15 | Sim, PR #14 |
+| RNF-02 Integridade concorrente | Sim | Sim | Sim | M03c | Sim, PR #14 |
+| RNF-03 Rastreabilidade | Sim | Sim | Sim | M10, M11 | Sim, PR #14 |
 
 Resultado local, sem contar o CI: **10 de 10 requisitos críticos (100%)** atendem de (a) a (d). Autorização, que a RTM cobre pela matriz, teve 4 mutantes mortos (M16 a M19) e a matriz completa (35 linhas × 4 perfis = 140 verificações) passou.
 
 Limite: "10 de 10" significa que cada requisito tem ao menos um teste que detecta uma quebra plausível da regra. Não significa que todo comportamento do requisito está coberto, nem que não existam mutantes que eu não tenha pensado.
 
-## 6. CI no commit final
+## 6. CI
 
-O critério (e) depende do CI do commit que será etiquetado. Esta seção é preenchida depois que o PR desta rodada for aprovado e a `main` rodar (`./mvnw -B verify` com Testcontainers e Quality Gate). Até lá, a coluna (e) **não está comprovada**.
+O CI do PR #14 ([execução 43144281216](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/43144281216), commit `30bae72`) passou: Maven verify (Failsafe com 259 testes, 0 falhas), SonarCloud e Quality Gate. Isso comprova o critério (e) para o código desta rodada. O commit que receberá a tag é o da `main` depois do merge; o CI dele precisa ser conferido de novo e **ainda não existe**.
 
 ## 7. Estado final dos testes
 

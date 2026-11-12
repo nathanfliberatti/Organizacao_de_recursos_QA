@@ -40,7 +40,7 @@ Reproduzir: `./mvnw -B test` (sem Docker, só os testes unitários e de API em m
 | GitHub Actions em PR, JaCoCo, SonarCloud | Atendido | [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) |
 | Cobertura ≥ 80% de linhas e ≥ 70% de branches | Atendido | 93,7% de linhas e 74% de branches (JaCoCo no CI, `75294e9`) |
 | Exclusões do JaCoCo explícitas e documentadas | Atendido | **Nenhuma exclusão configurada** (`pom.xml` sem `<excludes>`); toda a cobertura é medida sobre todo o código |
-| Zero bugs críticos e zero vulnerabilidades críticas na entrega final | Atendido | Critério adotado: severidade **High/Blocker** no SonarCloud. Na `main` (análise de `1abb9da`): 0 vulnerabilidades abertas, 1 bug aberto de severidade **Medium** (`java:S8786`, em código de teste), 0 hotspots. Ver [../relatorio-qualidade.md](../relatorio-qualidade.md) §4. |
+| Zero bugs críticos e zero vulnerabilidades críticas na entrega final | Atendido | Critério adotado: severidade **High/Blocker** no SonarCloud. Na `main` (análise de `1abb9da`): 0 vulnerabilidades abertas, 1 bug aberto de severidade **Medium** (`java:S8786`, em código de teste), 0 hotspots. Ver [../relatorio-qualidade.md](../relatorio-qualidade.md) §4.4. |
 
 ## 4. Testes acrescentados na entrega final
 

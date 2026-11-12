@@ -49,7 +49,7 @@ Formato da Aula 13. Cada afirmação traz **evidência** (onde conferir), **inte
 |---|---|---|
 | Cobertura de linhas ≥ 80% | 93,7% (1.033 de 1.103) | Atendida |
 | Cobertura de branches ≥ 70% | 74% (322 de 430) | Atendida, com folga pequena |
-| 100% dos requisitos críticos da RTM com evidência | 10 de 10 com risco, teste localizável, execução e mutante detectado; CI do commit final pendente (ver 4.3) | Atendida localmente; **fechamento depende do CI do PR** |
+| 100% dos requisitos críticos da RTM com evidência | 10 de 10 com risco, teste localizável, execução, mutante detectado e CI verde no PR #14 (`30bae72`) | Atendida; falta só o CI da `main` após o merge |
 | Zero defeito crítico aberto | 0 defeitos de severidade Crítica registrados; 0 abertos de qualquer severidade (14 corrigidos, 1 mitigado) | Atendida |
 | Zero vulnerabilidade | Sonar: Segurança A, 0 issues de segurança abertas, 0 *hotspots* | Atendida no escopo do Sonar |
 | Quality Gate aprovado | Passed | Atendida |
@@ -64,15 +64,15 @@ Formato da Aula 13. Cada afirmação traz **evidência** (onde conferir), **inte
 ### 4.2 Testes
 
 - **Evidência:** no CI do PR #13 ([execução 43134310856](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/43134310856)): 177 testes Surefire + 116 Failsafe = **293, 0 falhas, 0 erros, 0 ignorados**. A `main` em `3e849fa` repete o mesmo conjunto com CI verde.
-- **Neste PR (medido só localmente):** `./mvnw -B test` com **183 testes, 0 falhas** (6 novos desde o PR #13); `AuthorizationMatrixFullIT` (140 verificações), `ReservationAuditIT` (8) e `ApplicationFlowIT` (15) passaram em cópias contra PostgreSQL 16 local. O resultado oficial desses `*IT` sairá do CI do PR.
+- **Neste PR:** o CI do PR #14 ([execução 43144281216](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/43144281216), commit `30bae72`) passou: Maven verify, SonarCloud e Quality Gate. O Failsafe executou **259 testes, 0 falhas, 0 erros** (116 do PR #13 + 140 da matriz completa + 3 novos); o gate do JaCoCo foi atendido. Localmente, `./mvnw -B test` deu 183 testes sem falhas; não li no log do CI a linha do Surefire.
 - **Interpretação:** nenhuma regressão conhecida no conjunto atual.
-- **Limite:** o CI deste PR ainda não rodou; os números locais não substituem o CI. A UI (E2E, 37 verificações) roda manualmente, fora do CI ([testes/e2e-resultado.md](testes/e2e-resultado.md)).
+- **Limite:** o valor da cobertura não foi lido neste run (só o gate). A UI (E2E, 37 verificações) roda manualmente, fora do CI ([testes/e2e-resultado.md](testes/e2e-resultado.md)).
 
 ### 4.3 Requisitos críticos e eficácia dos testes
 
 - **Evidência:** [testes/mutacao-manual.md](testes/mutacao-manual.md): 21 mutantes nas dez regras críticas (RF-05, 06, 07, 08, 10, 13, 14, 15, RNF-02, RNF-03) mais autorização. Na primeira rodada **5 sobreviveram**: 3 eram lacunas reais (limite da manutenção, atomicidade da auditoria sem transação externa, cancelamento de reserva iniciada) e 2 eram defesas redundantes (trava de aviso e restrição de exclusão, que só falham juntas). As 3 lacunas viraram testes (commit `3f2ed8f`). Resultado final: **19 de 21 mortos (90,5%)**; os 2 restantes são os redundantes, mortos quando combinados. Dos 10 requisitos críticos, **10 (100%)** têm ao menos um mutante detectado.
 - **Interpretação:** os testes dos requisitos críticos falham quando a regra quebra, e a busca achou fraquezas que a cobertura de 93,7% não mostrava.
-- **Limite:** amostra de 21 mutantes escolhidos por mim, sem ferramenta automática (PIT). "100%" quer dizer que cada requisito tem uma quebra detectável, não que todo comportamento está coberto. A coluna "CI no commit final" só fecha depois do CI do PR.
+- **Limite:** amostra de 21 mutantes escolhidos por mim, sem ferramenta automática (PIT). "100%" quer dizer que cada requisito tem uma quebra detectável, não que todo comportamento está coberto. A coluna "CI" refere-se ao PR #14; o commit da tag é o da `main` depois do merge, cujo CI precisa ser conferido de novo.
 
 ### 4.4 Análise estática e segurança
 
@@ -133,14 +133,14 @@ Fonte: riscos aceitos R1–R11 em [decisao-qualidade.md](decisao-qualidade.md#ri
 
 - **Evidência:** Erick Yuji Conceição (`Erickyuji08`) aprovou o PR #13 **antes do merge** ([revisão](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/13#pullrequestreview-5867927078)) e o PR #9 depois do merge ([1](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851518916), [2](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851608090)). Os PRs #1–#8, #10–#12 não têm revisão humana registrada.
 - **Interpretação:** a mudança maior da entrega foi lida por um segundo integrante antes de entrar.
-- **Limite:** a revisão do PR deste relatório só vale depois da aprovação de Erick; o GitHub não deixa o autor aprovar o próprio PR.
+- **Limite:** o PR #14 (este relatório) ainda não tem aprovação de Erick; o GitHub não deixa o autor aprovar o próprio PR.
 
 ## 8. Recomendação
 
 **Liberar com ressalvas**, como *release candidate* para avaliação acadêmica e demonstração. **Não** declarar pronto para produção.
 
 - **Por quê:** as regras críticas têm teste que falha quando a regra quebra (4.3), a autorização está verificada célula a célula (4.5), o CI e o Quality Gate passam (4.2, 4.4) e não há defeito aberto (5).
-- **Condição para a tag:** CI verde no PR desta rodada e na `main` após o merge, e aprovação de Erick no PR.
+- **Condição para a tag:** aprovação de Erick no PR #14 e CI verde na `main` depois do merge (o CI do PR já passou).
 - **Condição para produção:** fechar R5, R6 e R7, validar a matriz de estados (R1) com usuários reais e rodar carga em ambiente separado.
 
 ## 9. Uso de ferramentas de IA
