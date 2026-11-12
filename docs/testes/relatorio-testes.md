@@ -65,4 +65,4 @@ Cada um fecha uma lacuna registrada na [RTM](../rtm.md):
 - O E2E não roda no CI, não cobre todas as telas e não mede acessibilidade.
 - A carga e a concorrência foram medidas em máquina única.
 - O modo em memória também impede sobreposição (DEF-014), mas só vale para uma instância; a garantia entre instâncias e a persistência são verificadas apenas pelos `*IT` em PostgreSQL.
-- [mutacao-manual.md](mutacao-manual.md) registra a auditoria manual de mutações feita antes desta entrega; seus números (137 testes, CI 0/10) são os daquele momento.
+- [mutacao-manual.md](mutacao-manual.md) registra a mutação manual refeita no commit atual da entrega: 21 mutantes, 19 mortos, 3 lacunas de teste fechadas.

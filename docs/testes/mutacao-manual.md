@@ -1,49 +1,98 @@
-# Auditoria de rastreabilidade e mutação manual
+# Mutação manual dos requisitos críticos
 
-> **Atualização da entrega final:** os números desta análise (137 testes, "CI 0/10") são do momento em que ela foi feita, quando o status do Actions não podia ser consultado. Hoje o CI da `main` executa `./mvnw -B verify` com 158 testes passando e Quality Gate aprovado ([relatorio-testes.md](relatorio-testes.md)). A tabela de mutações **não foi refeita** para a entrega final. O RF-14, que aqui consta como parcial por falta dos estados alternativos, foi completado depois. Uma mutação pontual foi repetida nos testes de webhook (tratar qualquer resposta como sucesso fez 5 testes falharem).
+Rodada refeita no commit atual da entrega. Substitui a rodada anterior (commit `fa13d6c`, 137 testes, "CI 0/10"), que ficou obsoleta.
 
+## 1. Identificação
 
-## Escopo e critério de evidência
+| Item | Valor |
+|---|---|
+| Código de produção avaliado | `src/main` idêntico ao da `main` em `3e849fa` (merge do PR #13). Nenhuma linha de produção foi alterada nesta rodada, só testes. |
+| Commit onde as mutações foram aplicadas | `736598a` (branch `entrega/matriz-mutacao-relatorio`) |
+| Commit com os testes que fecharam as lacunas | `3f2ed8f` |
+| Data | 2026-11-12 |
+| Ambiente | Contêiner Linux, Java 21, Maven Wrapper, PostgreSQL 16 local (sem Docker) |
+| Executor | Claude Code, a pedido de Nathan Ferraz Liberatti |
 
-Commit avaliado: `fa13d6cfe51634bb181c106ce40baaa9422c8532` (`fa13d6c`), branch `feature/utilizacao-relatorios`. A RTM contém 10 entradas críticas: RF-05, RF-06, RF-07, RF-08, RF-10, RF-13, RF-14, RF-15, RNF-02 e RNF-03.
+## 2. Método e limite
 
-Para contar como evidência completa, cada requisito precisa de risco identificado, teste localizável por arquivo e nome, execução observada e status de CI associado ao commit avaliado. A branch local estava 17 commits à frente da remota. `gh run list --commit fa13d6cfe51634bb181c106ce40baaa9422c8532 --limit 10` não pôde consultar o GitHub porque o `gh` não está autenticado. Portanto, não há evidência remota de CI confirmada para esse commit; os resultados locais abaixo não são apresentados como resultados de CI.
+Mutação **manual**, não estatística: para cada regra crítica, introduzi uma quebra pequena e plausível no código de produção, executei os testes que deveriam proteger a regra e voltei o arquivo com `git checkout` antes da mutação seguinte. O script que executa o ciclo (aplicar, testar, restaurar) fica fora do repositório; cada linha da tabela abaixo é reproduzível com a quebra e o comando descritos.
 
-O baseline local `./mvnw -B clean verify` passou antes das mutações: 43 testes Surefire e 93 testes Failsafe, sem falhas ou erros. Depois de cada mutação, o(s) arquivo(s) de produção alterado(s) foi/foram restaurado(s) com `git restore` antes da mutação seguinte. Após todas as restaurações e a inclusão do caso de duração zero, `./mvnw -B clean verify` passou novamente: 43 testes Surefire e 94 testes Failsafe, sem falhas ou erros (137 no total).
+- **Mutantes de regra de negócio** rodaram a suíte unitária completa (`./mvnw test`, 181–182 testes).
+- **Mutantes de PostgreSQL** (SQL, restrição de exclusão, transações) rodaram cópias dos ITs apontadas para o PostgreSQL 16 local, porque o sandbox não tem Docker. Os ITs originais, com Testcontainers, rodam no CI. As cópias são idênticas, salvo a origem do banco, e passaram 100% sem mutação antes de cada bateria (158 testes no baseline: `ReservationConcurrencyIT` 11, `ReservationAuditIT` 7, `AuthorizationMatrixFullIT` 140).
+- **Limite:** 21 mutantes escolhidos por mim. Não substituem uma ferramenta como PIT, não cobrem todas as linhas e o escore abaixo vale somente para este conjunto.
 
-## Requisitos críticos na RTM
+## 3. Resultado por mutante
 
-| Requisito | Risco se a regra falhar | Teste(s) executado(s) — caminho e nome | Evidência local | CI no commit |
-|---|---|---|---|---|
-| RF-05 — Sobreposição | Reservas conflitantes de sala ou professor podem aparecer como disponíveis ou ser aceitas. | `src/test/java/br/com/organizacao/recursos/reservas/ReservationConcurrencyIT.java` — `roomAvailabilityQueriesPostgresWithoutProfessorFilter`; `src/test/java/br/com/organizacao/recursos/reservas/PostgresReservationStoreTest.java` — `doesNotInsertWhenReservationIsUnavailable` | Passou no baseline; mutação de detecção de sobreposição falhou no teste de disponibilidade. | Não confirmado |
-| RF-06 — Dupla reserva | Duas solicitações concorrentes incompatíveis podem confirmar reservas para o mesmo recurso ou professor. | `src/test/java/br/com/organizacao/recursos/reservas/ReservationConcurrencyIT.java` — `onlyOneConcurrentReservationIsAcceptedForSameRoomAndTime`; `onlyOneConcurrentReservationIsAcceptedForSameProfessorAndTime` | Os dois cenários passaram no baseline; a mutação de concorrência falhou nas cinco repetições por sala. | Não confirmado |
-| RF-07 — Aprovação de restrito | Solicitantes ou usuários que não sejam Responsáveis podem aprovar uma reserva restrita. | `src/test/java/br/com/organizacao/recursos/reservas/ReservationApprovalTest.java` — `responsibleApprovalRecordsDecisionAndMovesReservationToApproved`, `requesterCannotApproveOwnReservationEvenWithResponsibleRole`, `requesterCannotApproveAnotherUsersRestrictedReservation`; `src/test/java/br/com/organizacao/recursos/reservas/ReservationApiTest.java` — `apiRejectsRequesterApprovingOwnRestrictedReservation` | Passou no baseline; mutação da elegibilidade falhou nos dois testes de negação. | Não confirmado |
-| RF-08 — Manutenção | O sistema pode permitir reserva durante indisponibilidade programada ou reportar disponibilidade incorreta. | `src/test/java/br/com/organizacao/recursos/reservas/MaintenanceRuleTest.java` — `reservationCrossingMaintenanceStartByOneSecondIsRejected`; `src/test/java/br/com/organizacao/recursos/reservas/ReservationApiTest.java` — `apiRejectsReservationCrossingMaintenanceAndDoesNotStoreIt` | Passou no baseline; mutação que sempre permitia reserva falhou no teste de regra. | Não confirmado |
-| RF-10 — Auditoria | Mudanças podem ficar sem autoria, instante, motivo ou registro persistido; rollback pode deixar histórico inconsistente. | `src/test/java/br/com/organizacao/recursos/reservas/ReservationAuditIT.java` — `stateAndAuditArePersistedTogether`, `rollbackDoesNotLeaveStateChangeOrOrphanedAudit`; `src/test/java/br/com/organizacao/recursos/reservas/ReservationLifecycleTest.java` — `everyStateChangeUsesClockAndRecordsReasonAndReservationId` | Passou no baseline; mutação da gravação falhou porque havia 1 registro onde o teste esperava 2. | Não confirmado |
-| RF-13 — Intervalo | Intervalos de duração zero ou invertidos podem ser aceitos, gerando reservas inválidas. | `src/test/java/br/com/organizacao/recursos/reservas/AuthorizationMatrixIT.java` — `invalidInputReturnsSafeProblemDetail` (casos de término anterior e igual ao início) | Casos executados com sucesso no teste parametrizado. O caso de duração zero foi acrescentado nesta auditoria porque faltava na massa e foi executado isoladamente. | Não confirmado |
-| RF-14 — Ciclo de vida | Transições inválidas ou não representadas podem corromper o estado e a auditoria da reserva. | `src/test/java/br/com/organizacao/recursos/reservas/ReservationLifecycleTest.java` — `reservationFollowsMainLifecycleAndAuditsEveryTransition`, `reservationCannotStartUseBeforeApproval`; `src/test/java/br/com/organizacao/recursos/reservas/ReservationAuditIT.java` — `invalidTransitionDoesNotChangeStateOrAppendAudit` | Testes executados localmente. **Parcial:** o fluxo principal é exercitado, mas os estados alternativos `REJEITADA`, `CANCELADA` e `NÃO_COMPARECEU` da especificação não estão cobertos; a RTM também registra que as transições alternativas aguardam definição. | Não confirmado |
-| RF-15 — Preservação após início | Exclusão de reserva em uso pode apagar evidência operacional e histórico necessário para consulta. | `src/test/java/br/com/organizacao/recursos/reservas/ReservationLifecycleTest.java` — `reservationCannotBeDeletedAfterItHasStarted`; `src/test/java/br/com/organizacao/recursos/reservas/ReservationAuditIT.java` — `startedReservationCannotBeDeletedAndItsHistoryRemains`; `src/test/java/br/com/organizacao/recursos/reservas/ReservationAuditApiTest.java` — `deletingStartedReservationReturnsConflict` | Passou no baseline local. | Não confirmado |
-| RNF-02 — Integridade concorrente | Corridas de execução podem violar a integridade mesmo quando a validação isolada funciona. | `src/test/java/br/com/organizacao/recursos/reservas/ReservationConcurrencyIT.java` — `onlyOneConcurrentReservationIsAcceptedForSameRoomAndTime`, `onlyOneConcurrentReservationIsAcceptedForSameProfessorAndTime` | Testcontainers/PostgreSQL passou no baseline. A mutação por sala resultou em 20 respostas 201, 0 respostas 409 e 20 linhas no banco. | Não confirmado |
-| RNF-03 — Rastreabilidade | Não é possível reconstruir quem alterou a reserva, quando ou por quê; falhas transacionais podem separar estado e histórico. | `src/test/java/br/com/organizacao/recursos/reservas/ReservationAuditIT.java` — `stateAndAuditArePersistedTogether`, `rollbackDoesNotLeaveStateChangeOrOrphanedAudit`; `src/test/java/br/com/organizacao/recursos/reservas/ReservationAuditApiTest.java` — `auditHistoryHasNoApiMutationOperations` | Testcontainers/PostgreSQL passou no baseline; a mutação de persistência foi detectada. | Não confirmado |
+"Morto" = pelo menos um teste falhou com a mutação. "Sobreviveu" = nenhum teste falhou.
 
-## Mutações manuais
+| ID | Requisito | Quebra aplicada | Onde | Resultado | Teste que detectou |
+|---|---|---|---|---|---|
+| M01 | RF-05 | Operador de sobreposição `&&` virou `<<` nas consultas de disponibilidade | `PostgresReservationStore` | Morto | `ReservationConcurrencyIT.roomAvailabilityQueriesPostgresWithoutProfessorFilter` |
+| M02 | RF-05 | `second.startsAt().isBefore(first.endsAt())` virou `isAfter` | `InMemoryReservationStore.overlaps` | Morto (15 testes) | `ApplicationFlowTest` (concorrência no mesmo horário, manutenção, cancelamento) |
+| M03a | RF-06, RNF-02 | Removi o `pg_advisory_xact_lock` | `PostgresReservationStore` | **Sobreviveu** | Nenhum. A restrição `EXCLUDE` do banco e a consulta de disponibilidade continuam impedindo a dupla reserva. |
+| M03b | RF-06, RNF-02 | Restrições `EXCLUDE` desligadas (`WHERE (false)`) | `schema.sql` | **Sobreviveu** | Nenhum. A trava de aviso e a consulta de disponibilidade continuam impedindo a dupla reserva. |
+| M03c | RF-06, RNF-02 | M03a + M03b juntos | `PostgresReservationStore` + `schema.sql` | Morto (8 testes) | `ReservationConcurrencyIT.onlyOneConcurrentReservationIsAcceptedForSameRoomAndTime` e `...SameProfessorAndTime` |
+| M04 | RF-07 | `isEligibleResponsible` passou a retornar `true` | `Reservation` | Morto (7 testes) | `ReservationApprovalTest.requesterCannotApproveAnotherUsersRestrictedReservation`, `ReservationApiTest.apiRejectsRequesterApprovingOwnRestrictedReservation` |
+| M05 | RF-08 | `MaintenanceRule.isReservable` passou a retornar `true` | `MaintenanceRule` | Morto (4 testes) | `MaintenanceRuleTest.reservationCrossingMaintenanceStartByOneSecondIsRejected`, `ReservationApiTest.apiRejectsReservationCrossingMaintenanceAndDoesNotStoreIt` |
+| M06 | RF-08 | Borda final: `isAfter(startsAt)` virou `!isBefore(startsAt)` (reserva colada no início da manutenção passa a ser bloqueada) | `MaintenancePeriod.overlaps` | **Sobreviveu na primeira rodada**; morto depois do teste novo | `MaintenanceRuleTest.reservationsTouchingTheMaintenanceBoundariesAreReservable` |
+| M07 | RF-08 | Borda inicial: `isBefore(endsAt)` virou `!isAfter(endsAt)` | `MaintenancePeriod.overlaps` | Morto (executado só depois do teste novo; sem resultado "antes") | idem M06 |
+| M08 | RF-13 | Aceita duração zero: `!startsAt.isBefore(endsAt)` virou `endsAt.isBefore(startsAt)` | `ReservationSchedulingService.validatePeriod` | Morto | `ReservationIntervalValidationTest.rejectsEqualOrInvertedIntervalAndAcceptsValidOne` |
+| M09 | RF-14 | `SOLICITADA` passou a poder ir direto para `EM_USO` | `ReservationStatus.canMoveTo` | Morto (3 testes) | `ReservationStatusTransitionTest.onlyTheDocumentedTransitionsAreAllowed`, `ReservationLifecycleTest.reservationCannotStartUseBeforeApproval` |
+| M10 | RF-10, RNF-03 | Removi o `insertAudit` | `ReservationAuditService` | Morto (3 testes) | `ReservationAuditIT.stateAndAuditArePersistedTogether` (esperado 2 registros, veio 1) |
+| M11 | RF-10, RNF-03 | Removi o `@Transactional` do serviço de auditoria | `ReservationAuditService` | **Sobreviveu na primeira rodada**; morto depois do teste novo | `ReservationAuditIT.failedAuditInsertRollsBackTheStateChangeWithoutAnOuterTransaction` (estado ficou `APROVADA` sem registro de auditoria) |
+| M12 | RF-14 | Removi `APROVADA → NAO_COMPARECEU` | `ReservationStatus.canMoveTo` | Morto (5 testes) | `ReservationStatusTransitionTest.onlyTheDocumentedTransitionsAreAllowed`, `ReservationAlternativeStatesTest.responsibleAndAdministratorRegisterNoShowOfAnApprovedReservation` |
+| M13 | RF-15 | `started()` passou a retornar `false` | `ReservationStatus` | Morto (3 testes) | `ReservationStatusTransitionTest.startedAndReleasingFlagsMatchTheRules` |
+| M14 | RF-15 | Removi o bloqueio de exclusão de reserva `EM_USO`/`CONCLUIDA` | `ReservationAuditService.deleteReservation` | Morto (2 testes) | `ReservationAuditIT.startedReservationCannotBeDeletedAndItsHistoryRemains`, `completedReservationCannotBeDeleted` |
+| M15 | RF-15 | Removi o bloqueio `started()` no cancelamento auditado | `ReservationAuditService.cancelReservation` | **Sobreviveu na primeira rodada**; morto depois do teste novo | `ReservationAuditIT.startedReservationCannotBeCancelledThroughTheAuditedTransition` |
+| M16 | Autorização | Removi o `@PreAuthorize` do histórico | `ReservationController` | Morto | `AuthorizationMatrixFullIT`: `GET /api/reservations/{id}/history` como Solicitante |
+| M17 | Autorização | Aprovação aberta a qualquer autenticado | `ReservationController` | Morto (2 testes) | `AuthorizationMatrixFullIT`: `POST .../approval` como Solicitante e como Administrador |
+| M18 | Autorização | Removi a checagem de dono na alteração | `ReservationSchedulingService` | Morto | `AuthorizationMatrixFullIT`: `PUT /api/reservations/{id}` reserva alheia, Solicitante |
+| M19 | Autorização | Removi a checagem de dono no cancelamento | `ReservationAuditService.cancelReservation` | Morto | `AuthorizationMatrixFullIT`: `DELETE /api/reservations/{id}` reserva alheia, Solicitante |
 
-| Regra | Quebra temporária no código de produção | Teste executado | Resultado observado |
-|---|---|---|---|
-| Sobreposição | Substituí a condição de interseção dos intervalos por uma comparação invertida de início e término em `PostgresReservationStore`. | `./mvnw -B -Dit.test=ReservationConcurrencyIT#roomAvailabilityQueriesPostgresWithoutProfessorFilter -Djacoco.skip=true verify` | **Falhou**, como esperado: disponibilidade sobreposta era `true`, mas o teste exigia `false` (`ReservationConcurrencyIT.java:114`). |
-| Dupla reserva | Removi a consulta de disponibilidade antes da gravação e transformei as faixas das restrições de exclusão em faixas vazias em `PostgresReservationStore` e `schema.sql`. | `./mvnw -B -DskipTests test-compile && ./mvnw -B -Dit.test=ReservationConcurrencyIT#onlyOneConcurrentReservationIsAcceptedForSameRoomAndTime failsafe:integration-test failsafe:verify` | **Falhou**, como esperado, nas 5 repetições: 20 reservas aceitas, 0 recusadas e 20 linhas para o mesmo recurso e período, em vez de 1/19/1. |
-| Aprovação de restrito | Fiz `isEligibleResponsible` retornar sempre verdadeiro em `Reservation`. | `./mvnw -B -Dtest=ReservationApprovalTest test` | **Falhou**, como esperado: os testes de Solicitante próprio e de outro Solicitante observaram `APROVADA`, em vez de `SOLICITADA`. |
-| Manutenção | Fiz `MaintenanceRule.isReservable` retornar sempre verdadeiro. | `./mvnw -B -Dtest=MaintenanceRuleTest test` | **Falhou**, como esperado: reserva que cruza o início da manutenção foi considerada reservável. |
-| Autorização — histórico | Removi `@PreAuthorize` da consulta de histórico em `ReservationController`. | `./mvnw -B -Dtest=ReservationAuditApiTest#requesterReceivesForbiddenWhenReadingReservationHistory test` | **Falhou**, como esperado: Solicitante recebeu 200, não 403. |
-| Autorização — posse | Removi a comparação do proprietário na alteração da reserva em `ReservationSchedulingService`. | `./mvnw -B -DskipTests test-compile && ./mvnw -B -Dit.test=AuthorizationMatrixIT#requesterCannotModifyAnotherRequestersReservation failsafe:integration-test failsafe:verify` | **Falhou**, como esperado: alteração por outro Solicitante recebeu 200, não 403. |
-| Auditoria | Removi a chamada que insere a transição em `reservation_audit` em `ReservationAuditService`. | `./mvnw -B -DskipTests test-compile && ./mvnw -B -Dit.test=ReservationAuditIT#stateAndAuditArePersistedTogether failsafe:integration-test failsafe:verify` | **Falhou**, como esperado: a verificação encontrou 1 registro, não os 2 esperados. |
+### Sobreviventes e como foram tratados
 
-Nenhuma das mutações acima permaneceu verde; portanto, nenhuma lacuna foi atribuída a sobrevivência de mutante. A inspeção da RF-13 revelou independentemente que a RTM só testava término anterior ao início. Acrescentei o caso de término igual ao início ao `invalidRequests()` de `AuthorizationMatrixIT`; a execução focada do `invalidInputReturnsSafeProblemDetail` executou 5 casos e passou.
+- **M06, M11, M15 revelaram lacunas reais** e foram corrigidas com testes novos (commit `3f2ed8f`):
+  - M06: nenhum teste cobria a reserva que termina exatamente quando a manutenção começa.
+  - M11: o teste de rollback já existente roda dentro de uma transação externa, então não provava que o serviço sozinho é atômico. Sem `@Transactional`, uma falha no INSERT da auditoria deixava o estado alterado sem registro. O teste novo força a falha com uma restrição temporária no banco e confirma que o estado volta a `SOLICITADA`.
+  - M15: o cancelamento de reserva `EM_USO` já devolvia 409 pela regra de transição, então o status HTTP não distingue o mutante. O corpo do erro não expõe a mensagem de propósito. O teste novo confere o tipo da exceção no serviço e o estado preservado.
+  - Para cada um, confirmei que o teste novo **passa no código original** e **falha no mutante**.
+- **M03a e M03b são sobreviventes por redundância**, não por falta de teste: a trava de aviso, a consulta de disponibilidade e a restrição `EXCLUDE` protegem a mesma regra (ADR-001, defesa em profundidade). Cada uma sozinha não causa dupla reserva; as duas juntas (M03c) causam e foram detectadas. Foram mantidos na contagem como sobreviventes.
 
-## Resultado e limitações
+## 4. Escore
 
-- **Execução local:** 10/10 requisitos críticos têm pelo menos um teste rastreável executado localmente (100%). Isso não significa cobertura completa do escopo de cada requisito.
-- **Cobertura funcional completa:** 9/10 (90%). RF-14 permanece parcial pela ausência de testes dos estados alternativos definidos na especificação.
-- **Evidência remota de CI no commit avaliado:** 0/10 (0%) confirmada. O status de Actions não pôde ser consultado; aprovação local não substitui CI.
-- **Evidência completa exigida (risco + teste executado + CI do commit):** 0/10 (0%) até que o commit seja publicado e o workflow correspondente possa ser verificado.
-- As mutações foram revertidas antes da próxima regra; a suíte completa foi executada novamente após as restaurações e passou (137 testes, sem falhas ou erros).
+| Medida | Valor | Observação |
+|---|---|---|
+| Mutantes executados | 21 | |
+| Mortos na primeira rodada | 15 de 20 avaliados | M07 só foi executado depois do teste novo e não entra nesta conta |
+| Sobreviventes na primeira rodada | 5 (M03a, M03b, M06, M11, M15) | 3 por lacuna real, 2 por redundância |
+| Mortos depois dos testes novos | 19 de 21 (90,5%) | Restam M03a e M03b, redundantes isoladamente |
+| Mortos, excluindo os dois redundantes | 19 de 19 (100%) | |
+
+## 5. Requisitos críticos com evidência
+
+Critérios, todos exigidos: (a) risco identificado em [riscos.md](../riscos.md) e na RTM; (b) teste localizável por arquivo e nome; (c) teste executado com sucesso no commit avaliado; (d) pelo menos um mutante da regra detectado pelo teste; (e) CI verde no commit final.
+
+| Requisito | (a) Risco | (b) Teste localizável | (c) Executado | (d) Mutantes detectados | (e) CI no commit final |
+|---|---|---|---|---|---|
+| RF-05 Sobreposição | Sim | Sim | Sim | M01, M02 | ver §6 |
+| RF-06 Dupla reserva | Sim | Sim | Sim | M03c | ver §6 |
+| RF-07 Aprovação de restrito | Sim | Sim | Sim | M04 | ver §6 |
+| RF-08 Manutenção | Sim | Sim | Sim | M05, M06, M07 | ver §6 |
+| RF-10 Auditoria | Sim | Sim | Sim | M10, M11 | ver §6 |
+| RF-13 Intervalo | Sim | Sim | Sim | M08 | ver §6 |
+| RF-14 Ciclo de vida | Sim | Sim | Sim | M09, M12 | ver §6 |
+| RF-15 Preservação após início | Sim | Sim | Sim | M13, M14, M15 | ver §6 |
+| RNF-02 Integridade concorrente | Sim | Sim | Sim | M03c | ver §6 |
+| RNF-03 Rastreabilidade | Sim | Sim | Sim | M10, M11 | ver §6 |
+
+Resultado local, sem contar o CI: **10 de 10 requisitos críticos (100%)** atendem de (a) a (d). Autorização, que a RTM cobre pela matriz, teve 4 mutantes mortos (M16 a M19) e a matriz completa (35 linhas × 4 perfis = 140 verificações) passou.
+
+Limite: "10 de 10" significa que cada requisito tem ao menos um teste que detecta uma quebra plausível da regra. Não significa que todo comportamento do requisito está coberto, nem que não existam mutantes que eu não tenha pensado.
+
+## 6. CI no commit final
+
+O critério (e) depende do CI do commit que será etiquetado. Esta seção é preenchida depois que o PR desta rodada for aprovado e a `main` rodar (`./mvnw -B verify` com Testcontainers e Quality Gate). Até lá, a coluna (e) **não está comprovada**.
+
+## 7. Estado final dos testes
+
+Com as lacunas fechadas, `./mvnw -B test` no commit `3f2ed8f`: **183 testes, 0 falhas, 0 erros**. Os ITs (`*IT`) só rodam no CI; localmente rodei as cópias contra o PostgreSQL 16 (ver §2).
