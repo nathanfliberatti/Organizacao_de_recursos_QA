@@ -36,7 +36,7 @@ Cópias em [imagens/](imagens/), porque os artifacts do CI expiram (30 dias) e o
 | [ci-maven-verify-pr9.png](imagens/ci-maven-verify-pr9.png) | Execução "Maven verify" do PR #9 com todos os passos verdes (análise Sonar, upload do JaCoCo) | [run 42728214539](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/42728214539) |
 | [github-aprovacoes-pr9.png](imagens/github-aprovacoes-pr9.png) | Duas aprovações de `Erickyuji08` no PR #9 | PR #9 |
 | [sonarcloud-pr8-issues-parte1.png](imagens/sonarcloud-pr8-issues-parte1.png), [parte2](imagens/sonarcloud-pr8-issues-parte2.png) | As 6 issues do SonarCloud no PR #8 **antes da correção** (2 de confiabilidade, 4 de segurança) | PR #8 |
-| [e2e-recursos-admin.png](imagens/e2e-recursos-admin.png), [e2e-reservas-solicitante.png](imagens/e2e-reservas-solicitante.png), [e2e-mobile.png](imagens/e2e-mobile.png) | Telas capturadas pelo E2E (Administrador, Solicitante, 375 px) | [e2e-resultado.md](../testes/e2e-resultado.md) |
+| [e2e-recursos-admin.png](imagens/e2e-recursos-admin.png), [e2e-reservas-solicitante.png](imagens/e2e-reservas-solicitante.png), [e2e-estados-alternativos.png](imagens/e2e-estados-alternativos.png), [e2e-mobile.png](imagens/e2e-mobile.png) | Telas capturadas pelo E2E (Administrador, Solicitante, estados REJEITADA/NÃO COMPARECEU/CANCELADA, 375 px) | [e2e-resultado.md](../testes/e2e-resultado.md) |
 
 ## Como reproduzir
 
