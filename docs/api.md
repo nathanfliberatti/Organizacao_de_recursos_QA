@@ -86,7 +86,9 @@ Perfis: RESPONSAVEL e ADMINISTRADOR. Só recursos do tipo `MATERIAL`; no máximo
 
 | Método e caminho | Perfil | Parâmetros | Resposta |
 |---|---|---|---|
-| `GET /api/notifications` | autenticado | `all` (somente RESPONSAVEL/ADMINISTRADOR), `limit` (1–500, padrão 100) | `200` lista `{id, event (CRIACAO/ALTERACAO/CANCELAMENTO), reservationId, recipientId, message, delivery:"SIMULADA", createdAt}` |
+| `GET /api/notifications` | autenticado | `all` (somente RESPONSAVEL/ADMINISTRADOR), `limit` (1–500, padrão 100) | `200` lista `{id, event (CRIACAO/ALTERACAO/CANCELAMENTO), reservationId, recipientId, message, delivery, createdAt}` |
+
+`delivery` é `SIMULADA` por padrão (o evento só é registrado). Com `app.notifications.webhook-url` (variável `NOTIFICATION_WEBHOOK_URL`) definido, cada evento também é enviado como `POST` JSON `{event, reservationId, recipientId, message, createdAt}` a essa URL (http/https, timeout de 3 s, sem reenvio): `WEBHOOK` quando a API externa responde 2xx e `WEBHOOK_FALHOU` caso contrário. **Uma falha do webhook nunca impede nem desfaz a reserva.**
 
 ## Relatório de utilização (RF-12)
 

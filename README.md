@@ -37,6 +37,8 @@ criados os usuários de demonstração `admin`, `responsavel` e `solicitante` e 
 Nenhum segredo fica no repositório. Sem `JWT_SECRET`, a chave do JWT é aleatória a cada execução (tokens expiram ao
 reiniciar). Não use dados de demonstração em produção.
 
+Notificações: por padrão a entrega é simulada (registro em `/api/notifications`). Para integrar uma API externa, defina `NOTIFICATION_WEBHOOK_URL` (http ou https); cada evento de reserva vira um `POST` JSON nessa URL, e uma falha dela não afeta a reserva.
+
 Variáveis do perfil `postgres`: `DB_URL`, `DB_USER`, `DB_PASSWORD` (obrigatória), `JWT_SECRET`, `APP_DEMO_DATA`,
 `APP_DEMO_PASSWORD`.
 
