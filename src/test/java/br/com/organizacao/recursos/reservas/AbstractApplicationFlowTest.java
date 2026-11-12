@@ -96,6 +96,29 @@ abstract class AbstractApplicationFlowTest {
     }
 
     @Test
+    void searchesResourcesByCompetencyAndFreeText() throws Exception {
+        String admin = login("admin");
+        String solicitante = login("solicitante");
+        String tag = suffix();
+        String id = "prof-" + tag;
+        mockMvc.perform(as(post("/api/resources").content("{\"id\":\"" + id + "\",\"name\":\"Prof Busca " + tag
+                + "\",\"type\":\"PROFESSOR\",\"capacity\":1,\"competency\":\"Calculo Diferencial " + tag
+                + "\"}"), admin)).andExpect(status().isCreated());
+
+        mockMvc.perform(as(get("/api/resources?type=PROFESSOR&competency=diferencial " + tag), solicitante))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(id));
+        mockMvc.perform(as(get("/api/resources?competency=algebra " + tag), solicitante))
+                .andExpect(jsonPath("$", hasSize(0)));
+        mockMvc.perform(as(get("/api/resources?text=busca " + tag), solicitante))
+                .andExpect(jsonPath("$", hasSize(1)));
+        mockMvc.perform(as(get("/api/resources?text=" + id), solicitante))
+                .andExpect(jsonPath("$", hasSize(1)));
+        mockMvc.perform(as(get("/api/resources?text=inexistente-" + tag), solicitante))
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    @Test
     void reservationLifecycleFollowsResourceRestrictionAndNotifiesEvents() throws Exception {
         String admin = login("admin");
         String responsavel = login("responsavel");

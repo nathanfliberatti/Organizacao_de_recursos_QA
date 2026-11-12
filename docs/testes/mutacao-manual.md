@@ -1,5 +1,8 @@
 # Auditoria de rastreabilidade e mutação manual
 
+> **Atualização da entrega final:** os números desta análise (137 testes, "CI 0/10") são do momento em que ela foi feita, quando o status do Actions não podia ser consultado. Hoje o CI da `main` executa `./mvnw -B verify` com 158 testes passando e Quality Gate aprovado ([relatorio-testes.md](relatorio-testes.md)). A tabela de mutações **não foi refeita** para a entrega final.
+
+
 ## Escopo e critério de evidência
 
 Commit avaliado: `fa13d6cfe51634bb181c106ce40baaa9422c8532` (`fa13d6c`), branch `feature/utilizacao-relatorios`. A RTM contém 10 entradas críticas: RF-05, RF-06, RF-07, RF-08, RF-10, RF-13, RF-14, RF-15, RNF-02 e RNF-03.
