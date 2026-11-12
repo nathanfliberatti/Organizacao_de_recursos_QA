@@ -1,6 +1,8 @@
 # Arquitetura do Sistema
 
 
+> **Este documento é o desenho original** (anterior à implementação). **O sistema entregue está descrito em [arquitetura-implementada.md](arquitetura-implementada.md)** (C4 de contexto, contêineres e componentes, e as sequências críticas). Onde houver divergência, vale o documento de arquitetura implementada.
+>
 > ## Estado implementado (atualização da entrega final)
 >
 > Este documento nasceu antes da implementação e **não escolhia tecnologia**. Hoje o sistema entregue é um monólito Spring Boot (Java 21) com:
@@ -53,7 +55,7 @@ As fontes documentais consultadas nesta versão são:
 - [Requisitos funcionais](requisitos-funcionais.md): `RF-01` a `RF-15`.
 - [Requisitos não funcionais](requisitos-nao-funcionais.md): `RNF-01` a `RNF-07`.
 - [Matriz de rastreabilidade](matriz-rastreabilidade.md): criticidade, validações planejadas, evidências e gates.
-- [README](../README.md): contém apenas o título do projeto, sem decisões arquiteturais adicionais.
+- [README](../README.md): na época da análise continha apenas o título do projeto (hoje traz execução, testes e documentação).
 
 Não foram encontrados em `docs/` documentos separados de regras de negócio, restrições ou decisões arquiteturais anteriores. Portanto, esta seção não assume decisões técnicas ausentes das fontes.
 
