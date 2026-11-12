@@ -16,7 +16,7 @@ Todas as evidências se referem ao **commit apontado pela tag `v1.0.0-rc1`**. Os
 | 4 | **Resultado do teste de carga** | [resultado-02.md](../performance/resultado-02.md) (banco vazio) e [resultado-03.md](../performance/resultado-03.md) (200 mil reservas), com `statistics.json` em `docs/performance/rodada-02/` e `rodada-03/` | Rodada 01 permanece como histórico "inconclusivo". |
 | 5 | **Matriz de rastreabilidade** | [docs/rtm.md](../rtm.md) | — |
 | 6 | **Registro de defeitos** | [docs/defeitos/](../defeitos/README.md) | 15 defeitos priorizados: 14 corrigidos e 1 mitigado (DEF-012). |
-| 7 | **Relatório de qualidade** | [docs/relatorio-qualidade.md](../relatorio-qualidade.md) | Dados não registrados estão indicados no texto (percentual de cobertura e notas gerais do Sonar). |
+| 7 | **Relatório de qualidade** | [docs/relatorio-qualidade.md](../relatorio-qualidade.md) | Cada afirmação traz evidência, interpretação e limite; o que não foi medido está dito como tal. |
 | 8 | Decisão de qualidade | [docs/decisao-qualidade.md](../decisao-qualidade.md) | — |
 | 9 | Checklist da entrega em clone limpo | [docs/entrega/checklist.md](../entrega/checklist.md) | — |
 | 10 | Documentação da API | [docs/api.md](../api.md) | Protegida por `ApiDocumentationTest` |

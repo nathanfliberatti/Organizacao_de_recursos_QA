@@ -2,7 +2,7 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versionamento: tags anotadas `vMAJOR.MINOR.PATCH[-rcN]`; uma tag publicada nunca é movida (correções geram `-rc2`, `-rc3`, …).
 
-## [1.0.0-rc1] — 2026-11-10
+## [1.0.0-rc1] — 2026-11-12
 
 Primeiro release candidate do sistema de Organização de Recursos.
 
@@ -23,6 +23,10 @@ Primeiro release candidate do sistema de Organização de Recursos.
 - Testes: `ReservationIntervalValidationTest` (parametrizado, RF-13), pesquisa por competência e texto livre (RF-03), `ApiDocumentationTest` (todo endpoint precisa constar em `docs/api.md`) e E2E da interface com Playwright (`e2e/`, fora do CI).
 - Capturas do Sonar, JaCoCo, CI e aprovações em `docs/evidencias/imagens/`; defeitos `DEF-012` e `DEF-013`.
 - Documentação: [docs/api.md](docs/api.md), [docs/frontend-e-banco-de-dados.md](docs/frontend-e-banco-de-dados.md), [docs/entrega/checklist.md](docs/entrega/checklist.md), [docs/defeitos/README.md](docs/defeitos/README.md), [docs/relatorio-qualidade.md](docs/relatorio-qualidade.md), [docs/evidencias/README.md](docs/evidencias/README.md), [docs/decisao-qualidade.md](docs/decisao-qualidade.md), resultado de desempenho `resultado-02`.
+
+- **Matriz de autorização completa** (PR #14): 35 linhas × 4 perfis em `docs/seguranca/matriz-autorizacao.md`, verificadas célula a célula por `AuthorizationMatrixFullIT`; `AuthorizationMatrixDocumentTest` falha se uma rota mapeada ficar fora da matriz.
+- **Mutação manual refeita** (PR #14, `docs/testes/mutacao-manual.md`): 21 mutantes, 19 mortos; três lacunas de teste fechadas (limites da manutenção, atomicidade da auditoria sem transação externa, cancelamento de reserva iniciada).
+- **Relatório de qualidade no formato da Aula 13** (`docs/relatorio-qualidade.md`): evidência, interpretação e limite em cada afirmação.
 
 ### Alterado
 - O perfil padrão agora sobe sem DataSource (armazenamento em memória, somente desenvolvimento); o perfil `postgres` exige `DB_PASSWORD`.
