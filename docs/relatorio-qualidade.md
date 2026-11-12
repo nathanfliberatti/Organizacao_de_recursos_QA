@@ -133,14 +133,15 @@ Fonte: riscos aceitos R1–R11 em [decisao-qualidade.md](decisao-qualidade.md#ri
 
 - **Evidência:** Erick Yuji Conceição (`Erickyuji08`) aprovou o PR #13 **antes do merge** ([revisão](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/13#pullrequestreview-5867927078)) e o PR #9 depois do merge ([1](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851518916), [2](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851608090)). Os PRs #1–#8, #10–#12 não têm revisão humana registrada.
 - **Interpretação:** a mudança maior da entrega foi lida por um segundo integrante antes de entrar.
-- **Limite:** o PR #14 (este relatório) ainda não tem aprovação de Erick; o GitHub não deixa o autor aprovar o próprio PR.
+- **Também aprovado antes do merge:** o PR #14 (matriz de autorização completa, mutação refeita e este relatório) teve [revisão `APPROVED` de Erick](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/14#pullrequestreview-5868420873) sobre o commit `4a23654`, o último do PR, com CI verde; o merge deu `eeacfe2`.
+- **Limite:** o GitHub não deixa o autor aprovar o próprio PR, então a aprovação é sempre de outro integrante; os PRs #1–#8, #10–#12 seguem sem revisão humana registrada, e a aprovação de um PR não diz nada sobre os demais.
 
 ## 8. Recomendação
 
 **Liberar com ressalvas**, como *release candidate* para avaliação acadêmica e demonstração. **Não** declarar pronto para produção.
 
 - **Por quê:** as regras críticas têm teste que falha quando a regra quebra (4.3), a autorização está verificada célula a célula (4.5), o CI e o Quality Gate passam (4.2, 4.4) e não há defeito aberto (5).
-- **Condição para a tag:** aprovação de Erick no PR #14 e CI verde na `main` depois do merge (o CI do PR já passou).
+- **Condição para a tag:** CI verde na `main` no commit que receber a tag (a aprovação de Erick e o CI dos PRs #13 e #14 já existem).
 - **Condição para produção:** fechar R5, R6 e R7, validar a matriz de estados (R1) com usuários reais e rodar carga em ambiente separado.
 
 ## 9. Uso de ferramentas de IA
