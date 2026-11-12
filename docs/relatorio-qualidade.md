@@ -78,9 +78,14 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 8. Revisão por pares
 
-O repositório usa pull requests. **Erick Yuji Conceição** (conta GitHub `Erickyuji08`, colaborador) **aprovou o PR #9** — o PR de entrega final — em duas revisões com estado `APPROVED` sobre o commit `dda4229`, registradas no GitHub em 2026-11-11: [revisão 1](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851518916) e [revisão 2](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851608090). **As aprovações foram feitas depois do merge** (o PR #9 foi mergeado em 2026-11-10), portanto não funcionaram como bloqueio prévio.
+O repositório usa pull requests. **Erick Yuji Conceição** (conta GitHub `Erickyuji08`, colaborador) aprovou dois PRs de entrega:
 
-Sem revisão humana registrada: os PRs #1 a #8 (o #8 só recebeu comentários de bots) e o PR #10 (somente documentação, mergeado após o CI verde).
+| PR | Aprovação | Quando | Observação |
+|---|---|---|---|
+| **#13** (conformidade com a especificação: estados alternativos, dupla reserva em memória, WireMock, RTM com risco, apresentação) | [revisão `APPROVED`](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/13#pullrequestreview-5867927078) sobre o commit `114fa27` | **Antes do merge**, em 2026-11-12 | O commit seguinte, só de documentação, registra esta própria aprovação |
+| #9 (entrega final anterior) | duas revisões `APPROVED` ([1](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851518916), [2](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9#pullrequestreview-5851608090)) sobre o commit `dda4229` | **Depois do merge**, em 2026-11-11 | Não funcionou como bloqueio prévio |
+
+**Sem revisão humana registrada:** os PRs #1 a #8 (o #8 só recebeu comentários de bots), #10, #11 e #12. O PR #13 é o maior da entrega final e foi revisado antes do merge; os PRs pequenos de documentação não foram. Os PRs são abertos pela conta do autor, e o GitHub não permite que o autor aprove o próprio PR, por isso a aprovação é sempre de outro integrante.
 
 ## 9. Uso de ferramentas de IA
 

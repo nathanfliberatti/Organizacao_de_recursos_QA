@@ -92,7 +92,7 @@ Reavaliação em **novo clone limpo** da branch final da entrega (commit `148cd0
 
 | Item da especificação | Existe | Atualizado | Caminho |
 |---|---|---|---|
-| Repositório com revisão por pares | parcial | sim | [PR #9 com 2 aprovações do Erickyuji08](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9) (após o merge); demais PRs sem revisão registrada — risco R5 |
+| Repositório com revisão por pares | parcial | sim | [PR #13 aprovado por Erickyuji08 antes do merge](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/13#pullrequestreview-5867927078) e [PR #9 aprovado depois do merge](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9); demais PRs sem revisão registrada — risco R5 |
 | Aplicação executável | sim | sim | `README.md`, `docker-compose.yml` |
 | README | sim | sim | `README.md` (pré-requisitos, execução com e sem banco, documentação) |
 | Documentação da API | sim | sim | [../api.md](../api.md), protegida por `ApiDocumentationTest` |
