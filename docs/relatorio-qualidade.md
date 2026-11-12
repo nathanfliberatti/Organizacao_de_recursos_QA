@@ -15,16 +15,16 @@ Sistema web para organizar a alocação de salas, professores e materiais com pr
 
 | Nível | Ferramenta | Resultado | Evidência |
 |---|---|---|---|
-| Unitário / API em memória / BDD | JUnit 5, MockMvc, Cucumber | **55 testes, 0 falhas** (Surefire) | `./mvnw -B test`; artifact `test-reports` do CI |
+| Unitário / API em memória / BDD | JUnit 5, MockMvc, Cucumber | **64 testes, 0 falhas** (Surefire) | `./mvnw -B test`; artifact `test-reports` do CI |
 | Integração com PostgreSQL real | Testcontainers (Failsafe, classes `*IT`) | Passam no CI | Execução do CI do commit da tag ([índice de evidências](evidencias/README.md)) |
 | Concorrência | `ReservationConcurrencyIT` (20 requisições, 5 repetições por cenário) e `ApplicationFlowIT` (8 requisições) | Exatamente uma reserva aceita por disputa | idem |
 | Autorização | `AuthorizationMatrixIT` (matriz perfil × operação) | Passa | [seguranca/matriz-autorizacao.md](seguranca/matriz-autorizacao.md) |
 | Fluxo ponta a ponta da API | `ApplicationFlowTest` (memória) e `ApplicationFlowIT` (PostgreSQL) | Passam | [rtm.md](rtm.md) |
-| Interface | Verificação manual no navegador (Chromium, 3 perfis, 375 px e 1200 px) | Sem erro de console além das respostas `401`/`409` esperadas | **Sem E2E automatizado versionado** |
+| Interface (E2E) | Playwright, script versionado [`e2e/e2e.js`](../e2e/e2e.js), 3 perfis, 375 px e 1200 px | **28/28 verificações**, 3 execuções seguidas com PostgreSQL; 27/27 sem banco | [testes/e2e-resultado.md](testes/e2e-resultado.md). **Executado manualmente, fora do CI** |
 
 Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/evidencia-tdd.md](testes/evidencia-tdd.md), [testes/mutacao-manual.md](testes/mutacao-manual.md).
 
-**Total de testes do `verify` no CI** (job "Maven verify" do PR #9, commit `078e029`, [execução 42728214539](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/42728214539)): **55 testes Surefire + 103 testes Failsafe = 158, 0 falhas, 0 erros, 0 ignorados.** Os `*IT` incluem `AuthorizationMatrixIT` (69), `ReservationConcurrencyIT` (11), `ApplicationFlowIT` (9), `UtilizationReportApiIT` (7) e `ReservationAuditIT` (7).
+**Total de testes do `verify` no CI** (job "Maven verify" do PR #12, [execução 43129180145](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/43129180145)): **64 testes Surefire + 104 testes Failsafe = 168, 0 falhas, 0 erros, 0 ignorados.** Os `*IT` incluem `AuthorizationMatrixIT` (69), `ReservationConcurrencyIT` (11), `ApplicationFlowIT` (10), `UtilizationReportApiIT` (7) e `ReservationAuditIT` (7). No PR #9 (entrega anterior) eram 55 + 103 = 158. Detalhe por nível: [testes/relatorio-testes.md](testes/relatorio-testes.md).
 
 ## 3. Cobertura
 
@@ -66,15 +66,15 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 5. Defeitos
 
-11 defeitos registrados em [defeitos/](defeitos/README.md) (concorrência, deadlock, matriz de autorização, validação, posse de reservas etc.), **todos corrigidos**, cada um com teste de regressão. Defeitos encontrados na entrega final: (a) IDs `DEF-001`/`DEF-002` duplicados — renumerados; (b) perfil `perf,postgres` não subia sem credenciais após o PR #8 — documentado em [performance/rnf.md](performance/rnf.md); (c) `ReservationConcurrencyIT` reiniciava ids sem limpar o ciclo de vida — corrigido no próprio PR #8.
+13 defeitos registrados em [defeitos/](defeitos/README.md) (concorrência, deadlock, matriz de autorização, validação, posse de reservas, perfil de carga e isolamento de teste): **12 corrigidos e 1 mitigado** (DEF-012, por procedimento documentado). Os corrigidos têm teste de regressão. Defeitos encontrados na entrega final: (a) IDs `DEF-001`/`DEF-002` duplicados — renumerados para `DEF-010`/`DEF-011`; (b) perfil `perf,postgres` não subia sem credenciais após o PR #8 — [DEF-012](defeitos/DEF-012-perfil-perf-postgres-sem-credenciais.md); (c) `ReservationConcurrencyIT` reiniciava ids sem limpar o ciclo de vida — [DEF-013](defeitos/DEF-013-concorrencia-it-ids-colidem-com-ciclo-de-vida.md).
 
 ## 6. Desempenho
 
-[Rodada 02](performance/resultado-02.md): 1.780.105 amostras, 0 erros inesperados; p95 de 36 ms (consulta de disponibilidade) e 49 ms (criação) contra meta de 300 ms; 1 reserva aceita e 534.013 recusadas na disputa pela mesma sala, confirmadas no banco. **Ambiente local de máquina única, uma sala disputada; não vale como garantia de produção.** A rodada 01 ficou inconclusiva.
+[Rodada 02](performance/resultado-02.md): 1.780.105 amostras, 0 erros inesperados; p95 de 36 ms (consulta de disponibilidade) e 49 ms (criação) contra meta de 300 ms; 1 reserva aceita e 534.013 recusadas na disputa pela mesma sala, confirmadas no banco. **Ambiente local de máquina única, uma sala disputada; não vale como garantia de produção.** [Rodada 03](performance/resultado-03.md), com 200.000 reservas já no banco: 853.042 amostras, 0 erros, p95 de 33 ms e 44 ms, 1 aceita e 255.895 recusadas. As metas (p95 ≤ 300 ms, erros < 1%, 50 usuários) foram aprovadas pelo grupo em [performance/rnf.md](performance/rnf.md). A rodada 01 ficou inconclusiva.
 
 ## 7. Rastreabilidade
 
-[rtm.md](rtm.md) liga cada requisito a cenário e teste. Cobertura de requisitos: ver [status-requisitos.md](status-requisitos.md). Lacunas: pesquisa por competência e texto livre (RF-03), teste parametrizado de intervalo (RF-13), estados alternativos do RF-14, E2E (RNF-04) e OpenAPI gerado (RNF-05).
+[rtm.md](rtm.md) liga cada requisito a cenário e teste. Cobertura de requisitos: ver [status-requisitos.md](status-requisitos.md). Lacunas fechadas na entrega final: pesquisa por competência e texto (RF-03), teste parametrizado de intervalo (RF-13), E2E (RNF-04, fora do CI) e verificação automática de que a API está documentada (`ApiDocumentationTest`, RNF-05). Lacunas que permanecem: estados alternativos do RF-14 e ausência de OpenAPI gerado (o contrato é escrito à mão, mas protegido pelo teste anterior).
 
 ## 8. Revisão por pares
 

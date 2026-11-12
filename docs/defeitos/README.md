@@ -13,5 +13,7 @@
 | [DEF-009](DEF-009-transicoes-sem-regra-de-posse.md) | Transições sem regra de posse | Corrigido (`0e4d8f6`) |
 | [DEF-010](DEF-010-criacao-restrita-status.md) | Código de sucesso da criação de reserva restrita (antes `DEF-001`) | Corrigido (`7d3c96b`) |
 | [DEF-011](DEF-011-jwt-autoridades.md) | Autoridades dos perfis não extraídas do JWT (antes `DEF-002`) | Corrigido (`5639986`) |
+| [DEF-012](DEF-012-perfil-perf-postgres-sem-credenciais.md) | Perfil `perf,postgres` não sobe sem credenciais por ambiente | Mitigado por procedimento documentado |
+| [DEF-013](DEF-013-concorrencia-it-ids-colidem-com-ciclo-de-vida.md) | `ReservationConcurrencyIT` falha por colisão de ids com o ciclo de vida | Corrigido (`1793e76`) |
 
 `DEF-010` e `DEF-011` foram renumerados porque `DEF-001` e `DEF-002` estavam duplicados (os dois primeiros defeitos de concorrência e os dois primeiros da matriz de autorização). As mensagens de commit antigas ainda citam os IDs originais.

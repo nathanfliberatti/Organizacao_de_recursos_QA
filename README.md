@@ -56,9 +56,9 @@ No PowerShell use `$env:APP_DEMO_DATA="true"; $env:APP_DEMO_PASSWORD="<senha>"; 
 
 - **API (endpoints, perfis, corpos e códigos):** [docs/api.md](docs/api.md)
 - Telas, modelo de dados e lacunas: [docs/frontend-e-banco-de-dados.md](docs/frontend-e-banco-de-dados.md)
-- Arquitetura: [docs/arquitetura.md](docs/arquitetura.md) · Requisitos: [docs/requisitos-funcionais.md](docs/requisitos-funcionais.md), [docs/requisitos-nao-funcionais.md](docs/requisitos-nao-funcionais.md)
-- Rastreabilidade: [docs/rtm.md](docs/rtm.md) · Defeitos: [docs/defeitos/](docs/defeitos/README.md) · Testes: [docs/testes/](docs/testes/plano-tdd.md)
-- Desempenho: [docs/performance/](docs/performance/rnf.md) · Entrega: [docs/entrega/checklist.md](docs/entrega/checklist.md)
+- Arquitetura do sistema entregue (C4 e sequências): [docs/arquitetura-implementada.md](docs/arquitetura-implementada.md) · Desenho original: [docs/arquitetura.md](docs/arquitetura.md) · Requisitos: [docs/requisitos-funcionais.md](docs/requisitos-funcionais.md), [docs/requisitos-nao-funcionais.md](docs/requisitos-nao-funcionais.md)
+- Rastreabilidade: [docs/rtm.md](docs/rtm.md) · Defeitos: [docs/defeitos/](docs/defeitos/README.md) · Testes: [docs/testes/relatorio-testes.md](docs/testes/relatorio-testes.md) (plano em [plano-tdd.md](docs/testes/plano-tdd.md)) · E2E da interface: [e2e/README.md](e2e/README.md)
+- Desempenho: [docs/performance/](docs/performance/rnf.md) · Qualidade: [docs/relatorio-qualidade.md](docs/relatorio-qualidade.md), [docs/decisao-qualidade.md](docs/decisao-qualidade.md) · Evidências: [docs/evidencias/README.md](docs/evidencias/README.md) · Entrega: [docs/entrega/checklist.md](docs/entrega/checklist.md)
 
 ## Integração contínua
 

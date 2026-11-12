@@ -1,5 +1,8 @@
 # Plano TDD — Organização de Recursos
 
+> **Atualização da entrega final:** este plano foi escrito antes da implementação (por isso diz que o workspace não tinha classes de produção). O que foi de fato executado, com resultados e o estado de cada exigência do RNF-07, está em [relatorio-testes.md](relatorio-testes.md).
+
+
 ## Objetivo e limites
 
 Este documento inventaria regras e cenários de teste a partir das fontes do projeto. Na preparação original, não foram implementados testes nem código de produção. O workspace agora contém scaffold Maven e JUnit 5, mas continua sem classes de produção nem testes de produto; por isso, não há API executável para testes comportamentais. Casos marcados como pendentes também não podem receber expectativas inventadas: precisam de decisão registrada antes de virarem asserts de aceitação.

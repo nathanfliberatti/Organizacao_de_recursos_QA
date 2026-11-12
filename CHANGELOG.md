@@ -15,6 +15,10 @@ Primeiro release candidate do sistema de Organização de Recursos.
 - **Materiais**: retirada e devolução com no máximo uma retirada em aberto por material (RF-09).
 - **Notificações** simuladas para criação, alteração e cancelamento de reserva (RF-11).
 - Banco: tabelas `app_users`, `maintenance_periods`, `material_loans`, `notifications` e novas colunas em `resources`; `docker-compose.yml` com PostgreSQL 16.
+- Arquitetura do sistema implementado ([docs/arquitetura-implementada.md](docs/arquitetura-implementada.md)): C4 de contexto, contêineres e componentes e cinco sequências críticas, com imagens em `docs/diagramas/`.
+- Relatório de testes consolidado ([docs/testes/relatorio-testes.md](docs/testes/relatorio-testes.md)) com o estado de cada exigência do RNF-07.
+- Testes: `ReservationIntervalValidationTest` (parametrizado, RF-13), pesquisa por competência e texto livre (RF-03), `ApiDocumentationTest` (todo endpoint precisa constar em `docs/api.md`) e E2E da interface com Playwright (`e2e/`, fora do CI).
+- Capturas do Sonar, JaCoCo, CI e aprovações em `docs/evidencias/imagens/`; defeitos `DEF-012` e `DEF-013`.
 - Documentação: [docs/api.md](docs/api.md), [docs/frontend-e-banco-de-dados.md](docs/frontend-e-banco-de-dados.md), [docs/entrega/checklist.md](docs/entrega/checklist.md), [docs/defeitos/README.md](docs/defeitos/README.md), [docs/relatorio-qualidade.md](docs/relatorio-qualidade.md), [docs/evidencias/README.md](docs/evidencias/README.md), [docs/decisao-qualidade.md](docs/decisao-qualidade.md), resultado de desempenho `resultado-02`.
 
 ### Alterado

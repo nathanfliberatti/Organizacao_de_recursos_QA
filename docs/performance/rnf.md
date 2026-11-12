@@ -1,6 +1,6 @@
-# Requisito não funcional de desempenho (proposta)
+# Requisito não funcional de desempenho (RNF-PERF-01)
 
-**Status:** Proposta para validação pelo grupo. Os limites abaixo não são ainda um compromisso aprovado.
+**Status:** **Aprovado pelo grupo em 2026-11-12** como critério de aceite da entrega (o grupo confirmou, na conversa de fechamento da documentação, registrar os limites propostos abaixo). Valem para o **ambiente local de máquina única** descrito nos resultados; não são um compromisso para produção.
 
 ## RNF-PERF-01 — Disponibilidade e criação de reservas
 
@@ -16,6 +16,17 @@ Para a criação concorrente da mesma sala e do mesmo intervalo, `201 Created` e
 - **Mistura de operações:** aproximadamente 70% consultas de disponibilidade e 30% tentativas de criação, distribuídas pelos usuários.
 - **Contenção:** todas as criações disputam o mesmo recurso e intervalo futuro; portanto, uma aceitação (`201`) e conflitos (`409`) são resultados esperados.
 - **Critério de desempenho:** p95 <= 300 ms em cada operação; erros inesperados < 1% em cada operação.
+
+## Conjunto de dados e volume
+
+O RNF-06 exige considerar o volume de dados. O plano usa dois cenários, com o mesmo [`perf/reservas.jmx`](../../perf/reservas.jmx):
+
+| Cenário | Dados no banco antes da carga | Parâmetros | Resultado |
+|---|---|---|---|
+| **A — banco vazio** (rodada 02) | Nenhuma reserva; o banco começa vazio e cresce a **1** reserva | 50 usuários, ramp-up 120 s, 720 s no total | [resultado-02.md](resultado-02.md) |
+| **B — volume** (rodada 03) | **200.000 reservas** (180.000 ativas e 20.000 canceladas) em 2.000 salas, 200.000 professores e 500 solicitantes, mais 50.000 tentativas recusadas; ~78 MB | 50 usuários, ramp-up 30 s, 300 s no total (`-Jusers=50 -JrampUp=30 -Jduration=300`) | [resultado-03.md](resultado-03.md) |
+
+Dados fixos do plano: 50 usuários fictícios em [`perf/usuarios.csv`](../../perf/usuarios.csv) (credenciais válidas só no perfil `perf`), recurso disputado `room-shared` e intervalo `2026-10-27T10:00:00Z` a `11:00:00Z`. Como a tabela `reservations` não tem chave estrangeira para `resources`, o recurso disputado não precisa ser cadastrado. O script de carga do cenário B está em [`perf/gerar-volume.sql`](../../perf/gerar-volume.sql).
 
 ## Pré-condição de autenticação e execução
 

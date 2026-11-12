@@ -1,5 +1,7 @@
 # Checklist da entrega — avaliação em clone limpo
 
+> **Como ler:** as seções 1 a 5 registram a avaliação inicial do commit `d0447b0` e os bloqueadores que ela achou. **A seção 6 traz o estado final** de cada item, depois das correções.
+
 **Commit avaliado:** `d0447b0` (`main`, merge do PR #8) · **CI desse commit:** [run 42720000610 — success](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/42720000610)
 **Data:** 2026-11-09 · **Método:** `git clone` do zero em diretório temporário, seguindo apenas o `README.md`. Nada foi corrigido nesta etapa.
 
@@ -72,3 +74,40 @@ Legenda — **Existe:** sim / parcial / não · **Atualizado:** sim / não / n.a
 | 8 | IDs de defeito duplicados | Corrigido: `DEF-010` e `DEF-011`, com índice | [../defeitos/README.md](../defeitos/README.md) |
 
 Achados adicionais durante a correção: o perfil `perf,postgres` deixou de subir sem `DB_USER`/`DB_PASSWORD` após o PR #8 (documentado em [../performance/rnf.md](../performance/rnf.md)); rodar a carga só com `perf` usa memória e produz resultado inválido.
+
+## 6. Estado final por item da especificação
+
+Reavaliação em **novo clone limpo** da branch final da entrega (commit `148cd0f`), seguindo só o README:
+
+| Passo | Resultado |
+|---|---|
+| `git clone` da branch | OK |
+| `./mvnw -B verify` | **64 testes unitários passam**; os `*IT` falham somente por falta de Docker no ambiente da avaliação (pré-requisito agora declarado no README); no CI o `verify` completo passa |
+| Subir a aplicação (`postgres`, `DB_PASSWORD`, `APP_DEMO_*`) | OK: `GET /api/resources` → 200 com token e 401 sem token |
+| `e2e/e2e.js` a partir do clone | **28/28** verificações |
+| Links relativos entre os `.md` | 0 quebrados |
+
+| Item da especificação | Existe | Atualizado | Caminho |
+|---|---|---|---|
+| Repositório com revisão por pares | parcial | sim | [PR #9 com 2 aprovações do Erickyuji08](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/pull/9) (após o merge); demais PRs sem revisão registrada — risco R5 |
+| Aplicação executável | sim | sim | `README.md`, `docker-compose.yml` |
+| README | sim | sim | `README.md` (pré-requisitos, execução com e sem banco, documentação) |
+| Documentação da API | sim | sim | [../api.md](../api.md), protegida por `ApiDocumentationTest` |
+| `docs/rtm.md` | sim | sim | [../rtm.md](../rtm.md) |
+| Diagrama de contexto | sim | sim | [../arquitetura-implementada.md](../arquitetura-implementada.md) §1, [../diagramas/](../diagramas/) |
+| Diagrama de componentes | sim | sim | [../arquitetura-implementada.md](../arquitetura-implementada.md) §2 e §3 |
+| Sequências críticas | sim | sim | [../arquitetura-implementada.md](../arquitetura-implementada.md) §4 (login, criar reserva, aprovação/uso/conclusão, disputa concorrente, material) |
+| Plano de testes | sim | sim | [../testes/plano-tdd.md](../testes/plano-tdd.md) |
+| Relatório de testes | sim | sim | [../testes/relatorio-testes.md](../testes/relatorio-testes.md), [../testes/e2e-resultado.md](../testes/e2e-resultado.md) |
+| Pipeline de CI | sim | sim | `.github/workflows/ci.yml` |
+| Relatório do SonarCloud | sim (capturas e números) | sim | [../evidencias/README.md](../evidencias/README.md), [../relatorio-qualidade.md](../relatorio-qualidade.md) §4 |
+| Relatório do JaCoCo | sim (captura e números) | sim | [../evidencias/imagens/](../evidencias/imagens/), [../relatorio-qualidade.md](../relatorio-qualidade.md) §3; artifact `jacoco-report` do CI |
+| Plano do teste de carga | sim | sim | [../performance/rnf.md](../performance/rnf.md), `perf/reservas.jmx`, `perf/gerar-volume.sql` |
+| Resultado do teste de carga | sim | sim | [../performance/resultado-02.md](../performance/resultado-02.md), [resultado-03.md](../performance/resultado-03.md) |
+| Registro de defeitos | sim | sim | [../defeitos/README.md](../defeitos/README.md) (13 defeitos) |
+| Relatório final de qualidade | sim | sim | [../relatorio-qualidade.md](../relatorio-qualidade.md) |
+| Decisão de qualidade | sim | sim | [../decisao-qualidade.md](../decisao-qualidade.md) |
+| Pacote de evidências | sim | sim | [../evidencias/README.md](../evidencias/README.md) |
+| `CHANGELOG.md` | sim | sim | [../../CHANGELOG.md](../../CHANGELOG.md) |
+| Tag `v1.0.0-rc1` | **ainda não** | — | A criar no commit da `main` após o merge desta entrega |
+| Formulário de entrega | **ainda não** | — | Depende do link do Hub; texto pronto em [../decisao-qualidade.md](../decisao-qualidade.md) |
