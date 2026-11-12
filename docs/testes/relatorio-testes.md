@@ -7,7 +7,7 @@ Consolida os testes da entrega final: o que existe, o que foi executado, com que
 | Execução | Resultado | Onde |
 |---|---|---|
 | CI da `main`, commit `75294e9` (`./mvnw -B verify`) | **158 testes, 0 falhas**: 55 Surefire + 103 Failsafe; gate JaCoCo atendido; Quality Gate do SonarCloud aprovado | [run 42931118129](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/42931118129); detalhe por classe no job "Maven verify" |
-| Esta entrega (testes adicionados, §4) | Surefire passa de 55 para **64**; o Failsafe ganha 1 teste (`searchesResourcesByCompetencyAndFreeText` roda também em `ApplicationFlowIT`) | CI do PR da entrega final e da `main` após o merge |
+| CI do PR da entrega final (PR #12, [run 43129180145](https://github.com/nathanfliberatti/Organizacao_de_recursos_QA/actions/runs/43129180145)) | **168 testes, 0 falhas**: **64 Surefire + 104 Failsafe**; gate JaCoCo atendido; Quality Gate do SonarCloud aprovado. `ApplicationFlowIT` passou de 9 para 10 testes (pesquisa por competência em PostgreSQL real) | job "Maven verify" do run |
 | E2E da interface (manual) | **28/28** verificações em 3 execuções seguidas com PostgreSQL; 27/27 sem banco | [e2e-resultado.md](e2e-resultado.md) |
 | Carga (JMeter, local) | Rodada 02: 1.780.105 amostras; rodada 03 (200 mil reservas no banco): 853.042 amostras; 0 erros inesperados nas duas | [resultado-02](../performance/resultado-02.md), [resultado-03](../performance/resultado-03.md) |
 
@@ -15,12 +15,12 @@ Reproduzir: `./mvnw -B test` (sem Docker, só os testes unitários e de API em m
 
 ## 2. Testes por nível
 
-| Nível | Classe (testes no commit `75294e9`) | O que verifica |
+| Nível | Classe (testes no CI do PR #12) | O que verifica |
 |---|---|---|
 | Unidade / domínio | `ReservationLifecycleTest` (6), `ReservationApprovalTest` (4), `ReservationAuditEntryTest` (4), `MaintenanceRuleTest` (5), `InMemoryReservationStoreTest` (1), `InMemoryResourceStoreTest` (1), `InMemoryReservationAuditServiceTest` (4), `PostgresReservationStoreTest` (5, com mocks) | Ciclo de vida, aprovação sem autoaprovação, auditoria, regra de manutenção, stores |
-| API caixa-preta (MockMvc, sem banco) | `ReservationApiTest` (4), `ReservationAuditApiTest` (5), `PerformanceAuthControllerTest` (3), `ApplicationFlowTest` (7) | Contratos HTTP, perfis, fluxo completo com login JWT real |
+| API caixa-preta (MockMvc, sem banco) | `ReservationApiTest` (4), `ReservationAuditApiTest` (5), `PerformanceAuthControllerTest` (3), `ApplicationFlowTest` (8), `ReservationIntervalValidationTest` (6), `ApiDocumentationTest` (2) | Contratos HTTP, perfis, fluxo completo com login JWT real |
 | BDD (Cucumber) | `RunCucumberTest` (6 cenários de [`aprovacao-bloqueio.feature`](../../src/test/resources/features/aprovacao-bloqueio.feature)) | Aprovação e bloqueio de recursos restritos e em manutenção |
-| Integração com PostgreSQL real (Testcontainers) | `AuthorizationMatrixIT` (69), `ReservationConcurrencyIT` (11), `ApplicationFlowIT` (9), `ReservationAuditIT` (7), `UtilizationReportApiIT` (7) | Matriz de autorização, concorrência, persistência/auditoria, relatório, fluxo completo |
+| Integração com PostgreSQL real (Testcontainers) | `AuthorizationMatrixIT` (69), `ReservationConcurrencyIT` (11), `ApplicationFlowIT` (10), `ReservationAuditIT` (7), `UtilizationReportApiIT` (7) | Matriz de autorização, concorrência, persistência/auditoria, relatório, fluxo completo |
 | Concorrência | `ReservationConcurrencyIT` (20 requisições simultâneas, 5 repetições por cenário, sala e professor), `ApplicationFlowIT#concurrentRequestsForSameSlotConfirmOnlyOneReservation` (8 requisições) | No máximo uma reserva aceita por disputa |
 | E2E da interface | [`e2e/e2e.js`](../../e2e/e2e.js) (28 verificações) | Fluxos principais no navegador; **executado manualmente, fora do CI** |
 | Desempenho | [`perf/reservas.jmx`](../../perf/reservas.jmx) | RNF-PERF-01 |
