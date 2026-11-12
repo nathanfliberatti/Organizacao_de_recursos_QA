@@ -14,6 +14,9 @@ Primeiro release candidate do sistema de Organização de Recursos.
 - **Manutenção** persistida no banco, com listagem e remoção (RF-08).
 - **Materiais**: retirada e devolução com no máximo uma retirada em aberto por material (RF-09).
 - **Notificações** simuladas para criação, alteração e cancelamento de reserva (RF-11).
+- **Estados alternativos do ciclo de vida (RF-14)**: `REJEITADA`, `CANCELADA` e `NAO_COMPARECEU`, com matriz de transições única, auditoria de cada mudança e horário devolvido à agenda; novas rotas `POST /api/reservations/{id}/rejection` e `/no-show`; cancelar passa a ser uma transição auditada.
+- **Integração externa de notificação (RF-11)**: webhook opcional (`NOTIFICATION_WEBHOOK_URL`), testado com WireMock; a falha do webhook nunca derruba a reserva.
+- Registro de riscos técnicos (`docs/riscos.md`) e coluna **Risco** na RTM; severidade e prioridade em todos os defeitos; apresentação e roteiro de demonstração (`docs/apresentacao/`).
 - Banco: tabelas `app_users`, `maintenance_periods`, `material_loans`, `notifications` e novas colunas em `resources`; `docker-compose.yml` com PostgreSQL 16.
 - Arquitetura do sistema implementado ([docs/arquitetura-implementada.md](docs/arquitetura-implementada.md)): C4 de contexto, contêineres e componentes e cinco sequências críticas, com imagens em `docs/diagramas/`.
 - Relatório de testes consolidado ([docs/testes/relatorio-testes.md](docs/testes/relatorio-testes.md)) com o estado de cada exigência do RNF-07.
@@ -29,14 +32,15 @@ Primeiro release candidate do sistema de Organização de Recursos.
 - RTM, status dos requisitos, relatório de testes e arquitetura atualizados.
 
 ### Corrigido
+- **Dupla reserva no modo em memória** (DEF-014): o armazenamento em memória aceitava qualquer reserva; agora recusa sobreposição de sala e de professor, de forma atômica.
 - Issues do SonarCloud no código novo: `SecureRandom` reutilizável e consultas SQL constantes.
 - Isolamento do `ReservationConcurrencyIT` (ids reiniciados colidiam com o ciclo de vida).
 
 ### Limitações conhecidas
-- Estados `REJEITADA`, `NÃO_COMPARECEU` e `CANCELADA` como estado do ciclo de vida (RF-14) não modelados; matriz de transições pendente.
+- Não há regra de tempo para registrar "não compareceu" (pode ser registrado antes do início da reserva); a matriz de transições adotada não foi validada com usuários reais.
 - Fuso do fechamento mensal do relatório: UTC (decisão de negócio pendente).
-- Armazenamento em memória não detecta sobreposição de horários.
-- Notificações têm entrega simulada, sem integração externa.
+- O modo em memória vale para uma única instância e perde os dados ao parar.
+- Notificações são simuladas por padrão; o webhook opcional não reenvia em caso de falha.
 - O job diário de treinamento descrito em `docs/arquitetura.md` não foi implementado.
 
 ## [anteriores]

@@ -42,11 +42,12 @@ Notificações: por padrão a entrega é simulada (registro em `/api/notificatio
 Variáveis do perfil `postgres`: `DB_URL`, `DB_USER`, `DB_PASSWORD` (obrigatória), `JWT_SECRET`, `APP_DEMO_DATA`,
 `APP_DEMO_PASSWORD`.
 
-Sem o perfil `postgres` a aplicação sobe com armazenamento em memória, apenas para desenvolvimento: **esse modo
-não impede dupla reserva** (a garantia vem das constraints do PostgreSQL, ver ADR-001) e o relatório de
+Sem o perfil `postgres` a aplicação sobe com armazenamento em memória, apenas para desenvolvimento: ele **também
+impede dupla reserva** (sobreposição de sala e de professor, de forma atômica) dentro de uma instância, mas os dados
+somem ao parar, a garantia entre várias instâncias vem das constraints do PostgreSQL (ver ADR-001) e o relatório de
 utilização não está disponível.
 
-Sem Docker e sem PostgreSQL, apenas para ver as telas (os dados somem ao parar e **não há proteção contra dupla reserva**):
+Sem Docker e sem PostgreSQL, para ver as telas e experimentar os fluxos (os dados somem ao parar):
 
 ```bash
 APP_DEMO_DATA=true APP_DEMO_PASSWORD='<senha>' ./mvnw spring-boot:run

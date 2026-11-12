@@ -9,7 +9,7 @@
 
 Sistema web para organizar a alocação de salas, professores e materiais com prevenção de conflitos de horário: API Spring Boot (Java 21), PostgreSQL 16 e frontend estático. Requisitos: [RF-01 a RF-15](requisitos-funcionais.md) e [RNF-01 a RNF-07](requisitos-nao-funcionais.md); contrato da API em [api.md](api.md).
 
-**Conclusão resumida:** os requisitos críticos (sobreposição e concorrência, autorização por perfil, ciclo de vida auditado, preservação de reservas iniciadas) têm teste automatizado que passa no CI; não há defeito conhecido em aberto. Permanecem lacunas de escopo (estados alternativos do RF-14, notificação real) e de evidência (revisão por pares, E2E da interface, carga em ambiente separado). A decisão e os riscos aceitos estão em [decisao-qualidade.md](decisao-qualidade.md).
+**Conclusão resumida:** os requisitos críticos (sobreposição e concorrência, autorização por perfil, ciclo de vida auditado, preservação de reservas iniciadas) têm teste automatizado que passa no CI; não há defeito conhecido em aberto. O RF-14 está completo (estados alternativos incluídos) e o modo em memória também impede dupla reserva. Permanecem lacunas de evidência (revisão por pares, E2E fora do CI, carga em ambiente separado) e a notificação é simulada por padrão (a integração externa é opcional e testada com WireMock). A decisão e os riscos aceitos estão em [decisao-qualidade.md](decisao-qualidade.md).
 
 ## 2. Testes
 
@@ -74,7 +74,7 @@ Plano e histórico TDD/BDD: [testes/plano-tdd.md](testes/plano-tdd.md), [testes/
 
 ## 7. Rastreabilidade
 
-[rtm.md](rtm.md) liga cada requisito a cenário e teste. Cobertura de requisitos: ver [status-requisitos.md](status-requisitos.md). Lacunas fechadas na entrega final: pesquisa por competência e texto (RF-03), teste parametrizado de intervalo (RF-13), E2E (RNF-04, fora do CI) e verificação automática de que a API está documentada (`ApiDocumentationTest`, RNF-05). Lacunas que permanecem: estados alternativos do RF-14 e ausência de OpenAPI gerado (o contrato é escrito à mão, mas protegido pelo teste anterior).
+[rtm.md](rtm.md) liga cada requisito a cenário e teste. Cobertura de requisitos: ver [status-requisitos.md](status-requisitos.md). Lacunas fechadas na entrega final: pesquisa por competência e texto (RF-03), teste parametrizado de intervalo (RF-13), E2E (RNF-04, fora do CI) e verificação automática de que a API está documentada (`ApiDocumentationTest`, RNF-05). Lacuna que permanece: ausência de OpenAPI gerado (o contrato é escrito à mão, mas protegido pelo teste anterior). A RTM agora tem coluna de risco ([riscos.md](riscos.md)).
 
 ## 8. Revisão por pares
 

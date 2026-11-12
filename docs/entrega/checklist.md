@@ -77,6 +77,9 @@ Achados adicionais durante a correção: o perfil `perf,postgres` deixou de subi
 
 ## 6. Estado final por item da especificação
 
+> **Pendências conhecidas da seção 4, atualizadas:** os estados `REJEITADA`, `CANCELADA` e `NAO_COMPARECEU` (RF-14) foram implementados e o modo em memória passou a impedir sobreposição (DEF-014 e DEF-015). Continuam valendo o fuso UTC do relatório, o CSRF isento em `/api/**` e a issue `java:S8786` em teste.
+
+
 Reavaliação em **novo clone limpo** da branch final da entrega (commit `148cd0f`), seguindo só o README:
 
 | Passo | Resultado |
