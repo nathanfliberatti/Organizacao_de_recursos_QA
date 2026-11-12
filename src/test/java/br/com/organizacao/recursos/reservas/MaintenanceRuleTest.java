@@ -27,6 +27,25 @@ class MaintenanceRuleTest {
                 () -> assertFalse(rule.isReservable(reservation, maintenance)));
     }
 
+    @Test
+    void reservationsTouchingTheMaintenanceBoundariesAreReservable() {
+        Clock clock = Clock.fixed(Instant.parse("2026-10-25T09:00:00Z"), ZoneOffset.UTC);
+        MaintenanceRule rule = new MaintenanceRule(clock);
+        MaintenancePeriod maintenance = new MaintenancePeriod(
+                Instant.parse("2026-10-25T10:00:00Z"),
+                Instant.parse("2026-10-25T11:00:00Z"));
+        ReservationPeriod endsWhenMaintenanceStarts = new ReservationPeriod(
+                Instant.parse("2026-10-25T09:00:00Z"),
+                Instant.parse("2026-10-25T10:00:00Z"));
+        ReservationPeriod startsWhenMaintenanceEnds = new ReservationPeriod(
+                Instant.parse("2026-10-25T11:00:00Z"),
+                Instant.parse("2026-10-25T12:00:00Z"));
+
+        assertAll(
+                () -> assertTrue(rule.isReservable(endsWhenMaintenanceStarts, maintenance)),
+                () -> assertTrue(rule.isReservable(startsWhenMaintenanceEnds, maintenance)));
+    }
+
         @Test
         void reservationOutsideMaintenancePeriodRemainsReservable() {
                 Clock clock = Clock.fixed(Instant.parse("2026-10-25T12:30:00Z"), ZoneOffset.UTC);
